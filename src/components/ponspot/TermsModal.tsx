@@ -118,7 +118,7 @@ export function TermsModal({ isOpen, onAccept, onDecline }: TermsModalProps) {
             </label>
 
             {/* Checkbox 2: Terms & Privacy Agreement */}
-            <label
+            <div
               onClick={() => setTermsChecked(!termsChecked)}
               className={`flex items-start gap-3 p-3.5 rounded-2xl border cursor-pointer select-none transition-all ${
                 termsChecked
@@ -133,11 +133,12 @@ export function TermsModal({ isOpen, onAccept, onDecline }: TermsModalProps) {
                   <Square className="w-5 h-5 opacity-40" />
                 )}
               </div>
-              <span className="text-xs leading-snug" onClick={(e) => e.stopPropagation()}>
+              <span className="text-xs leading-snug">
                 I have read, understood, and agree to Ponspot's{' '}
                 <Link
                   href="/terms"
                   target="_blank"
+                  onClick={(e) => e.stopPropagation()}
                   className="font-bold text-[#718D76] dark:text-emerald-400 hover:underline inline-flex items-center gap-0.5"
                 >
                   Terms of Use <ExternalLink className="w-2.5 h-2.5 inline" />
@@ -146,12 +147,13 @@ export function TermsModal({ isOpen, onAccept, onDecline }: TermsModalProps) {
                 <Link
                   href="/privacy"
                   target="_blank"
+                  onClick={(e) => e.stopPropagation()}
                   className="font-bold text-[#718D76] dark:text-emerald-400 hover:underline inline-flex items-center gap-0.5"
                 >
                   Privacy Policy <ExternalLink className="w-2.5 h-2.5 inline" />
                 </Link>.
               </span>
-            </label>
+            </div>
           </div>
 
           {/* Action Buttons */}

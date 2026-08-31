@@ -12,6 +12,7 @@ import { GameResultModal } from '@/components/ponspot/GameResultModal';
 import Link from 'next/link';
 import { TermsModal } from '@/components/ponspot/TermsModal';
 import { ProfileModal } from '@/components/ponspot/ProfileModal';
+import { WalletSelectModal } from '@/components/ponspot/WalletSelectModal';
 import { ROBINHOOD_CHAIN_CONFIG, PONSPOT_TOKEN_ADDRESS, PONS_TOKEN_ADDRESS, GAME_CONTRACT_ADDRESS, getGameContractAddress } from '@/lib/web3/contracts';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -73,15 +74,11 @@ export default function PonscorePage() {
   // User Level & XP Stats State
   const [userStats, setUserStats] = useState(() => getUserStats(account));
   const [isClaimingAirdrop, setIsClaimingAirdrop] = useState(false);
-  const [mobileTab, setMobileTab] = useState<'game' | 'chat' | 'history'>('game');
   const [claimedAddresses, setClaimedAddresses] = useState<string[]>([]);
   const [airdropInfo, setAirdropInfo] = useState<{ poolBalance: number; rewardPerClaim: number; airdropContractAddress?: string }>({
     poolBalance: 0,
     rewardPerClaim: 100,
   });
-
-
-
 
   const isCurrentWalletClaimed = useMemo(() => {
     if (!account) return false;
@@ -199,31 +196,20 @@ export default function PonscorePage() {
 
   const levelInfo = useMemo(() => getUserLevelInfo(userStats.gamesPlayed, userStats.totalVolumePons), [userStats]);
 
-  // Terms of Service & Age Verification Modal State
+  // Terms of Service & Wallet Modal State
   const [showTermsModal, setShowTermsModal] = useState(false);
-  const [pendingWalletType, setPendingWalletType] = useState<string | null>(null);
+  const [showWalletModal, setShowWalletModal] = useState(false);
 
   const handleInitiateConnectWallet = (targetType: 'okx' | 'metamask' | 'rabby' | 'bitget' = 'okx') => {
-    const accepted = localStorage.getItem('ponspot_terms_accepted');
-    if (accepted === 'true') {
-      connectWallet(targetType);
-    } else {
-      setPendingWalletType(targetType);
-      setShowTermsModal(true);
-    }
+    connectWallet(targetType);
   };
 
   const handleAcceptTerms = () => {
-    localStorage.setItem('ponspot_terms_accepted', 'true');
     setShowTermsModal(false);
-    const target = pendingWalletType || 'okx';
-    connectWallet(target as any);
-    setPendingWalletType(null);
   };
 
   const handleDeclineTerms = () => {
     setShowTermsModal(false);
-    setPendingWalletType(null);
   };
 
   // User Profile Customization State
@@ -244,16 +230,6 @@ export default function PonscorePage() {
       console.error('Failed to load user profile', e);
     }
   }, []);
-
-  // Automatically prompt player to enter Name & Avatar when wallet is connected
-  useEffect(() => {
-    if (isConnected && account) {
-      const configured = localStorage.getItem('ponspot_profile_configured');
-      if (!configured) {
-        setShowProfileModal(true);
-      }
-    }
-  }, [isConnected, account]);
 
   const handleSaveProfile = useCallback((name: string, avatar: string) => {
     const finalAvatar = avatar || '/image/logo.png';
@@ -717,12 +693,11 @@ export default function PonscorePage() {
   const displayAvatar = userProfile.avatar || '/image/logo.png';
 
   return (
-    <div className="h-screen flex flex-col cyber-grid-bg font-sans text-[#F5F8F3] dark">
-      {/* Inner scrollable area — overflow hidden here so sidebars are clipped */}
-      <div className="flex-1 flex flex-col overflow-hidden min-h-0">
-      <header className="flex-shrink-0 h-[60px] sm:h-[96px] lg:h-[104px] flex items-center border-b border-white/60 dark:border-[#718D76]/30 bg-[#A4BAA2]/80 dark:bg-[#0c1611]/90 backdrop-blur-2xl z-40 shadow-sm transition-colors">
-        {/* Left: Logo (mobile) / Video Banner (desktop) */}
-        <div className="hidden lg:flex w-[275px] h-full flex-shrink-0 border-r border-white/50 dark:border-[#718D76]/30 overflow-hidden items-center justify-center p-0 m-0">
+    <div className="h-screen flex flex-col overflow-hidden cyber-grid-bg font-sans text-[#F5F8F3] dark">
+      {/* ═══════════ TOP MINIMALIST TRADING NAVBAR ═══════════ */}
+      <header className="flex-shrink-0 h-[96px] sm:h-[104px] flex items-center border-b border-white/60 dark:border-[#718D76]/30 bg-[#A4BAA2]/80 dark:bg-[#0c1611]/90 backdrop-blur-2xl z-40 shadow-sm transition-colors">
+        {/* Left: Branding Video Banner matching the exact sidebar width with zero space */}
+        <div className="w-[275px] h-full flex-shrink-0 border-r border-white/50 dark:border-[#718D76]/30 overflow-hidden flex items-center justify-center p-0 m-0">
           <video
             src="/image/banner.mp4"
             autoPlay
@@ -732,14 +707,9 @@ export default function PonscorePage() {
             className="w-full h-full object-cover select-none pointer-events-none block"
           />
         </div>
-        {/* Mobile logo */}
-        <div className="flex lg:hidden items-center gap-2 pl-3 flex-shrink-0">
-          <img src="/image/logo.png" alt="Ponspot" className="w-8 h-8 rounded-xl object-contain" />
-          <span className="text-sm font-black text-white tracking-wide">PONSPOT</span>
-        </div>
 
-        {/* Center: Token Badge (desktop only) */}
-        <div className="hidden sm:flex flex-1 items-center gap-3 px-4">
+        {/* Center: System Proof Badges */}
+        <div className="flex-1 flex items-center gap-3 px-4">
           <a
             href={`${ROBINHOOD_CHAIN_CONFIG.blockExplorer}/token/${getPonspotTokenAddress() || PONSPOT_TOKEN_ADDRESS}`}
             target="_blank"
@@ -755,17 +725,15 @@ export default function PonscorePage() {
             <ExternalLink className="w-2.5 h-2.5 text-[#718D76] dark:text-emerald-400" />
           </a>
         </div>
-        {/* Spacer on mobile */}
-        <div className="flex-1 sm:hidden" />
 
         {/* Right: Wallet & Sound Controls */}
-        <div className="flex items-center gap-2 justify-end pr-3 sm:pr-4">
+        <div className="flex items-center gap-2.5 justify-end pr-4">
           {/* Connected Wallet Pill / Connect Button */}
           {isConnected && account ? (
             <div className="relative">
               <button
                 onClick={() => setShowWalletDropdown(!showWalletDropdown)}
-                className="tactile-btn flex items-center gap-2 px-2.5 sm:px-3 py-1.5 bg-white/65 hover:bg-white/85 dark:bg-[#14241d]/75 dark:hover:bg-[#1b3127] backdrop-blur-xl border border-white/80 dark:border-[#718D76]/35 rounded-xl transition-all shadow-sm text-[#243329] dark:text-white"
+                className="tactile-btn flex items-center gap-2 px-3 py-1.5 bg-white/65 hover:bg-white/85 dark:bg-[#14241d]/75 dark:hover:bg-[#1b3127] backdrop-blur-xl border border-white/80 dark:border-[#718D76]/35 rounded-xl transition-all shadow-sm text-[#243329] dark:text-white"
               >
                 <div className="w-7 h-7 rounded-xl bg-white/80 dark:bg-black/50 p-0.5 border border-white/90 dark:border-white/20 shadow-sm flex items-center justify-center overflow-hidden flex-shrink-0">
                   <img src={displayAvatar} alt="" className="w-full h-full rounded-lg object-cover" />
@@ -809,7 +777,7 @@ export default function PonscorePage() {
                       className="w-full btn-primary-sage py-2.5 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 shadow-sm"
                     >
                       <Edit3 className="w-3.5 h-3.5" />
-                      <span>EDIT PROFILE &amp; AVATAR</span>
+                      <span>EDIT PROFILE & AVATAR</span>
                     </button>
 
                     <div className="p-2.5 bg-white/60 dark:bg-[#14241d]/70 rounded-xl border border-white/80 dark:border-[#718D76]/30 flex justify-between items-center text-[11px]">
@@ -833,20 +801,19 @@ export default function PonscorePage() {
             </div>
           ) : (
             <button
-              onClick={() => handleInitiateConnectWallet('okx')}
-              className="btn-primary-sage px-3 sm:px-4 py-2 font-black rounded-xl text-xs transition-all flex items-center gap-1.5 shadow-sm"
+              onClick={() => setShowWalletModal(true)}
+              className="btn-primary-sage px-4 py-2 font-black rounded-xl text-xs transition-all flex items-center gap-1.5 shadow-sm active:scale-95"
             >
               <Wallet className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">CONNECT WALLET</span>
-              <span className="sm:hidden">Connect</span>
+              <span>CONNECT WALLET</span>
             </button>
           )}
         </div>
       </header>
 
-      {/* ═══════════ MAIN LAYOUT (3 cols desktop, 1 col mobile with tabs) ═══════════ */}
+      {/* ═══════════ MAIN 3-COLUMN LAYOUT ═══════════ */}
       <div className="flex-1 flex overflow-hidden min-h-0">
-        {/* Left: Chat Sidebar — desktop always visible, mobile only on chat tab */}
+        {/* Left: Chat Feed */}
         <LeftChatSidebar
           messages={messages}
           onSend={handleChat}
@@ -857,11 +824,10 @@ export default function PonscorePage() {
           isClaimingAirdrop={isClaimingAirdrop}
           airdropRewardAmount={airdropInfo.rewardPerClaim}
           airdropPoolBalance={airdropInfo.poolBalance}
-          className={mobileTab === 'chat' ? 'flex w-full lg:w-[275px]' : 'hidden lg:flex'}
         />
 
-        {/* Center: Main Ponscore Game Arena — visible when mobileTab is 'game' or on desktop */}
-        <main className={`flex-1 overflow-y-auto min-w-0 bg-transparent p-0 flex flex-col justify-between ${mobileTab === 'game' ? 'flex' : 'hidden lg:flex'}`}>
+        {/* Center: Main Ponscore Game Arena */}
+        <main className="flex-1 overflow-y-auto min-w-0 bg-transparent p-0 flex flex-col justify-between">
           <div className="px-4 lg:px-6 pt-4">
             <div className="max-w-4xl xl:max-w-5xl mx-auto">
               {/* ── GAME ARENA CONTENT STACK ── */}
@@ -909,7 +875,7 @@ export default function PonscorePage() {
             </AnimatePresence>
 
             {/* ── 1. CORE GAME HEADER & STATS ── */}
-            <div className="grid grid-cols-3 gap-2 sm:gap-2.5">
+            <div className="grid grid-cols-3 gap-2.5">
               {/* Prize Pool */}
               <div className="p-3.5 rounded-2xl glass-panel text-center relative overflow-hidden">
                 <p className="text-[10px] font-mono text-[#526256] dark:text-[#8fa596] uppercase tracking-wider mb-0.5 font-bold">PRIZE POOL</p>
@@ -1007,8 +973,8 @@ export default function PonscorePage() {
                 {/* Dynamic Button: Approve vs Bet */}
                 {!isConnected ? (
                   <button
-                    onClick={() => connectWallet('okx')}
-                    className="btn-primary-sage px-6 py-2.5 font-black rounded-xl text-xs transition-all flex-shrink-0"
+                    onClick={() => setShowWalletModal(true)}
+                    className="btn-primary-sage px-6 py-2.5 font-black rounded-xl text-xs transition-all flex-shrink-0 active:scale-95 shadow-md"
                   >
                     CONNECT WALLET
                   </button>
@@ -1263,7 +1229,7 @@ export default function PonscorePage() {
 
                   {/* Right: X / Twitter */}
                   <a
-                    href="https://x.com/play_ponspot"
+                    href="https://x.com"
                     target="_blank"
                     rel="noreferrer"
                     className="flex items-center gap-2.5 px-3.5 py-1.5 rounded-xl bg-white/70 dark:bg-[#122019] border border-white/80 dark:border-[#718D76]/35 hover:bg-white dark:hover:bg-[#182b22] transition-all shadow-sm group flex-shrink-0"
@@ -1273,7 +1239,7 @@ export default function PonscorePage() {
                     </div>
                     <div className="text-left leading-none">
                       <span className="text-[8px] text-[#526256] dark:text-slate-400 block">Follow our</span>
-                      <span className="text-[11px] font-black text-[#243329] dark:text-white">@play_ponspot</span>
+                      <span className="text-[11px] font-black text-[#243329] dark:text-white">X / Twitter</span>
                     </div>
                     <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-[8px] font-black border border-emerald-500/30 ml-1">
                       Follow now
@@ -1284,67 +1250,25 @@ export default function PonscorePage() {
             </footer>
         </main>
 
-        {/* Right: Round History Sidebar — desktop always visible, mobile only on history tab */}
-        <RightWinnerSidebar
-          pastRounds={pastGames.map((g) => ({
-            roundNumber: g.nonce,
-            winner: {
-              playerId: g.winner?.address || '',
-              playerName: g.winner?.name || '',
-              playerAvatar: g.winner?.avatar,
-              walletAddress: g.winner?.address,
-              ticketCount: g.winner?.ticketCount || 0,
-              potWon: g.winner?.prizePons || 0,
-              odds: g.winner?.odds || 0,
-              winningTicket: g.winner?.winningTicket || 0,
-              timestamp: g.endTime,
-            },
-            totalPot: g.totalPool,
-            totalPlayers: g.totalPlayers,
+        {/* Right: Round History Sidebar */}
+        <RightWinnerSidebar pastRounds={pastGames.map((g) => ({
+          roundNumber: g.nonce,
+          winner: {
+            playerId: g.winner?.address || '',
+            playerName: g.winner?.name || '',
+            playerAvatar: g.winner?.avatar,
+            walletAddress: g.winner?.address,
+            ticketCount: g.winner?.ticketCount || 0,
+            potWon: g.winner?.prizePons || 0,
+            odds: g.winner?.odds || 0,
+            winningTicket: g.winner?.winningTicket || 0,
             timestamp: g.endTime,
-          }))}
-          className={mobileTab === 'history' ? 'flex w-full lg:w-[275px]' : 'hidden lg:flex'}
-        />
+          },
+          totalPot: g.totalPool,
+          totalPlayers: g.totalPlayers,
+          timestamp: g.endTime,
+        }))} />
       </div>
-
-      </div>{/* end inner overflow-hidden wrapper */}
-
-      {/* ═══════════ MOBILE BOTTOM NAVIGATION BAR ═══════════ */}
-      <nav className="lg:hidden flex-shrink-0 flex items-stretch bg-[#0c1611]/97 backdrop-blur-2xl border-t border-[#718D76]/40 shadow-2xl z-50">
-        <button
-          onClick={() => setMobileTab('game')}
-          className={`flex-1 flex flex-col items-center justify-center gap-0.5 py-3 text-[10px] font-black transition-all ${
-            mobileTab === 'game'
-              ? 'text-emerald-400 border-t-2 border-emerald-400'
-              : 'text-slate-500 border-t-2 border-transparent'
-          }`}
-        >
-          <span className="text-lg leading-none">🎮</span>
-          <span>GAME</span>
-        </button>
-        <button
-          onClick={() => setMobileTab('chat')}
-          className={`flex-1 flex flex-col items-center justify-center gap-0.5 py-3 text-[10px] font-black transition-all ${
-            mobileTab === 'chat'
-              ? 'text-emerald-400 border-t-2 border-emerald-400'
-              : 'text-slate-500 border-t-2 border-transparent'
-          }`}
-        >
-          <span className="text-lg leading-none">💬</span>
-          <span>CHAT</span>
-        </button>
-        <button
-          onClick={() => setMobileTab('history')}
-          className={`flex-1 flex flex-col items-center justify-center gap-0.5 py-3 text-[10px] font-black transition-all ${
-            mobileTab === 'history'
-              ? 'text-emerald-400 border-t-2 border-emerald-400'
-              : 'text-slate-500 border-t-2 border-transparent'
-          }`}
-        >
-          <span className="text-lg leading-none">🏆</span>
-          <span>HISTORY</span>
-        </button>
-      </nav>
 
       {/* ── 6. FLOATING TRANSACTION NOTIFICATION POPUP ── */}
       <AnimatePresence>
@@ -1427,6 +1351,13 @@ export default function PonscorePage() {
         isOpen={showTermsModal}
         onAccept={handleAcceptTerms}
         onDecline={handleDeclineTerms}
+      />
+
+      {/* ── 14. MULTI-WALLET SELECTION MODAL ── */}
+      <WalletSelectModal
+        isOpen={showWalletModal}
+        onClose={() => setShowWalletModal(false)}
+        onSelect={(type) => connectWallet(type)}
       />
     </div>
   );
