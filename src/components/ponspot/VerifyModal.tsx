@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShieldCheck, Check, X, Search, RefreshCw, Copy, Cpu } from 'lucide-react';
 import { verifyGameClientSide } from '@/lib/web3/contracts';
+import { getApiBaseUrl } from '@/lib/apiConfig';
 
 interface VerifyModalProps {
   isOpen: boolean;
@@ -33,7 +34,8 @@ export const VerifyModal: React.FC<VerifyModalProps> = ({ isOpen, gameId, onClos
     setVerifyReport(null);
 
     try {
-      const res = await fetch(`http://localhost:4000/api/game/${id.trim()}`);
+      const apiBase = getApiBaseUrl();
+      const res = await fetch(`${apiBase}/api/game/${id.trim()}`);
       if (!res.ok) {
         throw new Error('Game not found or still in progress.');
       }

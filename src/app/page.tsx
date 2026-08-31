@@ -13,6 +13,7 @@ import Link from 'next/link';
 import { TermsModal } from '@/components/ponspot/TermsModal';
 import { ProfileModal } from '@/components/ponspot/ProfileModal';
 import { WalletSelectModal } from '@/components/ponspot/WalletSelectModal';
+import { getApiBaseUrl } from '@/lib/apiConfig';
 import { ROBINHOOD_CHAIN_CONFIG, PONSPOT_TOKEN_ADDRESS, PONS_TOKEN_ADDRESS, GAME_CONTRACT_ADDRESS, getGameContractAddress } from '@/lib/web3/contracts';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -90,7 +91,7 @@ export default function PonscorePage() {
   useEffect(() => {
     const fetchAirdrop = async () => {
       try {
-        const apiBase = typeof window !== 'undefined' ? `${window.location.protocol}//${window.location.hostname}:4000` : 'http://localhost:4000';
+        const apiBase = getApiBaseUrl();
         const res = await fetch(`${apiBase}/api/airdrop`);
         if (res.ok) {
           const data = await res.json();
@@ -288,7 +289,7 @@ export default function PonscorePage() {
   useEffect(() => {
     const syncContract = async () => {
       try {
-        const apiBase = typeof window !== 'undefined' ? `${window.location.protocol}//${window.location.hostname}:4000` : 'http://localhost:4000';
+        const apiBase = getApiBaseUrl();
         const res = await fetch(`${apiBase}/api/contract-address`);
         const data = await res.json();
         if (data.contractAddress && data.contractAddress.startsWith('0x')) {

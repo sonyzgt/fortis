@@ -3,6 +3,8 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 
+import { getSocketBaseUrl } from '@/lib/apiConfig';
+
 interface SocketContextType {
   socket: Socket | null;
   isConnected: boolean;
@@ -18,7 +20,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [isConnected, setIsConnected] = useState(false);
 
   useEffect(() => {
-    const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:4000';
+    const socketUrl = getSocketBaseUrl();
     const s = io(socketUrl, {
       transports: ['websocket', 'polling'],
       autoConnect: true,

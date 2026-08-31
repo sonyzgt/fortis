@@ -45,6 +45,7 @@ import {
   PONSPOT_TOKEN_ADDRESS,
   PONS_TOKEN_ADDRESS,
 } from '@/lib/web3/contracts';
+import { getApiBaseUrl } from '@/lib/apiConfig';
 
 export default function AdminPanelPage() {
   const { account, isConnected, connectWallet, refreshBalances } = usePonspotWeb3();
@@ -88,10 +89,7 @@ export default function AdminPanelPage() {
 
   // Get dynamic backend API URL
   const getApiBase = () => {
-    if (typeof window !== 'undefined') {
-      return `${window.location.protocol}//${window.location.hostname}:4000`;
-    }
-    return 'http://localhost:4000';
+    return getApiBaseUrl();
   };
 
   // Authenticated Admin Fetch Helper

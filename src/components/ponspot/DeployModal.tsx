@@ -6,6 +6,7 @@ import { ethers } from 'ethers';
 import { Rocket, Check, X, RefreshCw, ExternalLink, ShieldCheck, AlertTriangle } from 'lucide-react';
 import { deployPonspotJackpotContract } from '@/lib/web3/deployer';
 import { PONSPOT_TOKEN_ADDRESS, ROBINHOOD_CHAIN_CONFIG, getPonspotTokenAddress } from '@/lib/web3/contracts';
+import { getApiBaseUrl } from '@/lib/apiConfig';
 
 interface DeployModalProps {
   isOpen: boolean;
@@ -45,7 +46,7 @@ export const DeployModal: React.FC<DeployModalProps> = ({ isOpen, onClose, onSuc
       try {
         localStorage.setItem('ponspot_deployed_game_contract', address);
         localStorage.setItem('ponscore_deployed_game_contract', address);
-        const apiBase = typeof window !== 'undefined' ? `${window.location.protocol}//${window.location.hostname}:4000` : 'http://localhost:4000';
+        const apiBase = getApiBaseUrl();
         await fetch(`${apiBase}/api/admin/set-contract`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
