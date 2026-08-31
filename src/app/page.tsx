@@ -79,23 +79,25 @@ export default function PonscorePage() {
     rewardPerClaim: 100,
   });
 
-  // Initial Entrance Loading Splash (3.0s Fade, 3.5s Unmount)
-  const [isInitialLoading, setIsInitialLoading] = useState(true);
+  // Initial Entrance Loading Splash — use ref so StrictMode can't cancel it
   const [showSplashDom, setShowSplashDom] = useState(true);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const splashStarted = React.useRef(false);
 
   useEffect(() => {
-    const fadeTimer = setTimeout(() => {
+    if (splashStarted.current) return;
+    splashStarted.current = true;
+
+    const fadeTimer = window.setTimeout(() => {
       setIsInitialLoading(false);
     }, 3000);
 
-    const removeTimer = setTimeout(() => {
+    const removeTimer = window.setTimeout(() => {
       setShowSplashDom(false);
     }, 3500);
 
-    return () => {
-      clearTimeout(fadeTimer);
-      clearTimeout(removeTimer);
-    };
+    // intentionally NOT clearing on unmount — we want it to always fire
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const isCurrentWalletClaimed = useMemo(() => {
