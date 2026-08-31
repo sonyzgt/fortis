@@ -79,13 +79,23 @@ export default function PonscorePage() {
     rewardPerClaim: 100,
   });
 
-  // Initial Entrance Loading Splash with Rotating Logo
+  // Initial Entrance Loading Splash (2.0s Fade, 2.5s Unmount)
   const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [showSplashDom, setShowSplashDom] = useState(true);
+
   useEffect(() => {
-    const timer = setTimeout(() => {
+    const fadeTimer = setTimeout(() => {
       setIsInitialLoading(false);
-    }, 1200);
-    return () => clearTimeout(timer);
+    }, 2000);
+
+    const removeTimer = setTimeout(() => {
+      setShowSplashDom(false);
+    }, 2500);
+
+    return () => {
+      clearTimeout(fadeTimer);
+      clearTimeout(removeTimer);
+    };
   }, []);
 
   const isCurrentWalletClaimed = useMemo(() => {
@@ -724,59 +734,40 @@ export default function PonscorePage() {
   return (
     <div className="h-screen flex flex-col overflow-hidden cyber-grid-bg font-sans text-[#F5F8F3] dark">
       {/* ═══════════ INITIAL ENTRANCE LOADING OVERLAY ═══════════ */}
-      <AnimatePresence>
-        {isInitialLoading && (
-          <motion.div
-            initial={{ opacity: 1 }}
-            exit={{ opacity: 0, transition: { duration: 0.5, ease: 'easeInOut' } }}
-            className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#050b08] select-none font-sans"
-          >
-            {/* Ambient Background Glow */}
-            <div className="absolute w-80 h-80 rounded-full bg-emerald-500/10 blur-[100px] pointer-events-none" />
+      {showSplashDom && (
+        <div
+          className={`fixed inset-0 z-[999999] flex flex-col items-center justify-center bg-[#050b08] select-none font-sans overflow-hidden transition-opacity duration-500 ease-out ${
+            isInitialLoading ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+          }`}
+        >
+          {/* Ambient Background Glow */}
+          <div className="absolute w-96 h-96 rounded-full bg-emerald-500/15 blur-[120px] pointer-events-none" />
 
-            <div className="relative flex flex-col items-center gap-6 z-10">
-              {/* Rotating Logo */}
-              <div className="relative w-24 h-24 sm:w-28 sm:h-28 flex items-center justify-center">
-                {/* Outer Ring Spinner */}
-                <div className="absolute inset-0 rounded-full border-2 border-emerald-500/20 border-t-emerald-400 animate-spin" />
-                {/* Glowing Spinning Logo */}
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ repeat: Infinity, duration: 3, ease: 'linear' }}
-                  className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-[#0c1611] border border-emerald-500/40 p-2.5 shadow-[0_0_30px_rgba(16,185,129,0.3)] flex items-center justify-center"
-                >
-                  <img
-                    src="/image/logo.png"
-                    alt="Ponspot Loading"
-                    className="w-full h-full object-contain drop-shadow-md"
-                  />
-                </motion.div>
-              </div>
-
-              {/* Branding Text */}
-              <div className="text-center space-y-1.5">
-                <h1 className="text-xl sm:text-2xl font-black tracking-widest text-white font-mono">
-                  PONSPOT
-                </h1>
-                <p className="text-xs text-emerald-400 font-mono flex items-center justify-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
-                  <span>INITIALIZING DECENTRALIZED CASINO...</span>
-                </p>
-              </div>
-
-              {/* Minimal Loading Bar */}
-              <div className="w-48 h-1 bg-white/10 rounded-full overflow-hidden">
-                <motion.div
-                  initial={{ x: '-100%' }}
-                  animate={{ x: '100%' }}
-                  transition={{ repeat: Infinity, duration: 1.2, ease: 'easeInOut' }}
-                  className="w-full h-full bg-gradient-to-r from-transparent via-emerald-400 to-transparent"
+          <div className="relative flex flex-col items-center gap-6 z-20">
+            {/* Clean Glowing Rotating Logo */}
+            <div className="relative w-28 h-28 sm:w-32 sm:h-32 flex items-center justify-center">
+              {/* Outer Ring Orbit */}
+              <div className="absolute inset-0 rounded-full border-2 border-emerald-500/20 border-t-emerald-400 animate-spin" />
+              {/* Spinning Logo Icon */}
+              <div
+                className="w-20 h-20 sm:w-24 sm:h-24 flex items-center justify-center drop-shadow-[0_0_25px_rgba(16,185,129,0.45)] animate-spin"
+                style={{ animationDuration: '2s' }}
+              >
+                <img
+                  src="/image/logo.png"
+                  alt="Ponspot Loading"
+                  className="w-full h-full object-contain select-none pointer-events-none"
                 />
               </div>
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+
+            {/* Minimal Loading Bar */}
+            <div className="w-36 sm:w-44 h-1.5 bg-white/10 rounded-full overflow-hidden">
+              <div className="w-full h-full bg-gradient-to-r from-transparent via-emerald-400 to-transparent animate-pulse" />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ═══════════ TOP MINIMALIST TRADING NAVBAR ═══════════ */}
       <header className="flex-shrink-0 h-[96px] sm:h-[104px] flex items-center border-b border-white/60 dark:border-[#718D76]/30 bg-[#A4BAA2]/80 dark:bg-[#0c1611]/90 backdrop-blur-2xl z-40 shadow-sm transition-colors">
