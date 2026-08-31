@@ -17,7 +17,7 @@ export type TxState = 'idle' | 'approving' | 'betting' | 'claiming' | 'confirmed
 
 interface PonspotWeb3ContextType {
   account: string | null;
-  walletType: 'okx' | 'metamask' | 'rabby' | 'demo' | null;
+  walletType: 'okx' | 'metamask' | 'rabby' | 'bitget' | null;
   isConnected: boolean;
   ponsBalance: number;       // Number of PONSPOT
   ponsAllowance: number;     // Number of PONSPOT approved
@@ -25,7 +25,7 @@ interface PonspotWeb3ContextType {
   txState: TxState;
   lastTxHash: string | null;
   errorMessage: string | null;
-  connectWallet: (type?: 'okx' | 'metamask' | 'demo') => Promise<void>;
+  connectWallet: (type?: 'okx' | 'metamask' | 'rabby' | 'bitget') => Promise<void>;
   disconnectWallet: () => void;
   approveTokens: (amountPons: number) => Promise<string | null>;
   placeBet: (gameId: string, amountPons: number) => Promise<string | null>;
@@ -65,7 +65,7 @@ export const usePonscoreWeb3 = usePonspotWeb3;
 
 export const PonspotWeb3Provider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [account, setAccount] = useState<string | null>(null);
-  const [walletType, setWalletType] = useState<'okx' | 'metamask' | 'rabby' | 'demo' | null>(null);
+  const [walletType, setWalletType] = useState<'okx' | 'metamask' | 'rabby' | 'bitget' | null>(null);
   const [ponsBalance, setPonsBalance] = useState<number>(0);
   const [ponsAllowance, setPonsAllowance] = useState<number>(0);
   const [txState, setTxState] = useState<TxState>('idle');
@@ -117,15 +117,24 @@ export const PonspotWeb3Provider: React.FC<{ children: React.ReactNode }> = ({ c
     }
   }, [account, walletType, saveSession]);
 
-  const connectWallet = useCallback(async (type: 'okx' | 'metamask' | 'demo' = 'okx') => {
+  const connectWallet = useCallback(async (type: 'okx' | 'metamask' | 'rabby' | 'bitget' = 'okx') => {
     setErrorMessage(null);
 
     try {
       let selectedAccount = '';
       const win = typeof window !== 'undefined' ? (window as any) : {};
-      const providerObj = type === 'okx' ? win.okxwallet || win.ethereum : win.ethereum;
+      let providerObj = null;
+      if (type === 'okx') {
+        providerObj = win.okxwallet || win.ethereum;
+      } else if (type === 'rabby') {
+        providerObj = win.rabby || win.ethereum;
+      } else if (type === 'bitget') {
+        providerObj = win.bitkeep?.ethereum || win.ethereum;
+      } else {
+        providerObj = win.ethereum;
+      }
 
-      if (type !== 'demo' && providerObj) {
+      if (providerObj) {
         // Request account
         const accounts = await providerObj.request({ method: 'eth_requestAccounts' });
         if (!accounts || accounts.length === 0) {
