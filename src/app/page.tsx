@@ -79,26 +79,8 @@ export default function PonscorePage() {
     rewardPerClaim: 100,
   });
 
-  // Initial Entrance Loading Splash — use ref so StrictMode can't cancel it
-  const [showSplashDom, setShowSplashDom] = useState(true);
-  const [isInitialLoading, setIsInitialLoading] = useState(true);
-  const splashStarted = React.useRef(false);
 
-  useEffect(() => {
-    if (splashStarted.current) return;
-    splashStarted.current = true;
 
-    const fadeTimer = window.setTimeout(() => {
-      setIsInitialLoading(false);
-    }, 3000);
-
-    const removeTimer = window.setTimeout(() => {
-      setShowSplashDom(false);
-    }, 3500);
-
-    // intentionally NOT clearing on unmount — we want it to always fire
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const isCurrentWalletClaimed = useMemo(() => {
     if (!account) return false;
@@ -735,41 +717,7 @@ export default function PonscorePage() {
 
   return (
     <div className="h-screen flex flex-col overflow-hidden cyber-grid-bg font-sans text-[#F5F8F3] dark">
-      {/* ═══════════ INITIAL ENTRANCE LOADING OVERLAY ═══════════ */}
-      {showSplashDom && (
-        <div
-          className={`fixed inset-0 z-[999999] flex flex-col items-center justify-center bg-[#050b08] select-none font-sans overflow-hidden transition-opacity duration-500 ease-out ${
-            isInitialLoading ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
-          }`}
-        >
-          {/* Ambient Background Glow */}
-          <div className="absolute w-96 h-96 rounded-full bg-emerald-500/15 blur-[120px] pointer-events-none" />
 
-          <div className="relative flex flex-col items-center gap-6 z-20">
-            {/* Clean Glowing Rotating Logo */}
-            <div className="relative w-28 h-28 sm:w-32 sm:h-32 flex items-center justify-center">
-              {/* Outer Ring Orbit */}
-              <div className="absolute inset-0 rounded-full border-2 border-emerald-500/20 border-t-emerald-400 animate-spin" />
-              {/* Spinning Logo Icon */}
-              <div
-                className="w-20 h-20 sm:w-24 sm:h-24 flex items-center justify-center drop-shadow-[0_0_25px_rgba(16,185,129,0.45)] animate-spin"
-                style={{ animationDuration: '2s' }}
-              >
-                <img
-                  src="/image/logo.png"
-                  alt="Ponspot Loading"
-                  className="w-full h-full object-contain select-none pointer-events-none"
-                />
-              </div>
-            </div>
-
-            {/* Minimal Loading Bar */}
-            <div className="w-36 sm:w-44 h-1.5 bg-white/10 rounded-full overflow-hidden">
-              <div className="w-full h-full bg-gradient-to-r from-transparent via-emerald-400 to-transparent animate-pulse" />
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* ═══════════ TOP MINIMALIST TRADING NAVBAR ═══════════ */}
       <header className="flex-shrink-0 h-[96px] sm:h-[104px] flex items-center border-b border-white/60 dark:border-[#718D76]/30 bg-[#A4BAA2]/80 dark:bg-[#0c1611]/90 backdrop-blur-2xl z-40 shadow-sm transition-colors">
