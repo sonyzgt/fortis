@@ -55,7 +55,7 @@ export const LeftChatSidebar: React.FC<LeftChatSidebarProps> = ({
   };
 
   return (
-    <aside className="w-[275px] flex-shrink-0 flex flex-col bg-[#A4BAA2]/75 dark:bg-[#0e1914]/85 backdrop-blur-2xl border-r border-white/60 dark:border-[#718D76]/30 h-full select-none transition-colors">
+    <aside className="w-full lg:w-[275px] flex-shrink-0 flex flex-col bg-[#A4BAA2]/75 dark:bg-[#0e1914]/85 backdrop-blur-2xl border-r border-white/60 dark:border-[#718D76]/30 h-full select-none transition-colors overflow-hidden">
       {/* Chat Header */}
       <div className="flex items-center justify-between px-3.5 py-3 border-b border-white/50 dark:border-[#718D76]/25">
         <div className="flex items-center gap-2">

@@ -648,7 +648,7 @@ export const RightWinnerSidebar: React.FC<RightWinnerSidebarProps> = ({ pastRoun
   ];
 
   return (
-    <aside className="w-[275px] flex-shrink-0 flex flex-col bg-[#A4BAA2]/75 dark:bg-[#0e1914]/85 backdrop-blur-2xl border-l border-white/60 dark:border-[#718D76]/30 h-full overflow-y-auto transition-colors">
+    <aside className="w-full lg:w-[275px] flex-shrink-0 flex flex-col bg-[#A4BAA2]/75 dark:bg-[#0e1914]/85 backdrop-blur-2xl border-l border-white/60 dark:border-[#718D76]/30 h-full overflow-y-auto transition-colors">
       {/* Last Winners Header */}
       <div className="m-3 p-3 rounded-2xl bg-white/50 dark:bg-[#14241d]/70 border border-white/70 dark:border-[#718D76]/35 shadow-sm">
         <p className="text-[9px] text-[#718D76] dark:text-emerald-400 font-black tracking-wider flex items-center gap-1.5 uppercase">

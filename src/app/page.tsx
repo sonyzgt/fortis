@@ -200,6 +200,9 @@ export default function PonscorePage() {
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [showWalletModal, setShowWalletModal] = useState(false);
 
+  // Mobile panel tab: 'chat' | 'arena' | 'history'
+  const [mobileTab, setMobileTab] = useState<'chat' | 'arena' | 'history'>('arena');
+
   const handleInitiateConnectWallet = (targetType: 'okx' | 'metamask' | 'rabby' | 'bitget' = 'okx') => {
     connectWallet(targetType);
   };
@@ -695,9 +698,9 @@ export default function PonscorePage() {
   return (
     <div className="h-screen flex flex-col overflow-hidden cyber-grid-bg font-sans text-[#F5F8F3] dark">
       {/* ═══════════ TOP MINIMALIST TRADING NAVBAR ═══════════ */}
-      <header className="flex-shrink-0 h-[96px] sm:h-[104px] flex items-center border-b border-white/60 dark:border-[#718D76]/30 bg-[#A4BAA2]/80 dark:bg-[#0c1611]/90 backdrop-blur-2xl z-40 shadow-sm transition-colors">
-        {/* Left: Branding Video Banner matching the exact sidebar width with zero space */}
-        <div className="w-[275px] h-full flex-shrink-0 border-r border-white/50 dark:border-[#718D76]/30 overflow-hidden flex items-center justify-center p-0 m-0">
+      <header className="flex-shrink-0 h-[60px] sm:h-[96px] lg:h-[104px] flex items-center border-b border-white/60 dark:border-[#718D76]/30 bg-[#A4BAA2]/80 dark:bg-[#0c1611]/90 backdrop-blur-2xl z-40 shadow-sm transition-colors">
+        {/* Left: Branding Video Banner (hidden on mobile, shown on lg) */}
+        <div className="hidden lg:flex w-[275px] h-full flex-shrink-0 border-r border-white/50 dark:border-[#718D76]/30 overflow-hidden items-center justify-center p-0 m-0">
           <video
             src="/image/banner.mp4"
             autoPlay
@@ -708,8 +711,14 @@ export default function PonscorePage() {
           />
         </div>
 
-        {/* Center: System Proof Badges */}
-        <div className="flex-1 flex items-center gap-3 px-4">
+        {/* Mobile: Logo + Name */}
+        <div className="flex lg:hidden items-center gap-2 pl-3 flex-shrink-0">
+          <img src="/image/logo.png" alt="Ponspot" className="w-7 h-7 rounded-lg object-contain" />
+          <span className="text-sm font-black text-[#243329] dark:text-white tracking-widest font-mono">PONSPOT</span>
+        </div>
+
+        {/* Center: System Proof Badges (hidden on mobile) */}
+        <div className="hidden sm:flex flex-1 items-center gap-3 px-4">
           <a
             href={`${ROBINHOOD_CHAIN_CONFIG.blockExplorer}/token/${getPonspotTokenAddress() || PONSPOT_TOKEN_ADDRESS}`}
             target="_blank"
@@ -726,14 +735,17 @@ export default function PonscorePage() {
           </a>
         </div>
 
+        {/* Spacer on mobile */}
+        <div className="flex-1 sm:hidden" />
+
         {/* Right: Wallet & Sound Controls */}
-        <div className="flex items-center gap-2.5 justify-end pr-4">
+        <div className="flex items-center gap-2 sm:gap-2.5 justify-end pr-3 sm:pr-4">
           {/* Connected Wallet Pill / Connect Button */}
           {isConnected && account ? (
             <div className="relative">
               <button
                 onClick={() => setShowWalletDropdown(!showWalletDropdown)}
-                className="tactile-btn flex items-center gap-2 px-3 py-1.5 bg-white/65 hover:bg-white/85 dark:bg-[#14241d]/75 dark:hover:bg-[#1b3127] backdrop-blur-xl border border-white/80 dark:border-[#718D76]/35 rounded-xl transition-all shadow-sm text-[#243329] dark:text-white"
+                className="tactile-btn flex items-center gap-2 px-2 sm:px-3 py-1.5 bg-white/65 hover:bg-white/85 dark:bg-[#14241d]/75 dark:hover:bg-[#1b3127] backdrop-blur-xl border border-white/80 dark:border-[#718D76]/35 rounded-xl transition-all shadow-sm text-[#243329] dark:text-white"
               >
                 <div className="w-7 h-7 rounded-xl bg-white/80 dark:bg-black/50 p-0.5 border border-white/90 dark:border-white/20 shadow-sm flex items-center justify-center overflow-hidden flex-shrink-0">
                   <img src={displayAvatar} alt="" className="w-full h-full rounded-lg object-cover" />
@@ -802,31 +814,38 @@ export default function PonscorePage() {
           ) : (
             <button
               onClick={() => setShowWalletModal(true)}
-              className="btn-primary-sage px-4 py-2 font-black rounded-xl text-xs transition-all flex items-center gap-1.5 shadow-sm active:scale-95"
+              className="btn-primary-sage px-3 sm:px-4 py-2 font-black rounded-xl text-xs transition-all flex items-center gap-1.5 shadow-sm active:scale-95"
             >
               <Wallet className="w-3.5 h-3.5" />
-              <span>CONNECT WALLET</span>
+              <span className="hidden sm:inline">CONNECT WALLET</span>
+              <span className="sm:hidden">Connect</span>
             </button>
           )}
         </div>
       </header>
 
       {/* ═══════════ MAIN 3-COLUMN LAYOUT ═══════════ */}
-      <div className="flex-1 flex overflow-hidden min-h-0">
+      {/* On mobile: show one panel at a time controlled by mobileTab state */}
+      {/* On desktop lg+: show all 3 columns side by side */}
+      <div className="flex-1 flex overflow-hidden min-h-0 pb-[56px] lg:pb-0">
         {/* Left: Chat Feed */}
-        <LeftChatSidebar
-          messages={messages}
-          onSend={handleChat}
-          currentUserId={account || undefined}
-          levelInfo={levelInfo}
-          hasClaimedAirdrop={isCurrentWalletClaimed}
-          onClaimAirdrop={handleClaimAirdrop}
-          isClaimingAirdrop={isClaimingAirdrop}
-          airdropRewardAmount={airdropInfo.rewardPerClaim}
-          airdropPoolBalance={airdropInfo.poolBalance}
-        />
+        {/* Mobile: only show when mobileTab === 'chat'; Desktop: always show */}
+        <div className={`${mobileTab === 'chat' ? 'flex' : 'hidden'} lg:flex flex-col w-full lg:w-auto h-full`}>
+          <LeftChatSidebar
+            messages={messages}
+            onSend={handleChat}
+            currentUserId={account || undefined}
+            levelInfo={levelInfo}
+            hasClaimedAirdrop={isCurrentWalletClaimed}
+            onClaimAirdrop={handleClaimAirdrop}
+            isClaimingAirdrop={isClaimingAirdrop}
+            airdropRewardAmount={airdropInfo.rewardPerClaim}
+            airdropPoolBalance={airdropInfo.poolBalance}
+          />
+        </div>
 
-        {/* Center: Main Ponscore Game Arena */}
+        {/* Center: Main Arena – always visible on desktop; show only on 'arena' tab on mobile */}
+        <div className={`${mobileTab === 'arena' ? 'flex' : 'hidden'} lg:flex flex-col flex-1 min-w-0 h-full`}>
         <main className="flex-1 overflow-y-auto min-w-0 bg-transparent p-0 flex flex-col justify-between">
           <div className="px-4 lg:px-6 pt-4">
             <div className="max-w-4xl xl:max-w-5xl mx-auto">
@@ -1153,8 +1172,7 @@ export default function PonscorePage() {
 
           {/* ═══════════ MAIN SITE FOOTER (100% EDGE-TO-EDGE FULL BLACK) ═══════════ */}
           <footer
-            style={{ marginTop: '450px' }}
-            className="w-full bg-black dark:bg-[#050a07] border-t border-black/80 dark:border-[#718D76]/20 pt-10 pb-4 px-4 lg:px-6 select-none font-sans text-xs"
+            className="w-full bg-black dark:bg-[#050a07] border-t border-black/80 dark:border-[#718D76]/20 mt-16 lg:mt-[420px] pt-8 pb-20 lg:pb-4 px-4 lg:px-6 select-none font-sans text-xs"
           >
             <div className="max-w-4xl xl:max-w-5xl mx-auto space-y-4">
               {/* Top Card: About Ponspot & Terms */}
@@ -1249,26 +1267,55 @@ export default function PonscorePage() {
               </div>
             </footer>
         </main>
+        </div>{/* end arena div */}
 
         {/* Right: Round History Sidebar */}
-        <RightWinnerSidebar pastRounds={pastGames.map((g) => ({
-          roundNumber: g.nonce,
-          winner: {
-            playerId: g.winner?.address || '',
-            playerName: g.winner?.name || '',
-            playerAvatar: g.winner?.avatar,
-            walletAddress: g.winner?.address,
-            ticketCount: g.winner?.ticketCount || 0,
-            potWon: g.winner?.prizePons || 0,
-            odds: g.winner?.odds || 0,
-            winningTicket: g.winner?.winningTicket || 0,
+        {/* Mobile: only show when mobileTab === 'history'; Desktop: always show */}
+        <div className={`${mobileTab === 'history' ? 'flex' : 'hidden'} lg:flex flex-col w-full lg:w-auto h-full`}>
+          <RightWinnerSidebar pastRounds={pastGames.map((g) => ({
+            roundNumber: g.nonce,
+            winner: {
+              playerId: g.winner?.address || '',
+              playerName: g.winner?.name || '',
+              playerAvatar: g.winner?.avatar,
+              walletAddress: g.winner?.address,
+              ticketCount: g.winner?.ticketCount || 0,
+              potWon: g.winner?.prizePons || 0,
+              odds: g.winner?.odds || 0,
+              winningTicket: g.winner?.winningTicket || 0,
+              timestamp: g.endTime,
+            },
+            totalPot: g.totalPool,
+            totalPlayers: g.totalPlayers,
             timestamp: g.endTime,
-          },
-          totalPot: g.totalPool,
-          totalPlayers: g.totalPlayers,
-          timestamp: g.endTime,
-        }))} />
+          }))} />
+        </div>
       </div>
+
+      {/* ═══════════ MOBILE BOTTOM NAV BAR ═══════════ */}
+      <nav className="fixed bottom-0 left-0 right-0 z-50 flex lg:hidden items-stretch h-14 bg-[#0c1611]/95 dark:bg-[#0a1209]/95 backdrop-blur-2xl border-t border-[#718D76]/30 shadow-2xl">
+        <button
+          onClick={() => setMobileTab('chat')}
+          className={`flex-1 flex flex-col items-center justify-center gap-0.5 text-[10px] font-black tracking-wide transition-all active:scale-95 ${mobileTab === 'chat' ? 'text-emerald-400 bg-emerald-400/10' : 'text-slate-500 hover:text-slate-300'}`}
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+          <span>CHAT</span>
+        </button>
+        <button
+          onClick={() => setMobileTab('arena')}
+          className={`flex-1 flex flex-col items-center justify-center gap-0.5 text-[10px] font-black tracking-wide transition-all active:scale-95 ${mobileTab === 'arena' ? 'text-emerald-400 bg-emerald-400/10' : 'text-slate-500 hover:text-slate-300'}`}
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+          <span>ARENA</span>
+        </button>
+        <button
+          onClick={() => setMobileTab('history')}
+          className={`flex-1 flex flex-col items-center justify-center gap-0.5 text-[10px] font-black tracking-wide transition-all active:scale-95 ${mobileTab === 'history' ? 'text-emerald-400 bg-emerald-400/10' : 'text-slate-500 hover:text-slate-300'}`}
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>
+          <span>HISTORY</span>
+        </button>
+      </nav>
 
       {/* ── 6. FLOATING TRANSACTION NOTIFICATION POPUP ── */}
       <AnimatePresence>
