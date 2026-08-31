@@ -451,7 +451,13 @@ export class PonspotEngine {
 
   public verifyGameById(gameId: string): VerificationReport | null {
     const game = this.getGameById(gameId);
-    if (!game || !game.revealedServerSeed || game.winningTicket === undefined) {
+    if (
+      !game ||
+      !game.revealedServerSeed ||
+      game.winningTicket === undefined ||
+      !game.winningHash ||
+      !game.gameHash
+    ) {
       return null;
     }
 
@@ -459,10 +465,12 @@ export class PonspotEngine {
       game.revealedServerSeed,
       game.serverSeedHash,
       game.publicSeed,
-      game.gameId,
       game.nonce,
-      game.totalTickets,
-      game.winningTicket
+      game.gameId,
+      game.gameHash,
+      game.winningHash,
+      game.winningTicket,
+      game.totalTickets
     );
   }
 
