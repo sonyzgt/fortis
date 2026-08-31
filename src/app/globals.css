@@ -1,0 +1,148 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  min-height: 100%;
+  overflow-x: hidden;
+}
+
+:root {
+  --canvas-bg: #B0C5AD;
+  --text-base: #243329;
+  --canvas-radial-1: rgba(245, 248, 243, 0.7);
+  --canvas-radial-2: rgba(195, 213, 193, 0.5);
+  --canvas-grid: rgba(113, 141, 118, 0.08);
+}
+
+html.dark, body.dark, .dark {
+  --canvas-bg: #0c1410;
+  --text-base: #F5F8F3;
+  --canvas-radial-1: rgba(24, 46, 35, 0.7);
+  --canvas-radial-2: rgba(14, 26, 20, 0.6);
+  --canvas-grid: rgba(113, 141, 118, 0.12);
+}
+
+body {
+  background-color: var(--canvas-bg);
+  background-image: url('/image/background.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  color: var(--text-base);
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  letter-spacing: -0.01em;
+}
+
+/* Custom PONSPOT ambient background */
+.cyber-grid-bg {
+  background-color: var(--canvas-bg);
+  background-image: url('/image/background.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  transition: background 0.3s ease;
+}
+
+/* Frosted glassmorphism panels (translucent soft white-mint in light, dark forest sage in dark) */
+.glass-panel {
+  background: linear-gradient(175deg, rgba(255, 255, 255, 0.78) 0%, rgba(245, 248, 243, 0.62) 100%);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 12px 36px 0 rgba(36, 51, 41, 0.07), inset 0 1.5px 1px 0 rgba(255, 255, 255, 1);
+  transition: all 0.3s ease;
+}
+
+.dark .glass-panel {
+  background: linear-gradient(175deg, rgba(18, 32, 25, 0.85) 0%, rgba(11, 20, 15, 0.8) 100%);
+  border: 1px solid rgba(113, 141, 118, 0.35);
+  box-shadow: 0 12px 36px 0 rgba(0, 0, 0, 0.5), inset 0 1px 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.glass-panel-active {
+  background: rgba(245, 248, 243, 0.85) !important;
+  border-color: rgba(113, 141, 118, 0.75) !important;
+  box-shadow: 0 8px 30px rgba(113, 141, 118, 0.25), inset 0 1px 1px rgba(255, 255, 255, 0.95) !important;
+}
+
+html.dark .glass-panel-active,
+.dark .glass-panel-active {
+  background: rgba(22, 38, 30, 0.85) !important;
+  border-color: rgba(113, 141, 118, 0.75) !important;
+  box-shadow: 0 8px 30px rgba(113, 141, 118, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.15) !important;
+}
+
+/* Tactile rounded controls */
+.tactile-btn {
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 3px 10px rgba(36, 51, 41, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+.tactile-btn:active {
+  transform: scale(0.97);
+  box-shadow: 0 1px 3px rgba(36, 51, 41, 0.15), inset 0 1px 2px rgba(36, 51, 41, 0.08);
+}
+
+/* Primary dark sage button */
+.btn-primary-sage {
+  background: linear-gradient(180deg, #718D76 0%, #5E7A63 100%);
+  color: #F5F8F3;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 4px 14px rgba(94, 122, 99, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+.btn-primary-sage:hover {
+  background: linear-gradient(180deg, #648069 0%, #526C57 100%);
+}
+
+/* Secondary glass button */
+.btn-secondary-glass {
+  background: rgba(245, 248, 243, 0.75);
+  color: #243329;
+  border: 1px solid rgba(255, 255, 255, 0.95);
+  box-shadow: 0 2px 8px rgba(36, 51, 41, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.95);
+}
+.btn-secondary-glass:hover {
+  background: rgba(255, 255, 255, 0.95);
+}
+
+html.dark .btn-secondary-glass,
+.dark .btn-secondary-glass {
+  background: rgba(20, 36, 28, 0.75);
+  color: #F5F8F3;
+  border: 1px solid rgba(113, 141, 118, 0.35);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+html.dark .btn-secondary-glass:hover,
+.dark .btn-secondary-glass:hover {
+  background: rgba(28, 50, 39, 0.9);
+}
+
+/* Monospace font for digits and tokens */
+.font-mono, .timer-mono {
+  font-family: 'JetBrains Mono', 'SF Mono', Menlo, Monaco, Consolas, monospace !important;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+  letter-spacing: -0.02em;
+}
+
+/* Soft sage scrollbar */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(113, 141, 118, 0.35); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(113, 141, 118, 0.6); }
+
+/* Ambient winner soft pulse */
+@keyframes winner-pulse {
+  0%, 100% { box-shadow: 0 0 18px rgba(113, 141, 118, 0.4); }
+  50%       { box-shadow: 0 0 35px rgba(113, 141, 118, 0.7), 0 0 50px rgba(113, 141, 118, 0.25); }
+}
+.animate-winner-pulse { animation: winner-pulse 2s ease-in-out infinite; }
