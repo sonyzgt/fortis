@@ -79,6 +79,15 @@ export default function PonscorePage() {
     rewardPerClaim: 100,
   });
 
+  // Initial Entrance Loading Splash with Rotating Logo
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsInitialLoading(false);
+    }, 1200);
+    return () => clearTimeout(timer);
+  }, []);
+
   const isCurrentWalletClaimed = useMemo(() => {
     if (!account) return false;
     const norm = account.toLowerCase();
@@ -714,6 +723,61 @@ export default function PonscorePage() {
 
   return (
     <div className="h-screen flex flex-col overflow-hidden cyber-grid-bg font-sans text-[#F5F8F3] dark">
+      {/* ═══════════ INITIAL ENTRANCE LOADING OVERLAY ═══════════ */}
+      <AnimatePresence>
+        {isInitialLoading && (
+          <motion.div
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0, transition: { duration: 0.5, ease: 'easeInOut' } }}
+            className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#050b08] select-none font-sans"
+          >
+            {/* Ambient Background Glow */}
+            <div className="absolute w-80 h-80 rounded-full bg-emerald-500/10 blur-[100px] pointer-events-none" />
+
+            <div className="relative flex flex-col items-center gap-6 z-10">
+              {/* Rotating Logo */}
+              <div className="relative w-24 h-24 sm:w-28 sm:h-28 flex items-center justify-center">
+                {/* Outer Ring Spinner */}
+                <div className="absolute inset-0 rounded-full border-2 border-emerald-500/20 border-t-emerald-400 animate-spin" />
+                {/* Glowing Spinning Logo */}
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ repeat: Infinity, duration: 3, ease: 'linear' }}
+                  className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-[#0c1611] border border-emerald-500/40 p-2.5 shadow-[0_0_30px_rgba(16,185,129,0.3)] flex items-center justify-center"
+                >
+                  <img
+                    src="/image/logo.png"
+                    alt="Ponspot Loading"
+                    className="w-full h-full object-contain drop-shadow-md"
+                  />
+                </motion.div>
+              </div>
+
+              {/* Branding Text */}
+              <div className="text-center space-y-1.5">
+                <h1 className="text-xl sm:text-2xl font-black tracking-widest text-white font-mono">
+                  PONSPOT
+                </h1>
+                <p className="text-xs text-emerald-400 font-mono flex items-center justify-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                  <span>INITIALIZING DECENTRALIZED CASINO...</span>
+                </p>
+              </div>
+
+              {/* Minimal Loading Bar */}
+              <div className="w-48 h-1 bg-white/10 rounded-full overflow-hidden">
+                <motion.div
+                  initial={{ x: '-100%' }}
+                  animate={{ x: '100%' }}
+                  transition={{ repeat: Infinity, duration: 1.2, ease: 'easeInOut' }}
+                  className="w-full h-full bg-gradient-to-r from-transparent via-emerald-400 to-transparent"
+                />
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* ═══════════ TOP MINIMALIST TRADING NAVBAR ═══════════ */}
       <header className="flex-shrink-0 h-[96px] sm:h-[104px] flex items-center border-b border-white/60 dark:border-[#718D76]/30 bg-[#A4BAA2]/80 dark:bg-[#0c1611]/90 backdrop-blur-2xl z-40 shadow-sm transition-colors">
         {/* Left: Branding Video Banner matching the exact sidebar width with zero space */}
@@ -1249,7 +1313,7 @@ export default function PonscorePage() {
 
                   {/* Right: X / Twitter */}
                   <a
-                    href="https://x.com"
+                    href="https://x.com/play_ponspot"
                     target="_blank"
                     rel="noreferrer"
                     className="flex items-center gap-2.5 px-3.5 py-1.5 rounded-xl bg-white/70 dark:bg-[#122019] border border-white/80 dark:border-[#718D76]/35 hover:bg-white dark:hover:bg-[#182b22] transition-all shadow-sm group flex-shrink-0"
@@ -1259,7 +1323,7 @@ export default function PonscorePage() {
                     </div>
                     <div className="text-left leading-none">
                       <span className="text-[8px] text-[#526256] dark:text-slate-400 block">Follow our</span>
-                      <span className="text-[11px] font-black text-[#243329] dark:text-white">X / Twitter</span>
+                      <span className="text-[11px] font-black text-[#243329] dark:text-white">@play_ponspot</span>
                     </div>
                     <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-[8px] font-black border border-emerald-500/30 ml-1">
                       Follow now
