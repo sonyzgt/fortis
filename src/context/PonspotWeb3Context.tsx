@@ -169,24 +169,22 @@ export const PonspotWeb3Provider: React.FC<{ children: React.ReactNode }> = ({ c
         const hexChars = '0123456789abcdef';
         let fake = '0x';
         for (let i = 0; i < 40; i++) fake += hexChars[Math.floor(Math.random() * 16)];
-        selectedAccount = fake;
+        throw new Error('Provider not found');
       }
 
       setAccount(selectedAccount);
       setWalletType(type);
 
-      let initialBal = 50000;
+      let initialBal = 0;
       let initialAllow = 0;
 
-      if (type !== 'demo') {
-        try {
-          const rawBal = await getPonspotBalance(selectedAccount);
-          initialBal = Number(ethers.formatEther(rawBal));
-          const rawAllow = await getPonspotAllowance(selectedAccount, GAME_CONTRACT_ADDRESS);
-          initialAllow = Number(ethers.formatEther(rawAllow));
-        } catch (e) {
-          console.warn('Could not read real on-chain balance on connect:', e);
-        }
+      try {
+        const rawBal = await getPonspotBalance(selectedAccount);
+        initialBal = Number(ethers.formatEther(rawBal));
+        const rawAllow = await getPonspotAllowance(selectedAccount, GAME_CONTRACT_ADDRESS);
+        initialAllow = Number(ethers.formatEther(rawAllow));
+      } catch (e) {
+        console.warn('Could not read real on-chain balance on connect:', e);
       }
 
       setPonsBalance(initialBal);
@@ -225,38 +223,30 @@ export const PonspotWeb3Provider: React.FC<{ children: React.ReactNode }> = ({ c
       const providerObj = walletType === 'okx' ? win.okxwallet || win.ethereum : win.ethereum;
 
       let txHash = '';
-      if (walletType !== 'demo' && providerObj) {
+      if (providerObj) {
         try {
           const browserProvider = new ethers.BrowserProvider(providerObj);
           const signer = await browserProvider.getSigner();
           const amountWei = ethers.parseEther(amountPons.toString());
           txHash = await approvePonspot(signer, amountWei, GAME_CONTRACT_ADDRESS);
         } catch (approveErr: any) {
-          console.warn('On-chain approve skipped or failed, using simulated confirmation:', approveErr);
-          const hex = Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
-          txHash = `0x${hex}`;
+          console.warn('On-chain approve error:', approveErr);
+          throw approveErr;
         }
-      } else {
-        // Simulated Robinhood L2 nitro confirmation
-        await new Promise((res) => setTimeout(res, 600));
-        const hex = Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
-        txHash = `0x${hex}`;
       }
 
-      setPonsAllowance((prev) => prev + amountPons);
       setLastTxHash(txHash);
       setTxState('confirmed');
+      await refreshBalances();
       setTimeout(() => setTxState('idle'), 2500);
-
-      saveSession(account, walletType, ponsBalance, ponsAllowance + amountPons);
       return txHash;
     } catch (e: any) {
       setTxState('failed');
-      setErrorMessage(e?.message || 'Approval rejected');
+      setErrorMessage(e?.message || 'Approval failed');
       setTimeout(() => setTxState('idle'), 4000);
       return null;
     }
-  }, [account, walletType, ponsBalance, ponsAllowance, saveSession]);
+  }, [account, walletType, refreshBalances]);
 
   /**
    * Place Bet directly on-chain
@@ -275,34 +265,14 @@ export const PonspotWeb3Provider: React.FC<{ children: React.ReactNode }> = ({ c
       const providerObj = walletType === 'okx' ? win.okxwallet || win.ethereum : win.ethereum;
 
       let txHash = '';
-      if (walletType !== 'demo' && providerObj) {
-        try {
-          const browserProvider = new ethers.BrowserProvider(providerObj);
-          const signer = await browserProvider.getSigner();
-          const amountWei = ethers.parseEther(amountPons.toString());
-          // Executes real on-chain token transfer on Robinhood Chain!
-          txHash = await placeBetOnChain(signer, gameId, amountWei);
-          // Refresh real on-chain balance immediately!
-          await refreshBalances();
-        } catch (onChainErr: any) {
-          console.warn('On-chain bet call skipped or failed, using simulated L2 transaction:', onChainErr);
-          const hex = Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
-          txHash = `0x${hex}`;
-          const newBal = Math.max(0, ponsBalance - amountPons);
-          const newAllow = Math.max(0, ponsAllowance - amountPons);
-          setPonsBalance(newBal);
-          setPonsAllowance(newAllow);
-          saveSession(account, walletType, newBal, newAllow);
-        }
-      } else {
-        await new Promise((res) => setTimeout(res, 600));
-        const hex = Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
-        txHash = `0x${hex}`;
-        const newBal = Math.max(0, ponsBalance - amountPons);
-        const newAllow = Math.max(0, ponsAllowance - amountPons);
-        setPonsBalance(newBal);
-        setPonsAllowance(newAllow);
-        saveSession(account, walletType, newBal, newAllow);
+      if (providerObj) {
+        const browserProvider = new ethers.BrowserProvider(providerObj);
+        const signer = await browserProvider.getSigner();
+        const amountWei = ethers.parseEther(amountPons.toString());
+        // Executes real on-chain token transfer on Robinhood Chain!
+        txHash = await placeBetOnChain(signer, gameId, amountWei);
+        // Refresh real on-chain balance immediately!
+        await refreshBalances();
       }
 
       setLastTxHash(txHash);
@@ -315,7 +285,7 @@ export const PonspotWeb3Provider: React.FC<{ children: React.ReactNode }> = ({ c
       setTimeout(() => setTxState('idle'), 4000);
       return null;
     }
-  }, [account, walletType, ponsBalance, ponsAllowance, refreshBalances, saveSession]);
+  }, [account, walletType, ponsBalance, refreshBalances]);
 
   /**
    * Claim Winnings directly from smart contract
@@ -336,7 +306,7 @@ export const PonspotWeb3Provider: React.FC<{ children: React.ReactNode }> = ({ c
         const providerObj = walletType === 'okx' ? win.okxwallet || win.ethereum : win.ethereum;
 
         let txHash = '';
-        if (walletType !== 'demo' && providerObj) {
+        if (providerObj) {
           const browserProvider = new ethers.BrowserProvider(providerObj);
           const signer = await browserProvider.getSigner();
           txHash = await claimWinningsOnChain(
@@ -346,10 +316,6 @@ export const PonspotWeb3Provider: React.FC<{ children: React.ReactNode }> = ({ c
             serverSeedHex,
             serverSeedHashHex
           );
-        } else {
-          await new Promise((res) => setTimeout(res, 1500));
-          const hex = Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
-          txHash = `0x${hex}`;
         }
 
         setLastTxHash(txHash);
@@ -383,15 +349,13 @@ export const PonspotWeb3Provider: React.FC<{ children: React.ReactNode }> = ({ c
       providerObj = win.ethereum;
     }
 
-    if (walletType !== 'demo' && providerObj) {
+    if (providerObj) {
       const browserProvider = new ethers.BrowserProvider(providerObj);
       const signer = await browserProvider.getSigner();
       return await signer.signMessage(message);
     }
 
-    // Demo mode signature simulation
-    await new Promise((res) => setTimeout(res, 800));
-    return `0x_demo_signed_${Date.now()}`;
+    throw new Error('Web3 provider not available for signing');
   }, [account, walletType]);
 
   const faucet = useCallback(() => {

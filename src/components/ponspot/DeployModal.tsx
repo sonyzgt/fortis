@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ethers } from 'ethers';
 import { Rocket, Check, X, RefreshCw, ExternalLink, ShieldCheck, AlertTriangle } from 'lucide-react';
 import { deployPonspotJackpotContract } from '@/lib/web3/deployer';
-import { PONSPOT_TOKEN_ADDRESS, ROBINHOOD_CHAIN_CONFIG } from '@/lib/web3/contracts';
+import { PONSPOT_TOKEN_ADDRESS, ROBINHOOD_CHAIN_CONFIG, getPonspotTokenAddress } from '@/lib/web3/contracts';
 
 interface DeployModalProps {
   isOpen: boolean;

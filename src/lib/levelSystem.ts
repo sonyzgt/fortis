@@ -85,9 +85,9 @@ export function getUserStats(accountAddress?: string | null): {
 export function recordUserBet(
   accountAddress: string,
   amountPons: number
-): { gamesPlayed: number; totalVolumePons: number } {
+): { gamesPlayed: number; totalVolumePons: number; hasClaimedAirdrop: boolean; lastAirdropClaim: number } {
   if (typeof window === 'undefined' || !accountAddress) {
-    return { gamesPlayed: 0, totalVolumePons: 0 };
+    return { gamesPlayed: 0, totalVolumePons: 0, hasClaimedAirdrop: false, lastAirdropClaim: 0 };
   }
   const current = getUserStats(accountAddress);
   const updated = {
