@@ -79,18 +79,18 @@ export default function PonscorePage() {
     rewardPerClaim: 100,
   });
 
-  // Initial Entrance Loading Splash (2.0s Fade, 2.5s Unmount)
+  // Initial Entrance Loading Splash (3.0s Fade, 3.5s Unmount)
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [showSplashDom, setShowSplashDom] = useState(true);
 
   useEffect(() => {
     const fadeTimer = setTimeout(() => {
       setIsInitialLoading(false);
-    }, 2000);
+    }, 3000);
 
     const removeTimer = setTimeout(() => {
       setShowSplashDom(false);
-    }, 2500);
+    }, 3500);
 
     return () => {
       clearTimeout(fadeTimer);
