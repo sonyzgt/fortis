@@ -1211,7 +1211,7 @@ export default function PonscorePage() {
                       <CheckCircle2 className="w-5 h-5" />
                     </div>
                     <p className="text-[10px] text-[#526256] dark:text-slate-400 leading-normal">
-                      <strong className="text-[#243329] dark:text-emerald-300 font-bold">Ponspot.com</strong> operates via decentralized smart contracts on Robinhood Chain (Vault: <code className="text-[#718D76] dark:text-emerald-400 font-mono font-bold">{GAME_CONTRACT_ADDRESS.slice(0, 6)}...{GAME_CONTRACT_ADDRESS.slice(-4)}</code>, Token: <code className="text-[#718D76] dark:text-emerald-400 font-mono font-bold">{PONS_TOKEN_ADDRESS.slice(0, 6)}...{PONS_TOKEN_ADDRESS.slice(-4)}</code>). All rounds use SHA-256 pre-commit hash verification and public block seeds for 100% cryptographic provable fairness.
+                      <strong className="text-[#243329] dark:text-emerald-300 font-bold">Ponspot.fun</strong> operates via decentralized smart contracts on Robinhood Chain (Vault: <code className="text-[#718D76] dark:text-emerald-400 font-mono font-bold">{GAME_CONTRACT_ADDRESS ? `${GAME_CONTRACT_ADDRESS.slice(0, 6)}...${GAME_CONTRACT_ADDRESS.slice(-4)}` : 'Decentralized'}</code>, Token: <code className="text-[#718D76] dark:text-emerald-400 font-mono font-bold">{PONS_TOKEN_ADDRESS ? `${PONS_TOKEN_ADDRESS.slice(0, 6)}...${PONS_TOKEN_ADDRESS.slice(-4)}` : 'ERC-20'}</code>). All rounds use SHA-256 pre-commit hash verification and public block seeds for 100% cryptographic provable fairness.
                     </p>
                   </div>
                   <a
@@ -1230,7 +1230,7 @@ export default function PonscorePage() {
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-3 pb-2 text-[11px] text-[#526256] dark:text-slate-400 font-mono border-t border-white/40 dark:border-white/10 flex-wrap">
                   {/* Left: Copyright & Legal Links */}
                   <div className="flex items-center gap-2.5 flex-wrap">
-                    <span>© 2026 Ponspot.com All Rights Reserved</span>
+                    <span>© 2026 Ponspot.fun All Rights Reserved</span>
                     <span>•</span>
                     <Link
                       href="/terms"
