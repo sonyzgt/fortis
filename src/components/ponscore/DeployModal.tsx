@@ -4,8 +4,9 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ethers } from 'ethers';
 import { Rocket, Check, X, RefreshCw, ExternalLink, ShieldCheck, AlertTriangle } from 'lucide-react';
-import { deployPonscoreJackpotContract } from '@/lib/web3/deployer';
-import { PONS_TOKEN_ADDRESS, ROBINHOOD_CHAIN_CONFIG } from '@/lib/web3/contracts';
+import { deployPonspotJackpotContract } from '@/lib/web3/deployer';
+import { PONSPOT_TOKEN_ADDRESS, ROBINHOOD_CHAIN_CONFIG, getPonspotTokenAddress } from '@/lib/web3/contracts';
+import { getApiBaseUrl } from '@/lib/apiConfig';
 
 interface DeployModalProps {
   isOpen: boolean;
@@ -16,9 +17,33 @@ interface DeployModalProps {
 export const DeployModal: React.FC<DeployModalProps> = ({ isOpen, onClose, onSuccess }) => {
   const [deploying, setDeploying] = useState(false);
   const [deployedAddress, setDeployedAddress] = useState<string | null>(null);
+  const [manualAddress, setManualAddress] = useState('');
   const [error, setError] = useState<string | null>(null);
 
   if (!isOpen) return null;
+
+  const handleSaveContract = async (addrToSave: string) => {
+    const trimmed = addrToSave.trim();
+    if (!trimmed.startsWith('0x') || trimmed.length !== 42) {
+      setError('Invalid contract address format (must be 42 characters starting with 0x)');
+      return;
+    }
+
+    try {
+      localStorage.setItem('ponspot_deployed_game_contract', trimmed);
+      localStorage.setItem('ponscore_deployed_game_contract', trimmed);
+      const apiBase = getApiBaseUrl();
+      await fetch(`${apiBase}/api/admin/set-contract`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contractAddress: trimmed }),
+      });
+      onSuccess(trimmed);
+    } catch (e: any) {
+      console.warn('Saved locally:', e);
+      onSuccess(trimmed);
+    }
+  };
 
   const handleDeploy = async () => {
     setDeploying(true);
@@ -28,29 +53,23 @@ export const DeployModal: React.FC<DeployModalProps> = ({ isOpen, onClose, onSuc
       const win = typeof window !== 'undefined' ? (window as any) : {};
       const providerObj = win.okxwallet || win.ethereum;
       if (!providerObj) {
-        throw new Error('OKX Wallet atau MetaMask tidak terdeteksi di browser.');
+        throw new Error('OKX Wallet or MetaMask not detected in browser.');
       }
 
       const browserProvider = new ethers.BrowserProvider(providerObj);
       const signer = await browserProvider.getSigner();
 
-      const address = await deployPonscoreJackpotContract(signer, PONS_TOKEN_ADDRESS);
-      setDeployedAddress(address);
-
-      try {
-        await fetch('http://localhost:4000/api/admin/set-contract', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ contractAddress: address }),
-        });
-      } catch (postErr) {
-        console.warn('Could not sync contract to server, saved locally', postErr);
+      const tokenToUse = getPonspotTokenAddress();
+      if (!tokenToUse || !tokenToUse.startsWith('0x') || tokenToUse.length !== 42) {
+        throw new Error('Please configure an active Betting Token contract address in the Admin Panel before deploying the Jackpot Escrow contract.');
       }
 
-      onSuccess(address);
+      const address = await deployPonspotJackpotContract(signer, tokenToUse);
+      setDeployedAddress(address);
+      await handleSaveContract(address);
     } catch (e: any) {
       console.error('Deployment error:', e);
-      setError(e?.message || 'Gagal melakukan deploy contract');
+      setError(e?.message || 'Failed to deploy smart contract');
     } finally {
       setDeploying(false);
     }
@@ -62,37 +81,31 @@ export const DeployModal: React.FC<DeployModalProps> = ({ isOpen, onClose, onSuc
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-xl"
+        className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
         onClick={onClose}
       >
         <motion.div
-          initial={{ opacity: 0, scale: 0.9, y: 20 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.9, y: 20 }}
-          className="bg-gradient-to-b from-[#0a1428]/95 to-[#040812]/95 border-2 border-cyan-500/40 rounded-3xl p-6 shadow-[0_0_60px_rgba(0,240,255,0.3)] max-w-md w-full relative overflow-hidden backdrop-blur-2xl text-slate-100"
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.95 }}
+          className="w-full max-w-lg bg-[#0a1222] border border-cyan-500/40 rounded-3xl p-6 shadow-2xl font-mono space-y-4"
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Header */}
-          <div className="flex items-center justify-between pb-3 border-b border-cyan-500/15 mb-4">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-cyan-950/80 border border-cyan-500/40 flex items-center justify-center text-[#00f0ff] shadow-[0_0_12px_rgba(0,240,255,0.3)]">
-                <Rocket className="w-4 h-4" />
-              </div>
-              <div>
-                <h3 className="text-sm font-black text-white tracking-wide">DEPLOY SMART CONTRACT</h3>
-                <p className="text-[10px] text-slate-400 font-mono">Robinhood Chain (Arbitrum L2)</p>
-              </div>
+          <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+            <div className="flex items-center gap-2">
+              <Rocket className="w-5 h-5 text-cyan-400" />
+              <h3 className="font-bold text-white text-sm tracking-wider">DEPLOY NEW JACKPOT ESCROW</h3>
             </div>
-            <button onClick={onClose} className="p-1 text-slate-400 hover:text-white">
-              <X className="w-4 h-4" />
+            <button onClick={onClose} className="text-slate-400 hover:text-white transition-colors">
+              <X className="w-5 h-5" />
             </button>
           </div>
 
-          <div className="space-y-3 text-xs font-mono mb-4">
+          <div className="space-y-3">
             <div className="p-3 bg-cyan-950/30 border border-cyan-500/25 rounded-2xl space-y-1 text-slate-300">
               <p className="font-bold text-white flex items-center gap-1.5 text-xs">
                 <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                Why Deploy a Smart Contract?
+                Why Deploy the Smart Contract?
               </p>
               <p className="text-[11px] text-slate-300">
                 To allow winners to **receive automated on-chain payouts** when clicking <span className="text-[#00f0ff] font-bold">[ CLAIM WINNINGS ]</span> without relying on a centralized server wallet, the smart contract is deployed to Robinhood Chain.
@@ -102,15 +115,39 @@ export const DeployModal: React.FC<DeployModalProps> = ({ isOpen, onClose, onSuc
             <div className="p-3 bg-[#060c18] border border-slate-800 rounded-2xl space-y-1.5 text-[11px]">
               <div className="flex justify-between">
                 <span className="text-slate-400">Betting Token:</span>
-                <span className="text-[#00f0ff] font-bold">Verified ERC-20 Token</span>
+                <span className="text-[#00f0ff] font-bold">
+                  {getPonspotTokenAddress() ? `${getPonspotTokenAddress().slice(0, 6)}...${getPonspotTokenAddress().slice(-4)}` : '⚠️ Set Token First'}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-400">Platform Fee:</span>
-                <span className="text-emerald-400 font-bold">5% on-chain burn</span>
+                <span className="text-emerald-400 font-bold">5% on-chain (Burned)</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-400">Estimated Gas:</span>
+                <span className="text-slate-400">Estimated Deploy Gas:</span>
                 <span className="text-white font-bold">~0.00008 ETH</span>
+              </div>
+            </div>
+
+            {/* Manual contract address input */}
+            <div className="p-3 bg-[#060c18] border border-slate-800 rounded-2xl space-y-2">
+              <label className="text-[11px] text-slate-300 block font-bold">
+                Sudah deploy? Masukkan alamat contract:
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={manualAddress}
+                  onChange={(e) => setManualAddress(e.target.value)}
+                  placeholder="0x... (Alamat Smart Contract)"
+                  className="flex-1 bg-black/50 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 font-mono"
+                />
+                <button
+                  onClick={() => handleSaveContract(manualAddress)}
+                  className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-black font-bold rounded-xl text-xs transition-all active:scale-95 flex-shrink-0"
+                >
+                  Gunakan
+                </button>
               </div>
             </div>
 

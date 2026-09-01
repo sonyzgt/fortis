@@ -47,48 +47,48 @@ export function TermsModal({ isOpen, onAccept, onDecline }: TermsModalProps) {
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.93, y: 15 }}
           transition={{ type: 'spring', damping: 25, stiffness: 350 }}
-          className="relative w-full max-w-lg rounded-3xl bg-white/90 dark:bg-[#0c1611]/95 backdrop-blur-2xl border border-white/90 dark:border-[#718D76]/40 p-6 sm:p-7 shadow-2xl space-y-5 text-[#243329] dark:text-[#F5F8F3]"
+          className="relative w-full max-w-lg rounded-2xl bg-[#060b17]/98 backdrop-blur-2xl border-2 border-cyan-500/40 p-6 sm:p-7 shadow-[0_0_50px_rgba(0,240,255,0.25)] space-y-5 text-white"
         >
           {/* Header */}
-          <div className="flex items-start gap-3.5 pb-3 border-b border-black/5 dark:border-white/10">
-            <div className="w-12 h-12 rounded-2xl bg-[#718D76]/20 dark:bg-emerald-500/20 flex items-center justify-center text-[#718D76] dark:text-emerald-400 shadow-sm flex-shrink-0">
+          <div className="flex items-start gap-3.5 pb-3 border-b border-cyan-500/20">
+            <div className="w-11 h-11 rounded-xl bg-cyan-950/80 border border-cyan-400/40 flex items-center justify-center text-[#00f0ff] shadow-[0_0_12px_rgba(0,240,255,0.3)] flex-shrink-0">
               <Scale className="w-6 h-6" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-base sm:text-lg font-black tracking-tight text-[#243329] dark:text-white">
-                  RULES & TERMS OF SERVICE
+                <h2 className="text-base sm:text-lg font-black tracking-wider text-white font-orbitron text-neon-cyan">
+                  PROTOCOL TERMS & CLEARANCE
                 </h2>
               </div>
-              <p className="text-xs text-[#526256] dark:text-[#8fa596] font-mono mt-0.5">
-                Please confirm agreement before entering the game on Ponspot
+              <p className="text-xs text-slate-400 font-mono mt-0.5">
+                Verify compliance and authorize protocol access on Ponspot
               </p>
             </div>
           </div>
 
           {/* Quick Rules Overview */}
-          <div className="p-4 rounded-2xl bg-white/60 dark:bg-[#14241d]/70 border border-white/80 dark:border-[#718D76]/30 space-y-2.5 text-xs font-sans text-[#3a4d3f] dark:text-slate-300">
-            <div className="flex items-center gap-2 text-xs font-bold text-[#243329] dark:text-white font-mono">
-              <ShieldCheck className="w-4 h-4 text-[#718D76] dark:text-emerald-400" />
-              <span>Decentralized Web3 Gaming Principles:</span>
+          <div className="p-4 rounded-xl bg-[#091224] border border-cyan-500/30 space-y-2.5 text-xs font-sans text-slate-300">
+            <div className="flex items-center gap-2 text-xs font-bold text-white font-orbitron">
+              <ShieldCheck className="w-4 h-4 text-[#00f0ff]" />
+              <span>ON-CHAIN DECENTRALIZED PROTOCOL RULES</span>
             </div>
-            <ul className="space-y-1.5 pl-2 text-[11px] leading-relaxed">
+            <ul className="space-y-1.5 pl-2 text-[11px] leading-relaxed font-mono">
               <li className="flex items-start gap-1.5">
-                <span className="text-[#718D76] dark:text-emerald-400 font-bold">•</span>
+                <span className="text-[#00f0ff] font-bold">•</span>
                 <span>
-                  <strong>Non-Custodial Escrow:</strong> Bets are held and managed directly by the Smart Contract on Robinhood Chain, with automated prize payouts to the winner.
+                  <strong className="text-white">Non-Custodial Escrow:</strong> All wagers are locked in smart contract escrow with autonomous winner payouts.
                 </span>
               </li>
               <li className="flex items-start gap-1.5">
-                <span className="text-[#718D76] dark:text-emerald-400 font-bold">•</span>
+                <span className="text-[#00ff88] font-bold">•</span>
                 <span>
-                  <strong>100% Provably Fair:</strong> Random ticket outcomes are transparently verified via SHA-256 cryptographic pre-commitments.
+                  <strong className="text-white">100% Provably Fair:</strong> Cryptographic ticket draws verifiable on-chain via SHA-256 pre-commit proofs.
                 </span>
               </li>
               <li className="flex items-start gap-1.5">
-                <span className="text-amber-600 dark:text-amber-400 font-bold">•</span>
+                <span className="text-[#ff007a] font-bold">•</span>
                 <span>
-                  <strong>5% Deflationary Burn:</strong> 5% of every pot is automatically burned permanently to the Dead Address (<code className="font-mono text-[10px]">0x0000...dEaD</code>).
+                  <strong className="text-white">5% Deflationary Burn:</strong> 5% of each round is automatically burned permanently to the Dead Address (<code className="text-[#ff007a]">0x000...dEaD</code>).
                 </span>
               </li>
             </ul>
@@ -99,47 +99,47 @@ export function TermsModal({ isOpen, onAccept, onDecline }: TermsModalProps) {
             {/* Checkbox 1: Age verification */}
             <label
               onClick={() => setAgeChecked(!ageChecked)}
-              className={`flex items-start gap-3 p-3.5 rounded-2xl border cursor-pointer select-none transition-all ${
+              className={`flex items-start gap-3 p-3.5 rounded-xl border cursor-pointer select-none transition-all ${
                 ageChecked
-                  ? 'bg-emerald-500/10 border-emerald-500/40 text-[#243329] dark:text-white shadow-sm'
-                  : 'bg-white/50 dark:bg-white/5 border-white/80 dark:border-white/10 hover:border-black/20 dark:hover:border-white/20 text-[#526256] dark:text-slate-300'
+                  ? 'bg-cyan-950/60 border-cyan-400 text-white shadow-[0_0_12px_rgba(0,240,255,0.2)]'
+                  : 'bg-[#091224] border-cyan-500/20 hover:border-cyan-500/40 text-slate-400'
               }`}
             >
               <div className="pt-0.5 flex-shrink-0">
                 {ageChecked ? (
-                  <CheckSquare className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                  <CheckSquare className="w-5 h-5 text-[#00f0ff]" />
                 ) : (
                   <Square className="w-5 h-5 opacity-40" />
                 )}
               </div>
-              <span className="text-xs leading-snug">
-                I certify that I am <strong>18 years of age or older</strong> (or the legal age of majority) and legally eligible to participate in on-chain games.
+              <span className="text-xs leading-snug font-mono">
+                I certify that I am <strong className="text-white">18 years of age or older</strong> and legally eligible to participate in Web3 decentralized gaming.
               </span>
             </label>
 
             {/* Checkbox 2: Terms & Privacy Agreement */}
             <div
               onClick={() => setTermsChecked(!termsChecked)}
-              className={`flex items-start gap-3 p-3.5 rounded-2xl border cursor-pointer select-none transition-all ${
+              className={`flex items-start gap-3 p-3.5 rounded-xl border cursor-pointer select-none transition-all ${
                 termsChecked
-                  ? 'bg-emerald-500/10 border-emerald-500/40 text-[#243329] dark:text-white shadow-sm'
-                  : 'bg-white/50 dark:bg-white/5 border-white/80 dark:border-white/10 hover:border-black/20 dark:hover:border-white/20 text-[#526256] dark:text-slate-300'
+                  ? 'bg-cyan-950/60 border-cyan-400 text-white shadow-[0_0_12px_rgba(0,240,255,0.2)]'
+                  : 'bg-[#091224] border-cyan-500/20 hover:border-cyan-500/40 text-slate-400'
               }`}
             >
               <div className="pt-0.5 flex-shrink-0">
                 {termsChecked ? (
-                  <CheckSquare className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                  <CheckSquare className="w-5 h-5 text-[#00f0ff]" />
                 ) : (
                   <Square className="w-5 h-5 opacity-40" />
                 )}
               </div>
-              <span className="text-xs leading-snug">
+              <span className="text-xs leading-snug font-mono">
                 I have read, understood, and agree to Ponspot's{' '}
                 <Link
                   href="/terms"
                   target="_blank"
                   onClick={(e) => e.stopPropagation()}
-                  className="font-bold text-[#718D76] dark:text-emerald-400 hover:underline inline-flex items-center gap-0.5"
+                  className="font-bold text-[#00f0ff] hover:underline inline-flex items-center gap-0.5"
                 >
                   Terms of Use <ExternalLink className="w-2.5 h-2.5 inline" />
                 </Link>{' '}
@@ -148,7 +148,7 @@ export function TermsModal({ isOpen, onAccept, onDecline }: TermsModalProps) {
                   href="/privacy"
                   target="_blank"
                   onClick={(e) => e.stopPropagation()}
-                  className="font-bold text-[#718D76] dark:text-emerald-400 hover:underline inline-flex items-center gap-0.5"
+                  className="font-bold text-[#00f0ff] hover:underline inline-flex items-center gap-0.5"
                 >
                   Privacy Policy <ExternalLink className="w-2.5 h-2.5 inline" />
                 </Link>.
@@ -157,12 +157,12 @@ export function TermsModal({ isOpen, onAccept, onDecline }: TermsModalProps) {
           </div>
 
           {/* Action Buttons */}
-          <div className="pt-2 flex items-center gap-3">
+          <div className="pt-2 flex items-center gap-3 font-mono">
             <button
               onClick={onDecline}
-              className="flex-1 py-3 rounded-2xl border border-black/10 dark:border-white/10 bg-white/50 hover:bg-white/80 dark:bg-white/5 dark:hover:bg-white/10 text-xs font-mono font-bold text-[#526256] dark:text-slate-400 transition-colors"
+              className="flex-1 py-3 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 text-xs font-bold text-slate-400 transition-colors"
             >
-              Decline
+              DECLINE
             </button>
 
             <button
@@ -172,14 +172,14 @@ export function TermsModal({ isOpen, onAccept, onDecline }: TermsModalProps) {
                 }
               }}
               disabled={!canProceed}
-              className={`flex-2 py-3 px-6 rounded-2xl font-mono font-black text-xs flex items-center justify-center gap-2 transition-all shadow-lg ${
+              className={`flex-2 py-3 px-6 rounded-lg font-black text-xs flex items-center justify-center gap-2 transition-all font-orbitron ${
                 canProceed
-                  ? 'btn-primary-sage opacity-100 scale-100'
-                  : 'bg-black/10 dark:bg-white/10 text-black/40 dark:text-white/30 cursor-not-allowed opacity-60'
+                  ? 'cyber-btn-cyan shadow-[0_0_20px_rgba(0,240,255,0.5)] active:scale-95'
+                  : 'bg-black/40 text-slate-600 border border-white/5 cursor-not-allowed opacity-50'
               }`}
             >
               <Sparkles className="w-4 h-4" />
-              <span>AGREE & ENTER GAME</span>
+              <span>ENTER THE ARENA</span>
             </button>
           </div>
         </motion.div>

@@ -71,11 +71,11 @@ export const SignTransactionModal: React.FC<SignTransactionModalProps> = ({
         setStatus('confirmed');
       } else {
         setStatus('rejected');
-        setErrorMsg('Tanda tangan transaksi ditolak oleh user.');
+        setErrorMsg('Transaction signature was rejected by user.');
       }
     } catch (err: any) {
       setStatus('rejected');
-      setErrorMsg(err?.message || 'Transaksi gagal ditandatangani.');
+      setErrorMsg(err?.message || 'Failed to sign transaction.');
     }
   };
 

@@ -353,19 +353,21 @@ export const PlayerCarousel: React.FC<PlayerCarouselProps> = ({
     <div className="relative w-full my-4 overflow-visible">
       <CarouselIndicatorPin isSpinning={isSpinning} />
       <div
-        className={`relative w-full rounded-3xl backdrop-blur-2xl border transition-all duration-700 overflow-hidden ${
+        className={`relative w-full rounded-2xl transition-all duration-500 overflow-hidden ${
           isDarkening || isSpinning
-            ? 'bg-[#040906]/95 dark:bg-[#020503]/98 border-2 border-emerald-400/90 shadow-[0_0_60px_rgba(16,185,129,0.35),inset_0_0_80px_rgba(0,0,0,0.95)]'
-            : 'bg-[#A4BAA2]/35 dark:bg-[#101c16]/80 border-white/80 dark:border-[#718D76]/30 shadow-[0_10px_35px_rgba(36,51,41,0.06),inset_0_1px_1px_rgba(255,255,255,0.9)] dark:shadow-[0_10px_35px_rgba(0,0,0,0.4),inset_0_1px_1px_rgba(255,255,255,0.08)]'
+            ? 'bg-[#030611]/98 border-2 border-[#00f0ff] shadow-[0_0_50px_rgba(0,240,255,0.4),inset_0_0_60px_rgba(0,0,0,0.95)]'
+            : 'bg-[#0a1020]/90 border border-cyan-500/30 shadow-[0_12px_40px_rgba(0,0,0,0.8),inset_0_1px_1px_rgba(0,240,255,0.2)]'
         }`}
       >
-        {/* Ambient Darkened Spotlight & Theater Vignette */}
+        {/* Cyberpunk Top & Bottom Tech Accents */}
+        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#00f0ff] to-transparent opacity-75 z-20 pointer-events-none" />
+        <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#ff007a] to-transparent opacity-60 z-20 pointer-events-none" />
+
+        {/* Ambient Laser Grid Spotlight */}
         {(isDarkening || isSpinning) && (
           <div className="absolute inset-0 pointer-events-none z-30 overflow-hidden">
-            {/* Top Center Spotlight Cone */}
-            <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-72 h-80 bg-gradient-to-b from-emerald-400/30 via-emerald-400/10 to-transparent rounded-full blur-2xl animate-pulse" />
-            {/* Cinematic Outer Vignette */}
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_35%,rgba(0,0,0,0.85)_100%)]" />
+            <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-80 h-80 bg-gradient-to-b from-cyan-400/35 via-cyan-500/10 to-transparent rounded-full blur-2xl animate-pulse" />
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_30%,rgba(3,6,17,0.92)_100%)]" />
           </div>
         )}
 
@@ -405,7 +407,7 @@ export const PlayerCarousel: React.FC<PlayerCarouselProps> = ({
 };
 
 // ─────────────────────────────────────────────
-// 3D Dual-Layer Beveled Indicator Pin (Like Uploaded Screenshot)
+// Cyberpunk Holographic Targeting Reticle Pin
 // ─────────────────────────────────────────────
 interface CarouselIndicatorPinProps {
   isSpinning?: boolean;
@@ -417,79 +419,52 @@ const CarouselIndicatorPin: React.FC<CarouselIndicatorPinProps> = ({ isSpinning 
       style={{ left: 'calc(50% - 6px)' }}
       className={`absolute -top-4 -translate-x-1/2 z-50 pointer-events-none flex flex-col items-center select-none ${
         isSpinning
-          ? 'animate-[bounce_0.22s_infinite]'
-          : 'animate-[bounce_1.8s_ease-in-out_infinite]'
+          ? 'animate-[bounce_0.18s_infinite]'
+          : 'animate-[bounce_2s_ease-in-out_infinite]'
       }`}
     >
-      {/* Radiant ambient sage glow halo */}
-      <div className="absolute -inset-1.5 bg-[#718D76]/35 dark:bg-emerald-400/25 rounded-full blur-md animate-pulse pointer-events-none" />
+      {/* Radiant ambient neon cyan halo */}
+      <div className="absolute -inset-2 bg-[#00f0ff]/40 rounded-full blur-lg animate-pulse pointer-events-none" />
 
-      <div className="relative filter drop-shadow-[0_6px_12px_rgba(0,0,0,0.45)] dark:drop-shadow-[0_6px_16px_rgba(0,0,0,0.85)]">
+      <div className="relative filter drop-shadow-[0_0_12px_rgba(0,240,255,0.9)]">
         <svg
-          width="34"
-          height="30"
+          width="36"
+          height="32"
           viewBox="0 0 36 32"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
         >
           <defs>
-            {/* Outer Bezel Gradients */}
-            <linearGradient id="outerBezelGrad" x1="18" y1="0" x2="18" y2="32" gradientUnits="userSpaceOnUse">
-              <stop offset="0%" stopColor="#3d473e" />
-              <stop offset="35%" stopColor="#252c26" />
-              <stop offset="100%" stopColor="#141815" />
+            <linearGradient id="cyberNeedleBezel" x1="18" y1="0" x2="18" y2="32" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stopColor="#0c182e" />
+              <stop offset="40%" stopColor="#070e1c" />
+              <stop offset="100%" stopColor="#02060f" />
             </linearGradient>
 
-            <linearGradient id="outerBezelStroke" x1="18" y1="0" x2="18" y2="32" gradientUnits="userSpaceOnUse">
-              <stop offset="0%" stopColor="rgba(255, 255, 255, 0.65)" />
-              <stop offset="45%" stopColor="rgba(255, 255, 255, 0.2)" />
-              <stop offset="100%" stopColor="rgba(0, 0, 0, 0.7)" />
-            </linearGradient>
-
-            {/* Inner Glowing Jewel Gradients (PONSPOT Mint/Sage/Emerald Crystal) */}
-            <linearGradient id="innerJewelGrad" x1="18" y1="6" x2="18" y2="26" gradientUnits="userSpaceOnUse">
-              <stop offset="0%" stopColor="#A2DFB0" />
-              <stop offset="45%" stopColor="#718D76" />
-              <stop offset="100%" stopColor="#35533C" />
-            </linearGradient>
-
-            <linearGradient id="innerJewelSheen" x1="18" y1="6" x2="18" y2="16" gradientUnits="userSpaceOnUse">
-              <stop offset="0%" stopColor="rgba(255, 255, 255, 0.95)" />
-              <stop offset="100%" stopColor="rgba(255, 255, 255, 0)" />
+            <linearGradient id="cyberNeonLaser" x1="18" y1="4" x2="18" y2="28" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stopColor="#26f4ff" />
+              <stop offset="50%" stopColor="#00f0ff" />
+              <stop offset="100%" stopColor="#007799" />
             </linearGradient>
           </defs>
 
-          {/* 1. Outer Dark Rounded Triangle Bezel */}
+          {/* Outer Cyber Bezel */}
           <path
             d="M 5,3 L 31,3 Q 35,3 33,7 L 20,27.5 Q 18,30.5 16,27.5 L 3,7 Q 1,3 5,3 Z"
-            fill="url(#outerBezelGrad)"
-            stroke="url(#outerBezelStroke)"
-            strokeWidth="1.2"
+            fill="url(#cyberNeedleBezel)"
+            stroke="#00f0ff"
+            strokeWidth="1.5"
             strokeLinejoin="round"
           />
 
-          {/* 2. Inner Bevel Inset Shadow Line */}
+          {/* Inner Glowing Laser Core */}
           <path
-            d="M 8.5,6 L 27.5,6 Q 29.5,6 28.5,8 L 19.5,22.5 Q 18,25 16.5,22.5 L 7.5,8 Q 6.5,6 8.5,6 Z"
-            fill="#0E1210"
-            opacity="0.75"
-          />
-
-          {/* 3. Inner Glowing Neon Mint / Sage Jewel */}
-          <path
-            d="M 9.5,7 L 26.5,7 Q 28.5,7 27.5,9 L 19.3,21.8 Q 18,23.8 16.7,21.8 L 8.5,9 Q 7.5,7 9.5,7 Z"
-            fill="url(#innerJewelGrad)"
-            stroke="rgba(195, 240, 205, 0.85)"
+            d="M 9,6.5 L 27,6.5 Q 28.5,6.5 27.5,8.5 L 19.3,22 Q 18,24 16.7,22 L 8.5,8.5 Q 7.5,6.5 9,6.5 Z"
+            fill="url(#cyberNeonLaser)"
+            stroke="#ffffff"
             strokeWidth="0.8"
             strokeLinejoin="round"
             className="animate-pulse"
-          />
-
-          {/* 4. Specular Top Sheen Highlight on Jewel */}
-          <path
-            d="M 10,7.5 L 26,7.5 Q 27.5,7.5 26.8,9 L 18,17 L 9.2,9 Q 8.5,7.5 10,7.5 Z"
-            fill="url(#innerJewelSheen)"
-            opacity="0.75"
           />
         </svg>
       </div>
@@ -498,7 +473,7 @@ const CarouselIndicatorPin: React.FC<CarouselIndicatorPinProps> = ({ isSpinning 
 };
 
 // ─────────────────────────────────────────────
-// Ultra-Glossy Glassmorphic Participant Card (Liquid Glass & Specular Sheen)
+// Cyberpunk Holographic Participant Card
 // ─────────────────────────────────────────────
 interface ParticipantCardProps {
   participant: PotParticipant;
@@ -514,70 +489,60 @@ const ParticipantCard: React.FC<ParticipantCardProps> = ({
   return (
     <div
       style={{ width: 165 }}
-      className={`relative flex flex-col items-center gap-3 py-5 px-4 rounded-3xl transition-all duration-150 backdrop-blur-2xl overflow-hidden ${
+      className={`relative flex flex-col items-center gap-2.5 py-4 px-3.5 rounded-2xl transition-all duration-150 backdrop-blur-2xl overflow-hidden ${
         isWinner
-          ? 'bg-gradient-to-b from-white/95 to-[#C3D5C1]/90 dark:from-[#1f3e2e]/95 dark:to-[#0a1610]/95 border-2 border-[#718D76] dark:border-emerald-400 shadow-[0_16px_36px_rgba(0,0,0,0.3),0_0_30px_rgba(113,141,118,0.45),inset_0_2px_1.5px_rgba(255,255,255,1)] text-[#243329] dark:text-[#F5F8F3]'
+          ? 'bg-gradient-to-b from-[#0a2033] to-[#040c17] border-2 border-[#00ff88] shadow-[0_0_35px_rgba(0,255,136,0.6),inset_0_1px_2px_rgba(0,255,136,0.4)] text-white'
           : isCenter
-          ? 'bg-white/90 dark:bg-[#162a20]/90 border-2 border-[#718D76] dark:border-emerald-400 shadow-[0_16px_36px_rgba(36,51,41,0.14),0_0_20px_rgba(113,141,118,0.25),inset_0_2px_1.5px_rgba(255,255,255,1)] text-[#243329] dark:text-[#F5F8F3]'
-          : 'bg-white/70 dark:bg-[#101e17]/80 border border-white/90 dark:border-[#718D76]/30 shadow-[0_8px_24px_rgba(36,51,41,0.06),inset_0_1.5px_1px_rgba(255,255,255,0.9)] text-[#243329] dark:text-[#F5F8F3]'
+          ? 'bg-gradient-to-b from-[#0f1d38] to-[#080f1e] border-2 border-[#00f0ff] shadow-[0_0_30px_rgba(0,240,255,0.45),inset_0_1px_2px_rgba(0,240,255,0.3)] text-white'
+          : 'bg-[#0c1424]/90 border border-cyan-500/25 shadow-[0_8px_25px_rgba(0,0,0,0.7),inset_0_1px_0_rgba(255,255,255,0.06)] text-slate-200'
       }`}
     >
-      {/* ── 1. ULTRA-GLOSSY CURVED SPECULAR SHEEN OVERLAY (Like Logo Icon) ── */}
-      <div className="absolute inset-x-0 top-0 h-[46%] rounded-t-3xl bg-gradient-to-b from-white/80 via-white/20 to-transparent pointer-events-none z-10" />
+      {/* Top Cyber Specular Highlight */}
+      <div className="absolute inset-x-0 top-0 h-[40%] rounded-t-2xl bg-gradient-to-b from-cyan-400/20 to-transparent pointer-events-none z-10" />
 
-      {/* Top ambient sage light beacon for center card */}
+      {/* Cyber Center Laser Beacons */}
       {isCenter && !isWinner && (
-        <div className="absolute -top-px left-1/2 -translate-x-1/2 w-16 h-[3px] bg-gradient-to-r from-transparent via-[#718D76] dark:via-emerald-400 to-transparent rounded-full shadow-[0_0_10px_#718D76] z-20" />
+        <div className="absolute -top-px left-1/2 -translate-x-1/2 w-16 h-[2px] bg-[#00f0ff] shadow-[0_0_12px_#00f0ff] z-20" />
       )}
       {isWinner && (
-        <div className="absolute -top-px left-1/2 -translate-x-1/2 w-20 h-1 bg-gradient-to-r from-transparent via-[#718D76] dark:via-emerald-400 to-transparent rounded-full shadow-[0_0_14px_#718D76] z-20" />
+        <div className="absolute -top-px left-1/2 -translate-x-1/2 w-20 h-[3px] bg-[#00ff88] shadow-[0_0_16px_#00ff88] z-20" />
       )}
 
-      {/* ── 2. GLOSSY AVATAR GLASS POD ── */}
-      <div className={`relative p-1 rounded-2xl bg-white/85 dark:bg-white/10 border border-white/90 dark:border-white/20 shadow-[inset_0_2px_4px_rgba(255,255,255,0.9),0_4px_12px_rgba(36,51,41,0.08)] backdrop-blur-md overflow-hidden z-20 ${isCenter ? 'ring-2 ring-[#718D76]/70 dark:ring-emerald-400/70' : ''}`}>
-        <div className="absolute inset-x-0 top-0 h-[48%] rounded-t-xl bg-gradient-to-b from-white/60 to-transparent pointer-events-none z-10" />
-        
+      {/* Holographic Avatar Pod with Cyber Frame */}
+      <div className={`relative p-1 rounded-xl bg-black/60 border ${isWinner ? 'border-[#00ff88]' : isCenter ? 'border-[#00f0ff]' : 'border-cyan-500/30'} shadow-[inset_0_0_10px_rgba(0,240,255,0.2)] overflow-hidden z-20`}>
         <img
           src={p.playerAvatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${p.playerId}`}
           alt={p.playerName}
-          className="w-20 h-20 object-cover rounded-xl shadow-inner relative z-0"
+          className="w-20 h-20 object-cover rounded-lg shadow-inner relative z-0"
           draggable={false}
         />
         {isWinner && (
-          <div className="absolute inset-0 bg-[#718D76]/25 dark:bg-emerald-400/25 rounded-xl flex items-center justify-center animate-pulse z-20">
-            <span className="text-2xl drop-shadow-[0_0_8px_#718D76]">👑</span>
+          <div className="absolute inset-0 bg-[#00ff88]/20 rounded-lg flex items-center justify-center animate-pulse z-20">
+            <span className="text-2xl drop-shadow-[0_0_10px_#00ff88]">👑</span>
           </div>
         )}
       </div>
 
-      {/* ── 3. PLAYER NAME ── */}
+      {/* Player Name */}
       <p
-        className={`text-xs font-black truncate w-full text-center tracking-tight leading-tight z-20 ${
-          isWinner ? 'text-[#718D76] dark:text-emerald-300' : isCenter ? 'text-[#243329] dark:text-white font-extrabold' : 'text-[#243329]/80 dark:text-slate-200'
+        className={`text-xs font-black truncate w-full text-center tracking-wide z-20 font-cyber ${
+          isWinner ? 'text-[#00ff88]' : isCenter ? 'text-[#00f0ff]' : 'text-slate-200'
         }`}
       >
         {p.playerName.length > 14 ? p.playerName.slice(0, 13) + '…' : p.playerName}
       </p>
 
-      {/* ── 4. GLOSSY CRYSTAL TOKEN WAGER CAPSULE ── */}
-      <div className="relative flex items-center gap-1.5 px-4 py-1.5 bg-white/85 dark:bg-[#1d3829] border border-white/95 dark:border-[#718D76]/45 rounded-full shadow-[inset_0_1.5px_1px_rgba(255,255,255,1),0_2px_6px_rgba(36,51,41,0.08)] z-20 overflow-hidden">
-        <div className="absolute inset-x-0 top-0 h-[45%] rounded-t-full bg-gradient-to-b from-white/70 to-transparent pointer-events-none" />
-
-        <img
-          src="/image/logo.png"
-          alt="PONSPOT"
-          className="w-3.5 h-3.5 rounded-full object-cover flex-shrink-0 shadow-sm"
-        />
-        <span className={`text-[11px] font-black tabular-nums tracking-wide ${isWinner ? 'text-[#718D76] dark:text-emerald-300' : isCenter ? 'text-[#243329] dark:text-white' : 'text-[#243329]/80 dark:text-slate-200'}`}>
-          {p.totalSpent >= 1000 ? `${(p.totalSpent / 1000).toFixed(1)}k` : p.totalSpent} PONSPOT
-        </span>
+      {/* Token Wager Pill with Cyber Odds */}
+      <div className={`relative flex items-center justify-between w-full px-2.5 py-1 bg-black/50 border ${isWinner ? 'border-[#00ff88]/50 text-[#00ff88]' : isCenter ? 'border-cyan-400/50 text-[#00f0ff]' : 'border-cyan-500/20 text-slate-300'} rounded-lg z-20 font-mono text-[10px]`}>
+        <span className="font-bold">{p.odds}%</span>
+        <span className="font-black tabular-nums">{p.totalSpent >= 1000 ? `${(p.totalSpent / 1000).toFixed(0)}k` : p.totalSpent} PONS</span>
       </div>
     </div>
   );
 };
 
 // ─────────────────────────────────────────────
-// Waiting placeholder card (Harmonious Mint Sage Glass)
+// Cyber Waiting Placeholder Card
 // ─────────────────────────────────────────────
 interface PlaceholderCardProps {
   isCenter?: boolean;
@@ -586,115 +551,107 @@ interface PlaceholderCardProps {
 const PlaceholderCard: React.FC<PlaceholderCardProps> = ({ isCenter = false }) => (
   <div
     style={{ width: 165 }}
-    className={`relative flex flex-col items-center gap-3 py-5 px-4 rounded-3xl backdrop-blur-2xl select-none transition-all duration-150 overflow-hidden ${
+    className={`relative flex flex-col items-center gap-3 py-5 px-4 rounded-2xl backdrop-blur-2xl select-none transition-all duration-150 overflow-hidden ${
       isCenter
-        ? 'bg-white/90 dark:bg-[#162a20]/90 border-2 border-[#718D76] dark:border-emerald-400 shadow-[0_16px_36px_rgba(36,51,41,0.14),0_0_20px_rgba(113,141,118,0.25),inset_0_2px_1.5px_rgba(255,255,255,1)] ring-2 ring-[#718D76]/40 dark:ring-emerald-400/40'
-        : 'bg-white/70 dark:bg-[#101e17]/80 border border-white/90 dark:border-[#718D76]/30 shadow-[0_8px_24px_rgba(36,51,41,0.06),inset_0_1.5px_1px_rgba(255,255,255,0.9)]'
+        ? 'bg-gradient-to-b from-[#0e1b36] to-[#070e1e] border-2 border-cyan-400 shadow-[0_0_25px_rgba(0,240,255,0.35)]'
+        : 'bg-[#0c1424]/80 border border-cyan-500/25'
     }`}
   >
-    {/* Specular Curved Gloss Sheen Overlay */}
-    <div className="absolute inset-x-0 top-0 h-[46%] rounded-t-3xl bg-gradient-to-b from-white/80 via-white/20 to-transparent pointer-events-none z-10" />
-
-    {/* Top ambient sage beacon for center waiting card */}
-    {isCenter && (
-      <div className="absolute -top-px left-1/2 -translate-x-1/2 w-16 h-[3px] bg-gradient-to-r from-transparent via-[#718D76] dark:via-emerald-400 to-transparent rounded-full shadow-[0_0_10px_#718D76] z-20" />
-    )}
-
-    {/* Glossy Avatar Bubble with breathing pulse */}
-    <div className={`relative w-22 h-22 p-1 rounded-2xl bg-white/85 dark:bg-white/10 border border-white/90 dark:border-white/20 shadow-[inset_0_2px_4px_rgba(255,255,255,0.9),0_4px_10px_rgba(36,51,41,0.06)] flex items-center justify-center overflow-hidden z-20 ${isCenter ? 'ring-2 ring-[#718D76]/70 dark:ring-emerald-400/70' : ''}`}>
-      <div className="absolute inset-x-0 top-0 h-[48%] rounded-t-xl bg-gradient-to-b from-white/60 to-transparent pointer-events-none" />
-      <div className="w-20 h-20 rounded-xl bg-[#E6EFE4] dark:bg-[#0c1611]/80 flex items-center justify-center shadow-inner relative overflow-hidden">
-        {/* Soft radar pulse sweep */}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#718D76]/15 dark:from-emerald-400/15 to-transparent animate-pulse" />
-        <span className="text-[#718D76] dark:text-emerald-400 text-3xl font-black drop-shadow-sm animate-pulse relative z-10">?</span>
+    {/* Cyber Avatar Pod */}
+    <div className={`relative w-22 h-22 p-1 rounded-xl bg-black/60 border ${isCenter ? 'border-cyan-400' : 'border-cyan-500/30'} flex items-center justify-center overflow-hidden z-20`}>
+      <div className="w-20 h-20 rounded-lg bg-[#050b17] flex items-center justify-center shadow-inner relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-t from-cyan-500/20 to-transparent animate-pulse" />
+        <span className="text-[#00f0ff] text-2xl font-black font-orbitron drop-shadow-[0_0_8px_#00f0ff] animate-pulse relative z-10">?</span>
       </div>
     </div>
 
-    {/* Animated Waiting Label with Animated Dots */}
-    <p className="text-xs font-black text-[#243329] dark:text-white z-20 flex items-center gap-0.5">
-      <span>Waiting</span>
-      <span className="inline-flex tracking-tighter">
+    {/* Waiting Label with Animated Dots */}
+    <p className="text-xs font-black text-cyan-300 z-20 flex items-center gap-0.5 font-cyber uppercase tracking-wider">
+      <span>WAITING</span>
+      <span className="inline-flex tracking-tighter text-[#00f0ff]">
         <span className="animate-bounce" style={{ animationDuration: '1s', animationDelay: '0ms' }}>.</span>
         <span className="animate-bounce" style={{ animationDuration: '1s', animationDelay: '150ms' }}>.</span>
         <span className="animate-bounce" style={{ animationDuration: '1s', animationDelay: '300ms' }}>.</span>
       </span>
     </p>
 
-    {/* Glossy Token Capsule */}
-    <div className="relative flex items-center gap-1.5 px-4 py-1.5 bg-white/85 dark:bg-[#0c1611]/80 border border-white/95 dark:border-[#718D76]/35 rounded-full shadow-[inset_0_1.5px_1px_rgba(255,255,255,1),0_2px_6px_rgba(36,51,41,0.06)] z-20 overflow-hidden">
-      <div className="absolute inset-x-0 top-0 h-[45%] rounded-t-full bg-gradient-to-b from-white/70 to-transparent pointer-events-none" />
-      <span className="text-[#718D76] dark:text-emerald-400 text-[8px] font-black">PONSPOT</span>
-      <span className="text-xs font-black text-[#243329] dark:text-white tabular-nums">0</span>
+    {/* Capsule */}
+    <div className="relative flex items-center justify-between w-full px-2.5 py-1 bg-black/50 border border-cyan-500/20 rounded-lg z-20 font-mono text-[10px] text-slate-400">
+      <span className="text-cyan-400 font-bold">POT</span>
+      <span className="text-white font-black">0 PONS</span>
     </div>
   </div>
 );
 
 // ─────────────────────────────────────────────
-// Right Winner History Sidebar (Trading Dashboard Aesthetics)
+// Right Winner History Sidebar (Cyberpunk Terminal Stream)
 // ─────────────────────────────────────────────
 interface RightWinnerSidebarProps {
   pastRounds: PastRound[];
 }
 
 export const RightWinnerSidebar: React.FC<RightWinnerSidebarProps> = ({ pastRounds }) => {
-  const badges = ['LAST WINNER', 'LUCK OF THE DAY', 'HIGH ROROLLER', 'HOT STREAK', 'BIG WIN', 'LUCKY'];
+  const badges = ['LAST WINNER', 'TOP ROLLER', 'STREAK', 'BIG WIN', 'JACKPOT', 'LUCKY'];
   const badgeColors = [
-    'bg-[#718D76]/15 dark:bg-[#718D76]/30 text-[#243329] dark:text-emerald-300 border border-[#718D76]/30',
-    'bg-emerald-600/15 dark:bg-emerald-500/25 text-emerald-800 dark:text-emerald-300 border border-emerald-600/30',
-    'bg-[#5E7A63]/15 dark:bg-[#5E7A63]/30 text-[#243329] dark:text-emerald-300 border border-[#5E7A63]/30',
-    'bg-[#718D76]/20 dark:bg-[#718D76]/35 text-[#243329] dark:text-emerald-300 border border-[#718D76]/30',
-    'bg-amber-600/15 dark:bg-amber-500/25 text-amber-800 dark:text-amber-300 border border-amber-600/30',
-    'bg-teal-600/15 dark:bg-teal-500/25 text-teal-800 dark:text-teal-300 border border-teal-600/30',
+    'bg-cyan-950/60 text-[#00f0ff] border border-cyan-400/40 shadow-[0_0_8px_rgba(0,240,255,0.25)]',
+    'bg-emerald-950/60 text-[#00ff88] border border-emerald-400/40 shadow-[0_0_8px_rgba(0,255,136,0.25)]',
+    'bg-purple-950/60 text-[#c084fc] border border-purple-400/40 shadow-[0_0_8px_rgba(192,132,252,0.25)]',
+    'bg-pink-950/60 text-[#ff007a] border border-pink-400/40 shadow-[0_0_8px_rgba(255,0,122,0.25)]',
+    'bg-amber-950/60 text-[#facc15] border border-amber-400/40 shadow-[0_0_8px_rgba(250,204,21,0.25)]',
+    'bg-teal-950/60 text-[#2dd4bf] border border-teal-400/40 shadow-[0_0_8px_rgba(45,212,191,0.25)]',
   ];
 
   return (
-    <aside className="w-full lg:w-[275px] flex-shrink-0 flex flex-col bg-[#A4BAA2]/75 dark:bg-[#0e1914]/85 backdrop-blur-2xl border-l border-white/60 dark:border-[#718D76]/30 h-full overflow-y-auto transition-colors">
-      {/* Last Winners Header */}
-      <div className="m-3 p-3 rounded-2xl bg-white/50 dark:bg-[#14241d]/70 border border-white/70 dark:border-[#718D76]/35 shadow-sm">
-        <p className="text-[9px] text-[#718D76] dark:text-emerald-400 font-black tracking-wider flex items-center gap-1.5 uppercase">
-          <span className="w-2 h-2 rounded-full bg-[#718D76] dark:bg-emerald-400 animate-pulse" />
-          RECENT ROUNDS
-        </p>
-        <p className="text-sm font-black text-[#243329] dark:text-white tracking-wide mt-0.5">LAST WINNERS</p>
+    <aside className="w-full lg:w-[285px] flex-shrink-0 flex flex-col bg-[#060b17]/95 backdrop-blur-2xl border-l border-cyan-500/20 h-full overflow-y-auto transition-colors">
+      {/* Cyber Header */}
+      <div className="m-3 p-3 rounded-xl bg-[#091224] border border-cyan-500/30 shadow-[0_0_15px_rgba(0,240,255,0.1)]">
+        <div className="flex items-center justify-between">
+          <p className="text-[10px] text-[#00f0ff] font-bold tracking-widest flex items-center gap-1.5 uppercase font-mono">
+            <span className="w-2 h-2 rounded-full bg-[#00f0ff] animate-ping" />
+            TELEMETRY // FEED
+          </p>
+          <span className="text-[9px] font-mono text-slate-400 px-1.5 py-0.5 rounded bg-black/40 border border-white/10">LIVE</span>
+        </div>
+        <p className="text-xs font-black text-white tracking-wider mt-1 font-orbitron">RECENT WINNERS</p>
       </div>
 
-      <div className="flex-1 px-3 pb-4 space-y-3">
+      <div className="flex-1 px-3 pb-4 space-y-2.5">
         {pastRounds.length === 0 ? (
-          <div className="py-12 text-center text-xs text-[#526256] dark:text-slate-500 italic">No rounds yet</div>
+          <div className="py-12 text-center text-xs text-slate-500 italic font-mono">NO DATA STREAM // WAITING ROUNDS</div>
         ) : (
           pastRounds.slice(0, 8).map((r, idx) => {
             const w = r.winner;
             return (
               <div
                 key={r.roundNumber}
-                className="bg-white/60 dark:bg-[#13231c]/70 hover:bg-white/80 dark:hover:bg-[#1a2e25] backdrop-blur-xl border border-white/80 dark:border-[#718D76]/30 rounded-2xl p-3.5 transition-all shadow-sm"
+                className="bg-[#091224]/80 hover:bg-[#0e1a33] backdrop-blur-xl border border-cyan-500/20 hover:border-cyan-400/50 rounded-xl p-3 transition-all shadow-sm group"
               >
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-[10px] font-bold text-[#526256] dark:text-slate-400 uppercase tracking-wider">ROUND #{r.roundNumber}</span>
-                  <span className={`text-[9px] font-black px-2 py-0.5 rounded-full ${badgeColors[idx % badgeColors.length]}`}>
+                  <span className="text-[10px] font-bold text-slate-400 font-mono">ROUND #{r.roundNumber}</span>
+                  <span className={`text-[8px] font-mono font-black px-2 py-0.5 rounded ${badgeColors[idx % badgeColors.length]}`}>
                     {badges[idx % badges.length]}
                   </span>
                 </div>
                 
-                <div className="flex items-center gap-3 mb-2.5">
-                  <div className={`p-0.5 rounded-xl flex-shrink-0 ${idx === 0 ? 'ring-2 ring-[#718D76] dark:ring-emerald-400 shadow-[0_0_10px_rgba(113,141,118,0.4)]' : 'ring-1 ring-white/80 dark:ring-white/10'}`}>
+                <div className="flex items-center gap-2.5 mb-2">
+                  <div className={`p-0.5 rounded-lg flex-shrink-0 ${idx === 0 ? 'ring-2 ring-[#00f0ff] shadow-[0_0_10px_rgba(0,240,255,0.5)]' : 'ring-1 ring-white/10'}`}>
                     <img
                       src={w.playerAvatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${w.playerId}`}
                       alt={w.playerName}
-                      className="w-10 h-10 rounded-lg bg-white/60 dark:bg-black/40 object-cover"
+                      className="w-9 h-9 rounded-md bg-black/60 object-cover"
                     />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-xs font-black text-[#243329] dark:text-white truncate">{w.playerName}</p>
-                    <p className="text-[10px] font-mono text-[#718D76] dark:text-emerald-400 font-bold">{w.odds}% Chance</p>
+                    <p className="text-xs font-black text-white truncate font-cyber">{w.playerName}</p>
+                    <p className="text-[10px] font-mono text-cyan-400 font-bold">{w.odds}% Chance</p>
                   </div>
                 </div>
 
-                <div className="pt-2 border-t border-white/50 dark:border-white/10 flex items-center justify-between">
-                  <span className="text-[10px] text-[#526256] dark:text-slate-400 font-bold">Total Pot Won</span>
+                <div className="pt-2 border-t border-white/10 flex items-center justify-between font-mono">
+                  <span className="text-[9px] text-slate-400 uppercase">Pot Won</span>
                   <div className="flex items-center gap-1">
-                    <span className="text-xs font-mono font-black text-[#243329] dark:text-emerald-300">{r.totalPot.toLocaleString()}</span>
-                    <span className="text-[10px] text-[#718D76] dark:text-emerald-400 font-black">PONSPOT</span>
+                    <span className="text-xs font-black text-[#00ff88]">{r.totalPot.toLocaleString()}</span>
+                    <span className="text-[9px] text-cyan-400 font-bold">PONS</span>
                   </div>
                 </div>
               </div>

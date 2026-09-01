@@ -4,8 +4,9 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ethers } from 'ethers';
 import { Gift, Check, X, RefreshCw, ExternalLink, ShieldCheck, AlertTriangle, Sparkles } from 'lucide-react';
-import { deployPonscoreAirdropContract } from '@/lib/web3/deployer';
-import { PONS_TOKEN_ADDRESS, ROBINHOOD_CHAIN_CONFIG } from '@/lib/web3/contracts';
+import { deployPonspotAirdropContract } from '@/lib/web3/deployer';
+import { PONSPOT_TOKEN_ADDRESS, ROBINHOOD_CHAIN_CONFIG } from '@/lib/web3/contracts';
+import { getApiBaseUrl } from '@/lib/apiConfig';
 
 interface DeployAirdropModalProps {
   isOpen: boolean;
@@ -29,18 +30,19 @@ export const DeployAirdropModal: React.FC<DeployAirdropModalProps> = ({ isOpen, 
       const win = typeof window !== 'undefined' ? (window as any) : {};
       const providerObj = win.okxwallet || win.ethereum;
       if (!providerObj) {
-        throw new Error('OKX Wallet atau MetaMask tidak terdeteksi di browser.');
+        throw new Error('OKX Wallet or MetaMask not detected in browser.');
       }
 
       const browserProvider = new ethers.BrowserProvider(providerObj);
       const signer = await browserProvider.getSigner();
 
-      const address = await deployPonscoreAirdropContract(signer, PONS_TOKEN_ADDRESS, rewardAmount);
+      const address = await deployPonspotAirdropContract(signer, PONSPOT_TOKEN_ADDRESS, rewardAmount);
       setDeployedAddress(address);
 
       try {
+        localStorage.setItem('ponspot_airdrop_contract', address);
         localStorage.setItem('ponscore_airdrop_contract', address);
-        const apiBase = typeof window !== 'undefined' ? `${window.location.protocol}//${window.location.hostname}:4000` : 'http://localhost:4000';
+        const apiBase = getApiBaseUrl();
         await fetch(`${apiBase}/api/admin/set-airdrop-contract`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -53,7 +55,7 @@ export const DeployAirdropModal: React.FC<DeployAirdropModalProps> = ({ isOpen, 
       onSuccess(address);
     } catch (e: any) {
       console.error('Airdrop Deployment error:', e);
-      setError(e?.message || 'Gagal melakukan deploy airdrop contract');
+      setError(e?.message || 'Failed to deploy airdrop contract');
     } finally {
       setDeploying(false);
     }
@@ -98,13 +100,13 @@ export const DeployAirdropModal: React.FC<DeployAirdropModalProps> = ({ isOpen, 
                 Dedicated On-Chain Airdrop Vault
               </p>
               <p className="text-[11px] text-slate-300">
-                This smart contract holds token deposits from the Admin wallet and manages 1x automated claim per wallet directly on the blockchain.
+                This dedicated smart contract holds token deposits from the Admin wallet and manages 1-time automated claims per wallet directly on the blockchain.
               </p>
             </div>
 
             <div className="p-3 bg-black/40 rounded-xl space-y-1">
-              <span className="text-[10px] text-slate-400 block">TARGET TOKEN (PONS):</span>
-              <span className="text-xs text-emerald-400 font-bold break-all">{PONS_TOKEN_ADDRESS}</span>
+              <span className="text-[10px] text-slate-400 block">TARGET TOKEN (PONSPOT):</span>
+              <span className="text-xs text-emerald-400 font-bold break-all">{PONSPOT_TOKEN_ADDRESS}</span>
             </div>
 
             <div className="p-3 bg-black/40 rounded-xl space-y-1.5">
@@ -117,7 +119,7 @@ export const DeployAirdropModal: React.FC<DeployAirdropModalProps> = ({ isOpen, 
                   className="w-full px-3 py-1.5 rounded-lg bg-white/10 border border-white/20 text-xs font-mono text-white"
                   placeholder="100"
                 />
-                <span className="text-xs text-emerald-400 font-bold">PONS</span>
+                <span className="text-xs text-emerald-400 font-bold">PONSPOT</span>
               </div>
             </div>
 
@@ -140,7 +142,7 @@ export const DeployAirdropModal: React.FC<DeployAirdropModalProps> = ({ isOpen, 
                   rel="noreferrer"
                   className="inline-flex items-center gap-1 text-[11px] text-emerald-400 hover:underline pt-1"
                 >
-                  <span>Open on Blockscout</span>
+                  <span>View on Blockscout</span>
                   <ExternalLink className="w-3 h-3" />
                 </a>
               </div>
@@ -154,7 +156,6 @@ export const DeployAirdropModal: React.FC<DeployAirdropModalProps> = ({ isOpen, 
             >
               Close
             </button>
-
             <button
               onClick={handleDeploy}
               disabled={deploying}
@@ -168,7 +169,7 @@ export const DeployAirdropModal: React.FC<DeployAirdropModalProps> = ({ isOpen, 
               ) : (
                 <>
                   <Sparkles className="w-3.5 h-3.5" />
-                  <span>DEPLOY 1-KLIK</span>
+                  <span>DEPLOY (1-CLICK)</span>
                 </>
               )}
             </button>
