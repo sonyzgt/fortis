@@ -294,11 +294,11 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                       }}
                       className="px-3 py-2 rounded-xl bg-[#718D76] dark:bg-emerald-500 text-white dark:text-black font-black text-xs shadow-sm"
                     >
-                      Terapkan
+                      Apply
                     </button>
                   </div>
                   <p className="text-[10px] text-[#526256] dark:text-slate-400">
-                    Tempelkan link gambar profil dari Discord, Twitter, atau Imgur.
+                    Paste an avatar image link from Discord, X/Twitter, or Imgur.
                   </p>
                 </div>
               )}

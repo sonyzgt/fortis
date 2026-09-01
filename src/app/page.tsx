@@ -1312,7 +1312,7 @@ export default function PonscorePage() {
 
                   {/* Right: X / Twitter */}
                   <a
-                    href="https://x.com"
+                    href="https://x.com/play_ponspot"
                     target="_blank"
                     rel="noreferrer"
                     className="flex items-center gap-2.5 px-3.5 py-1.5 rounded-xl bg-white/70 dark:bg-[#122019] border border-white/80 dark:border-[#718D76]/35 hover:bg-white dark:hover:bg-[#182b22] transition-all shadow-sm group flex-shrink-0"
@@ -1322,7 +1322,7 @@ export default function PonscorePage() {
                     </div>
                     <div className="text-left leading-none">
                       <span className="text-[8px] text-[#526256] dark:text-slate-400 block">Follow our</span>
-                      <span className="text-[11px] font-black text-[#243329] dark:text-white">X / Twitter</span>
+                      <span className="text-[11px] font-black text-[#243329] dark:text-white">@play_ponspot</span>
                     </div>
                     <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-[8px] font-black border border-emerald-500/30 ml-1">
                       Follow now
