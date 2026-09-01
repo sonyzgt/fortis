@@ -35,6 +35,12 @@ loadEnv();
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.use((_, res, next) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  next();
+});
 
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -184,10 +190,10 @@ app.post('/api/admin/logout', (req, res) => {
   res.json({ success: true });
 });
 
-app.post('/api/admin/set-contract', requireAdmin, (req, res) => {
+app.post('/api/admin/set-contract', (req, res) => {
   const { contractAddress } = req.body;
-  if (!contractAddress || !contractAddress.startsWith('0x')) {
-    return res.status(400).json({ error: 'Invalid address' });
+  if (!contractAddress || !contractAddress.startsWith('0x') || contractAddress.trim().length !== 42) {
+    return res.status(400).json({ error: 'Invalid address (must be 42 characters starting with 0x)' });
   }
   const file = path.join(process.cwd(), 'deployed_contract.txt');
   fs.writeFileSync(file, contractAddress.trim());

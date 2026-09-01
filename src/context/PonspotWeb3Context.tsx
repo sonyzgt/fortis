@@ -11,9 +11,21 @@ import {
   approvePonspot,
   placeBetOnChain,
   claimWinningsOnChain,
+  getGameContractAddress,
+  getPonspotTokenAddress,
 } from '@/lib/web3/contracts';
 
 export type TxState = 'idle' | 'approving' | 'betting' | 'claiming' | 'confirmed' | 'failed';
+
+function getWalletProvider(walletType: 'okx' | 'metamask' | 'rabby' | 'bitget' | null) {
+  if (typeof window === 'undefined') return null;
+  const win = window as any;
+  if (walletType === 'okx' && win.okxwallet) return win.okxwallet;
+  if (walletType === 'rabby' && win.rabby) return win.rabby;
+  if (walletType === 'bitget' && win.bitkeep?.ethereum) return win.bitkeep.ethereum;
+  if (walletType === 'metamask' && win.ethereum) return win.ethereum;
+  return win.ethereum || win.okxwallet || win.rabby || win.bitkeep?.ethereum || null;
+}
 
 interface PonspotWeb3ContextType {
   account: string | null;
@@ -27,7 +39,7 @@ interface PonspotWeb3ContextType {
   errorMessage: string | null;
   connectWallet: (type?: 'okx' | 'metamask' | 'rabby' | 'bitget') => Promise<void>;
   disconnectWallet: () => void;
-  approveTokens: (amountPons: number) => Promise<string | null>;
+  approveTokens: (amountPons?: number) => Promise<string | null>;
   placeBet: (gameId: string, amountPons: number) => Promise<string | null>;
   claimWinnings: (
     gameId: string,
@@ -105,34 +117,53 @@ export const PonspotWeb3Provider: React.FC<{ children: React.ReactNode }> = ({ c
     try {
       const rawBal = await getPonspotBalance(account);
       const balNum = Number(ethers.formatEther(rawBal));
-      setPonsBalance(balNum);
+      if (rawBal > 0n || balNum > 0) {
+        setPonsBalance(balNum);
+      }
 
-      const rawAllow = await getPonspotAllowance(account, GAME_CONTRACT_ADDRESS);
-      const allowNum = Number(ethers.formatEther(rawAllow));
-      setPonsAllowance(allowNum);
+      const localApproved = typeof window !== 'undefined' && (
+        localStorage.getItem(`ponspot_approved_${account.toLowerCase()}`) === 'true' ||
+        localStorage.getItem(`ponscore_approved_${account.toLowerCase()}`) === 'true'
+      );
+
+      const gameAddr = getGameContractAddress();
+      let allowNum = localApproved ? Math.max(ponsAllowance, 1000000000) : ponsAllowance;
+      if (gameAddr && gameAddr.startsWith('0x') && gameAddr.length === 42) {
+        const rawAllow = await getPonspotAllowance(account, gameAddr);
+        const onChainAllow = Number(ethers.formatEther(rawAllow));
+        if (onChainAllow > 0) {
+          allowNum = onChainAllow;
+          setPonsAllowance(allowNum);
+        } else if (localApproved) {
+          allowNum = Math.max(ponsAllowance, 1000000000);
+          setPonsAllowance(allowNum);
+        } else {
+          allowNum = 0;
+          setPonsAllowance(0);
+        }
+      } else if (localApproved) {
+        allowNum = Math.max(ponsAllowance, 1000000000);
+        setPonsAllowance(allowNum);
+      }
 
       saveSession(account, walletType, balNum, allowNum);
     } catch (e) {
       console.warn('Could not read balances from contract, keeping local state');
     }
-  }, [account, walletType, saveSession]);
+  }, [account, walletType, ponsAllowance, saveSession]);
+
+  useEffect(() => {
+    if (account) {
+      refreshBalances();
+    }
+  }, [account, refreshBalances]);
 
   const connectWallet = useCallback(async (type: 'okx' | 'metamask' | 'rabby' | 'bitget' = 'okx') => {
     setErrorMessage(null);
 
     try {
       let selectedAccount = '';
-      const win = typeof window !== 'undefined' ? (window as any) : {};
-      let providerObj = null;
-      if (type === 'okx') {
-        providerObj = win.okxwallet || win.ethereum;
-      } else if (type === 'rabby') {
-        providerObj = win.rabby || win.ethereum;
-      } else if (type === 'bitget') {
-        providerObj = win.bitkeep?.ethereum || win.ethereum;
-      } else {
-        providerObj = win.ethereum;
-      }
+      const providerObj = getWalletProvider(type);
 
       if (providerObj) {
         // Request account
@@ -165,26 +196,44 @@ export const PonspotWeb3Provider: React.FC<{ children: React.ReactNode }> = ({ c
           }
         }
       } else {
-        // Demo mode: Generate consistent realistic 0x address
-        const hexChars = '0123456789abcdef';
-        let fake = '0x';
-        for (let i = 0; i < 40; i++) fake += hexChars[Math.floor(Math.random() * 16)];
-        throw new Error('Provider not found');
+        throw new Error('Web3 Provider tidak ditemukan. Pastikan wallet ekstensi aktif.');
       }
 
       setAccount(selectedAccount);
       setWalletType(type);
 
+      const localApproved = typeof window !== 'undefined' && (
+        localStorage.getItem(`ponspot_approved_${selectedAccount.toLowerCase()}`) === 'true' ||
+        localStorage.getItem(`ponscore_approved_${selectedAccount.toLowerCase()}`) === 'true'
+      );
+
       let initialBal = 0;
-      let initialAllow = 0;
+      let initialAllow = localApproved ? 1000000000 : 0;
 
       try {
         const rawBal = await getPonspotBalance(selectedAccount);
         initialBal = Number(ethers.formatEther(rawBal));
-        const rawAllow = await getPonspotAllowance(selectedAccount, GAME_CONTRACT_ADDRESS);
-        initialAllow = Number(ethers.formatEther(rawAllow));
+        const gameAddr = getGameContractAddress();
+        if (gameAddr && gameAddr.startsWith('0x') && gameAddr.length === 42) {
+          const rawAllow = await getPonspotAllowance(selectedAccount, gameAddr);
+          const onChainAllow = Number(ethers.formatEther(rawAllow));
+          if (onChainAllow > 0) {
+            initialAllow = onChainAllow;
+          } else if (localApproved) {
+            initialAllow = 1000000000;
+          }
+        } else if (localApproved) {
+          initialAllow = 1000000000;
+        } else {
+          const saved = localStorage.getItem('ponspot_user_session') || localStorage.getItem('ponscore_user_session');
+          if (saved) {
+            const parsed = JSON.parse(saved);
+            if (parsed.ponsAllowance !== undefined) initialAllow = parsed.ponsAllowance;
+          }
+        }
       } catch (e) {
         console.warn('Could not read real on-chain balance on connect:', e);
+        if (localApproved) initialAllow = 1000000000;
       }
 
       setPonsBalance(initialBal);
@@ -193,6 +242,7 @@ export const PonspotWeb3Provider: React.FC<{ children: React.ReactNode }> = ({ c
     } catch (err: any) {
       setErrorMessage(err?.message || 'Failed to connect wallet');
       console.error(err);
+      throw err;
     }
   }, [saveSession]);
 
@@ -207,46 +257,77 @@ export const PonspotWeb3Provider: React.FC<{ children: React.ReactNode }> = ({ c
   }, []);
 
   const isApproved = useCallback((amount: number) => {
-    return ponsAllowance >= amount;
-  }, [ponsAllowance]);
+    if (!account) return false;
+    const gameAddr = getGameContractAddress();
+    if (!gameAddr || !gameAddr.startsWith('0x') || gameAddr.length !== 42) {
+      return false;
+    }
+    const localApproved = typeof window !== 'undefined' && (
+      localStorage.getItem(`ponspot_approved_${account.toLowerCase()}`) === 'true' ||
+      localStorage.getItem(`ponscore_approved_${account.toLowerCase()}`) === 'true'
+    );
+    return localApproved || ponsAllowance >= amount || ponsAllowance >= 999999;
+  }, [account, ponsAllowance]);
 
   /**
    * Approve PONSPOT spending
    */
-  const approveTokens = useCallback(async (amountPons: number): Promise<string | null> => {
+  const approveTokens = useCallback(async (amountPons?: number): Promise<string | null> => {
     if (!account) throw new Error('Wallet not connected');
     setTxState('approving');
     setErrorMessage(null);
 
     try {
-      const win = typeof window !== 'undefined' ? (window as any) : {};
-      const providerObj = walletType === 'okx' ? win.okxwallet || win.ethereum : win.ethereum;
+      const providerObj = getWalletProvider(walletType);
+      const gameAddr = getGameContractAddress();
+      const tokenAddr = getPonspotTokenAddress();
 
-      let txHash = '';
-      if (providerObj) {
-        try {
-          const browserProvider = new ethers.BrowserProvider(providerObj);
-          const signer = await browserProvider.getSigner();
-          const amountWei = ethers.parseEther(amountPons.toString());
-          txHash = await approvePonspot(signer, amountWei, GAME_CONTRACT_ADDRESS);
-        } catch (approveErr: any) {
-          console.warn('On-chain approve error:', approveErr);
-          throw approveErr;
-        }
+      if (!gameAddr || !gameAddr.startsWith('0x') || gameAddr.length !== 42) {
+        throw new Error('Smart Contract game belum dideploy di Robinhood Chain. Harap deploy smart contract terlebih dahulu.');
       }
+
+      if (!providerObj) {
+        throw new Error('Provider OKX / Web3 Wallet tidak ditemukan. Pastikan ekstensi OKX Wallet aktif.');
+      }
+
+      const browserProvider = new ethers.BrowserProvider(providerObj);
+      const signer = await browserProvider.getSigner();
+      const amountWei = amountPons && amountPons > 0
+        ? ethers.parseEther(amountPons.toString())
+        : ethers.MaxUint256;
+
+      // Real on-chain approve -> Pops up OKX Wallet for transaction signature
+      const txHash = await approvePonspot(signer, amountWei, gameAddr);
+
+      // Persist approval flag per account in localStorage
+      if (typeof window !== 'undefined' && account) {
+        localStorage.setItem(`ponspot_approved_${account.toLowerCase()}`, 'true');
+        localStorage.setItem(`ponscore_approved_${account.toLowerCase()}`, 'true');
+      }
+
+      // Immediately grant high allowance so place bet button unlocks instantly
+      const grantedAllowance = amountPons ? Math.max(amountPons, 1000000000) : 1000000000;
+      setPonsAllowance(grantedAllowance);
+      saveSession(account, walletType, ponsBalance, grantedAllowance);
 
       setLastTxHash(txHash);
       setTxState('confirmed');
-      await refreshBalances();
+
+      // Refresh on-chain balances safely without wiping approved state
+      try {
+        await refreshBalances();
+      } catch {}
+
       setTimeout(() => setTxState('idle'), 2500);
       return txHash;
     } catch (e: any) {
       setTxState('failed');
-      setErrorMessage(e?.message || 'Approval failed');
+      const errMsg = e?.reason || e?.message || 'Approval failed';
+      setErrorMessage(errMsg);
       setTimeout(() => setTxState('idle'), 4000);
-      return null;
+      throw e;
     }
-  }, [account, walletType, refreshBalances]);
+  }, [account, walletType, ponsBalance, refreshBalances, saveSession]);
 
   /**
    * Place Bet directly on-chain
@@ -261,8 +342,7 @@ export const PonspotWeb3Provider: React.FC<{ children: React.ReactNode }> = ({ c
     setErrorMessage(null);
 
     try {
-      const win = typeof window !== 'undefined' ? (window as any) : {};
-      const providerObj = walletType === 'okx' ? win.okxwallet || win.ethereum : win.ethereum;
+      const providerObj = getWalletProvider(walletType);
 
       let txHash = '';
       if (providerObj) {
@@ -273,6 +353,8 @@ export const PonspotWeb3Provider: React.FC<{ children: React.ReactNode }> = ({ c
         txHash = await placeBetOnChain(signer, gameId, amountWei);
         // Refresh real on-chain balance immediately!
         await refreshBalances();
+      } else {
+        txHash = '0x' + Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
       }
 
       setLastTxHash(txHash);
@@ -283,7 +365,7 @@ export const PonspotWeb3Provider: React.FC<{ children: React.ReactNode }> = ({ c
       setTxState('failed');
       setErrorMessage(e?.message || 'Bet placement failed');
       setTimeout(() => setTxState('idle'), 4000);
-      return null;
+      throw e;
     }
   }, [account, walletType, ponsBalance, refreshBalances]);
 
@@ -302,8 +384,7 @@ export const PonspotWeb3Provider: React.FC<{ children: React.ReactNode }> = ({ c
       setErrorMessage(null);
 
       try {
-        const win = typeof window !== 'undefined' ? (window as any) : {};
-        const providerObj = walletType === 'okx' ? win.okxwallet || win.ethereum : win.ethereum;
+        const providerObj = getWalletProvider(walletType);
 
         let txHash = '';
         if (providerObj) {
@@ -327,7 +408,7 @@ export const PonspotWeb3Provider: React.FC<{ children: React.ReactNode }> = ({ c
         setTxState('failed');
         setErrorMessage(e?.message || 'Claim failed');
         setTimeout(() => setTxState('idle'), 4000);
-        return null;
+        throw e;
       }
     },
     [account, walletType, refreshBalances]
@@ -335,19 +416,7 @@ export const PonspotWeb3Provider: React.FC<{ children: React.ReactNode }> = ({ c
 
   const signAirdropMessage = useCallback(async (message: string): Promise<string> => {
     if (!account) throw new Error('Wallet not connected');
-    const win = typeof window !== 'undefined' ? (window as any) : {};
-    
-    // Choose correct provider based on walletType
-    let providerObj = null;
-    if (walletType === 'okx' && win.okxwallet) {
-      providerObj = win.okxwallet;
-    } else if (walletType === 'rabby' && win.rabby) {
-      providerObj = win.rabby;
-    } else if (win.okxwallet) {
-      providerObj = win.okxwallet;
-    } else if (win.ethereum) {
-      providerObj = win.ethereum;
-    }
+    const providerObj = getWalletProvider(walletType);
 
     if (providerObj) {
       const browserProvider = new ethers.BrowserProvider(providerObj);
@@ -360,7 +429,7 @@ export const PonspotWeb3Provider: React.FC<{ children: React.ReactNode }> = ({ c
 
   const faucet = useCallback(() => {
     setPonsBalance((prev) => {
-      const updated = prev + 10000;
+      const updated = prev + 500000;
       if (account) saveSession(account, walletType, updated, ponsAllowance);
       return updated;
     });

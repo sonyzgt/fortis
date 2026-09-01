@@ -294,7 +294,7 @@ export default function AdminPanelPage() {
   const handleSetContract = async () => {
     const trimmed = manualContractInput.trim();
     if (!trimmed.startsWith('0x') || trimmed.length !== 42) {
-      setStatusMsg({ ok: false, text: 'Invalid contract address (must be 42 characters starting with 0x)' });
+      setStatusMsg({ ok: false, text: `Invalid contract address format (${trimmed.length} chars). Must be 42 characters starting with 0x.` });
       return;
     }
 
@@ -305,6 +305,7 @@ export default function AdminPanelPage() {
       });
       const data = await res.json();
       if (data.success || res.ok) {
+        localStorage.setItem('ponspot_deployed_game_contract', trimmed);
         localStorage.setItem('ponscore_deployed_game_contract', trimmed);
         setActiveContract(trimmed);
         setStatusMsg({ ok: true, text: `Active smart contract updated to: ${trimmed}` });
@@ -313,6 +314,7 @@ export default function AdminPanelPage() {
         throw new Error(data.error || 'Failed to update contract');
       }
     } catch (e: any) {
+      localStorage.setItem('ponspot_deployed_game_contract', trimmed);
       localStorage.setItem('ponscore_deployed_game_contract', trimmed);
       setActiveContract(trimmed);
       setStatusMsg({ ok: true, text: `Smart contract saved locally in browser: ${trimmed}` });
@@ -333,17 +335,58 @@ export default function AdminPanelPage() {
       return;
     }
 
+    let targetContract = (activeContract || getGameContractAddress() || '').trim();
+    if (!targetContract.startsWith('0x') || targetContract.length !== 42) {
+      try {
+        const res = await fetch(`${getApiBase()}/api/contract-address`);
+        const data = await res.json();
+        if (data.contractAddress && data.contractAddress.length === 42) {
+          targetContract = data.contractAddress;
+          setActiveContract(targetContract);
+        }
+      } catch {}
+    }
+
+    if (!targetContract || !targetContract.startsWith('0x') || targetContract.length !== 42) {
+      setStatusMsg({ ok: false, text: `Alamat Smart Contract (${targetContract}) tidak valid. Pastikan 42 karakter diawali 0x.` });
+      return;
+    }
+
     setIsWithdrawingBetting(true);
     try {
       const win = typeof window !== 'undefined' ? (window as any) : {};
-      const providerObj = win.okxwallet || win.ethereum;
-      if (!providerObj || !account) {
-        throw new Error('Please connect your admin wallet first.');
+      const providerObj = win.okxwallet || win.ethereum || win.rabby || win.bitkeep?.ethereum;
+      if (!providerObj) {
+        throw new Error('Wallet extension (OKX Wallet, MetaMask, Rabby) not detected in your browser.');
       }
 
+      // 1. Ensure wallet switched to Robinhood Chain (ID: 4663)
+      try {
+        await providerObj.request({
+          method: 'wallet_switchEthereumChain',
+          params: [{ chainId: ROBINHOOD_CHAIN_CONFIG.chainHexId }],
+        });
+      } catch (switchError: any) {
+        if (switchError.code === 4902 || switchError.message?.includes('Unrecognized chain')) {
+          await providerObj.request({
+            method: 'wallet_addEthereumChain',
+            params: [
+              {
+                chainId: ROBINHOOD_CHAIN_CONFIG.chainHexId,
+                chainName: ROBINHOOD_CHAIN_CONFIG.name,
+                rpcUrls: [ROBINHOOD_CHAIN_CONFIG.rpcUrl],
+                nativeCurrency: ROBINHOOD_CHAIN_CONFIG.nativeCurrency,
+                blockExplorerUrls: [ROBINHOOD_CHAIN_CONFIG.blockExplorer],
+              },
+            ],
+          });
+        }
+      }
+
+      // 2. Connect and sign transaction
       const provider = new ethers.BrowserProvider(providerObj);
+      await provider.send('eth_requestAccounts', []);
       const signer = await provider.getSigner();
-      const targetContract = activeContract || getGameContractAddress();
       const withdrawWei = ethers.parseEther(num.toString());
 
       setStatusMsg({ ok: true, text: 'Please confirm the withdrawal transaction in your wallet...' });
@@ -361,7 +404,8 @@ export default function AdminPanelPage() {
       if (e?.code === 'ACTION_REJECTED' || e?.code === 4001) {
         setStatusMsg({ ok: false, text: 'Withdrawal transaction was cancelled in wallet.' });
       } else {
-        setStatusMsg({ ok: false, text: e?.reason || e?.message || 'Failed to withdraw from betting contract' });
+        const msg = e?.info?.error?.message || e?.data?.message || e?.reason || e?.shortMessage || e?.message || 'Failed to withdraw from betting contract';
+        setStatusMsg({ ok: false, text: msg });
       }
     } finally {
       setIsWithdrawingBetting(false);
@@ -380,17 +424,46 @@ export default function AdminPanelPage() {
       return;
     }
 
+    let targetContract = (activeAirdropContract || getAirdropContractAddress() || '').trim();
+    if (!targetContract || !targetContract.startsWith('0x') || targetContract.length !== 42) {
+      setStatusMsg({ ok: false, text: 'Airdrop smart contract address is not set or invalid. Please set or deploy a contract first.' });
+      return;
+    }
+
     setIsWithdrawingAirdrop(true);
     try {
       const win = typeof window !== 'undefined' ? (window as any) : {};
-      const providerObj = win.okxwallet || win.ethereum;
-      if (!providerObj || !account) {
-        throw new Error('Please connect your admin wallet first.');
+      const providerObj = win.okxwallet || win.ethereum || win.rabby || win.bitkeep?.ethereum;
+      if (!providerObj) {
+        throw new Error('Wallet extension (OKX Wallet, MetaMask, Rabby) not detected in your browser.');
+      }
+
+      // 1. Ensure wallet switched to Robinhood Chain (ID: 4663)
+      try {
+        await providerObj.request({
+          method: 'wallet_switchEthereumChain',
+          params: [{ chainId: ROBINHOOD_CHAIN_CONFIG.chainHexId }],
+        });
+      } catch (switchError: any) {
+        if (switchError.code === 4902 || switchError.message?.includes('Unrecognized chain')) {
+          await providerObj.request({
+            method: 'wallet_addEthereumChain',
+            params: [
+              {
+                chainId: ROBINHOOD_CHAIN_CONFIG.chainHexId,
+                chainName: ROBINHOOD_CHAIN_CONFIG.name,
+                rpcUrls: [ROBINHOOD_CHAIN_CONFIG.rpcUrl],
+                nativeCurrency: ROBINHOOD_CHAIN_CONFIG.nativeCurrency,
+                blockExplorerUrls: [ROBINHOOD_CHAIN_CONFIG.blockExplorer],
+              },
+            ],
+          });
+        }
       }
 
       const provider = new ethers.BrowserProvider(providerObj);
+      await provider.send('eth_requestAccounts', []);
       const signer = await provider.getSigner();
-      const targetContract = activeAirdropContract || getAirdropContractAddress();
       const withdrawWei = ethers.parseEther(num.toString());
 
       setStatusMsg({ ok: true, text: 'Please confirm emergency withdrawal transaction in wallet...' });
@@ -408,7 +481,8 @@ export default function AdminPanelPage() {
       if (e?.code === 'ACTION_REJECTED' || e?.code === 4001) {
         setStatusMsg({ ok: false, text: 'Withdrawal transaction was cancelled in wallet.' });
       } else {
-        setStatusMsg({ ok: false, text: e?.reason || e?.message || 'Failed to execute emergency withdraw from airdrop contract' });
+        const msg = e?.info?.error?.message || e?.data?.message || e?.reason || e?.shortMessage || e?.message || 'Failed to execute emergency withdraw from airdrop contract';
+        setStatusMsg({ ok: false, text: msg });
       }
     } finally {
       setIsWithdrawingAirdrop(false);

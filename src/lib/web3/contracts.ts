@@ -3,6 +3,8 @@ import PonspotTokenABI from './abi/PonspotTokenABI.json';
 import PonspotJackpotABI from './abi/PonspotJackpotABI.json';
 import PonspotAirdropABI from './abi/PonspotAirdropABI.json';
 
+export const DEFAULT_TOKEN_ADDRESS = '0x5cc01710b1c710d94703fb0e81f3c21ccb047e22';
+
 // --- Environment Configuration ---
 export function getPonspotTokenAddress(): string {
   if (typeof window !== 'undefined') {
@@ -11,23 +13,41 @@ export function getPonspotTokenAddress(): string {
       return saved;
     }
   }
-  return (process.env.NEXT_PUBLIC_PONSPOT_TOKEN_ADDRESS || process.env.NEXT_PUBLIC_PONS_TOKEN_ADDRESS || '').trim();
+  const envAddr = (process.env.NEXT_PUBLIC_PONSPOT_TOKEN_ADDRESS || process.env.NEXT_PUBLIC_PONS_TOKEN_ADDRESS || '').trim();
+  if (envAddr && envAddr.startsWith('0x') && envAddr.length === 42) {
+    return envAddr;
+  }
+  return DEFAULT_TOKEN_ADDRESS;
 }
 
 export const getPonsTokenAddress = getPonspotTokenAddress;
 
 export const PONSPOT_TOKEN_ADDRESS =
-  (process.env.NEXT_PUBLIC_PONSPOT_TOKEN_ADDRESS || process.env.NEXT_PUBLIC_PONS_TOKEN_ADDRESS || '').trim();
+  (process.env.NEXT_PUBLIC_PONSPOT_TOKEN_ADDRESS || process.env.NEXT_PUBLIC_PONS_TOKEN_ADDRESS || DEFAULT_TOKEN_ADDRESS).trim();
 export const PONS_TOKEN_ADDRESS = PONSPOT_TOKEN_ADDRESS;
 
 export function getGameContractAddress(): string {
   if (typeof window !== 'undefined') {
     const saved = localStorage.getItem('ponspot_deployed_game_contract') || localStorage.getItem('ponscore_deployed_game_contract');
-    if (saved && saved.startsWith('0x') && saved.length === 42) {
+    if (
+      saved &&
+      saved.startsWith('0x') &&
+      saved.length === 42 &&
+      saved.toLowerCase() !== '0x71c7656ec7ab88b098defb751b7401b5f6d8976f'
+    ) {
       return saved;
     }
   }
-  return (process.env.NEXT_PUBLIC_GAME_CONTRACT_ADDRESS || '').trim();
+  const envAddr = (process.env.NEXT_PUBLIC_GAME_CONTRACT_ADDRESS || '').trim();
+  if (
+    envAddr &&
+    envAddr.startsWith('0x') &&
+    envAddr.length === 42 &&
+    envAddr.toLowerCase() !== '0x71c7656ec7ab88b098defb751b7401b5f6d8976f'
+  ) {
+    return envAddr;
+  }
+  return '';
 }
 
 export const GAME_CONTRACT_ADDRESS =
@@ -53,8 +73,9 @@ export function getReadOnlyProvider(): ethers.JsonRpcProvider {
  * Get PONSPOT Token Contract instance
  */
 export function getPonspotContract(runner?: ethers.ContractRunner): ethers.Contract {
+  const tokenAddress = getPonspotTokenAddress();
   return new ethers.Contract(
-    getPonspotTokenAddress(),
+    tokenAddress || DEFAULT_TOKEN_ADDRESS,
     PonspotTokenABI,
     runner || getReadOnlyProvider()
   );
@@ -66,8 +87,9 @@ export const getPonsContract = getPonspotContract;
  * Get Ponspot Jackpot Contract instance
  */
 export function getGameContract(runner?: ethers.ContractRunner, customAddress?: string): ethers.Contract {
+  const gameAddress = customAddress || getGameContractAddress();
   return new ethers.Contract(
-    customAddress || getGameContractAddress(),
+    gameAddress,
     PonspotJackpotABI,
     runner || getReadOnlyProvider()
   );
@@ -78,6 +100,7 @@ export function getGameContract(runner?: ethers.ContractRunner, customAddress?: 
  */
 export async function getPonspotBalance(accountAddress: string): Promise<bigint> {
   try {
+    if (!accountAddress || !accountAddress.startsWith('0x')) return 0n;
     const contract = getPonspotContract();
     return await contract.balanceOf(accountAddress);
   } catch (e) {
@@ -96,7 +119,11 @@ export async function getPonspotAllowance(
   spenderAddress?: string
 ): Promise<bigint> {
   try {
+    if (!ownerAddress || !ownerAddress.startsWith('0x')) return 0n;
     const targetSpender = spenderAddress || getGameContractAddress();
+    if (!targetSpender || !targetSpender.startsWith('0x') || targetSpender.length !== 42) {
+      return 0n;
+    }
     const contract = getPonspotContract();
     return await contract.allowance(ownerAddress, targetSpender);
   } catch (e) {
@@ -111,12 +138,21 @@ export const getPonsAllowance = getPonspotAllowance;
  */
 export async function approvePonspot(
   signer: ethers.Signer,
-  amount: bigint,
+  amount?: bigint,
   spenderAddress?: string
 ): Promise<string> {
   const targetSpender = spenderAddress || getGameContractAddress();
+  if (!targetSpender || !targetSpender.startsWith('0x') || targetSpender.length !== 42) {
+    throw new Error('Alamat Smart Contract Game belum diset atau tidak valid. Harap pastikan game contract sudah dideploy.');
+  }
+  const tokenAddress = getPonspotTokenAddress();
+  if (!tokenAddress || !tokenAddress.startsWith('0x') || tokenAddress.length !== 42) {
+    throw new Error('Alamat Token Contract tidak valid.');
+  }
+
   const contract = getPonspotContract(signer);
-  const tx = await contract.approve(targetSpender, amount);
+  const approveAmount = amount && amount > 0n ? amount : ethers.MaxUint256;
+  const tx = await contract.approve(targetSpender, approveAmount);
   const receipt = await tx.wait();
   return receipt.hash || tx.hash;
 }
@@ -357,11 +393,57 @@ export async function withdrawBettingContractOnChain(
   amountWei: bigint,
   customGameAddress?: string
 ): Promise<string> {
-  const contract = getGameContract(signer, customGameAddress);
-  const withdrawGameId = `admin-withdraw-${Date.now()}`;
-  const tx = await contract.claimWinnings(withdrawGameId, amountWei);
+  const gameAddr = customGameAddress || getGameContractAddress();
+  if (!gameAddr || !gameAddr.startsWith('0x') || gameAddr.length !== 42) {
+    throw new Error('Alamat Smart Contract Game belum diset atau tidak valid. Silakan set atau deploy contract terlebih dahulu.');
+  }
+
+  const contract = getGameContract(signer, gameAddr);
+  
+  // Try adminWithdrawPool first (new contract has this — admin-only, no pool balance restriction)
+  let tx;
+  try {
+    if (typeof contract['adminWithdrawPool'] === 'function') {
+      tx = await contract.adminWithdrawPool(amountWei);
+    } else {
+      throw new Error('NO_ADMIN_WITHDRAW');
+    }
+  } catch (e: any) {
+    // Fallback: old contract without adminWithdrawPool, use claimWinnings
+    if (e?.message === 'NO_ADMIN_WITHDRAW' || e?.code === 'CALL_EXCEPTION') {
+      const withdrawGameId = `admin-withdraw-${Date.now()}`;
+      if (typeof contract['claimWinnings(string,uint256)'] === 'function') {
+        tx = await contract['claimWinnings(string,uint256)'](withdrawGameId, amountWei);
+      } else {
+        tx = await contract.claimWinnings(withdrawGameId, amountWei);
+      }
+    } else {
+      throw e;
+    }
+  }
+
   const receipt = await tx.wait();
-  return receipt.hash || tx.hash;
+  return receipt?.hash || tx.hash;
+}
+
+/**
+ * Rescue any ERC20 token stuck in the game contract (using adminWithdraw)
+ * Only works with new contract that has adminWithdraw function
+ */
+export async function rescueTokenFromContract(
+  signer: ethers.Signer,
+  tokenAddress: string,
+  amountWei: bigint,
+  customGameAddress?: string
+): Promise<string> {
+  const gameAddr = customGameAddress || getGameContractAddress();
+  if (!gameAddr || !gameAddr.startsWith('0x') || gameAddr.length !== 42) {
+    throw new Error('Alamat Smart Contract Game tidak valid.');
+  }
+  const contract = getGameContract(signer, gameAddr);
+  const tx = await contract.adminWithdraw(tokenAddress, amountWei);
+  const receipt = await tx.wait();
+  return receipt?.hash || tx.hash;
 }
 
 export async function withdrawAirdropContractOnChain(
@@ -369,8 +451,13 @@ export async function withdrawAirdropContractOnChain(
   amountWei: bigint,
   customAirdropAddress?: string
 ): Promise<string> {
-  const contract = getAirdropContract(signer, customAirdropAddress);
+  const airdropAddr = customAirdropAddress || getAirdropContractAddress();
+  if (!airdropAddr || !airdropAddr.startsWith('0x') || airdropAddr.length !== 42) {
+    throw new Error('Alamat Smart Contract Airdrop belum diset atau tidak valid. Silakan set atau deploy contract terlebih dahulu.');
+  }
+
+  const contract = getAirdropContract(signer, airdropAddr);
   const tx = await contract.emergencyWithdraw(amountWei);
   const receipt = await tx.wait();
-  return receipt.hash || tx.hash;
+  return receipt?.hash || tx.hash;
 }

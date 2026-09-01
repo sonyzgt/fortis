@@ -44,6 +44,7 @@ import {
   User,
   Edit3,
   Scale,
+  RefreshCw,
 } from 'lucide-react';
 
 import { getUserStats, getUserLevelInfo, recordUserBet, recordAirdropClaim } from '@/lib/levelSystem';
@@ -285,22 +286,42 @@ export default function PonscorePage() {
     return () => clearInterval(t);
   }, []);
 
-  // Auto-sync active game contract address from server
+  // Auto-sync active game & token contract address from server on refresh / mount
   useEffect(() => {
-    const syncContract = async () => {
+    const syncContracts = async () => {
+      const apiBase = getApiBaseUrl();
+      const ts = Date.now();
       try {
-        const apiBase = getApiBaseUrl();
-        const res = await fetch(`${apiBase}/api/contract-address`);
+        const res = await fetch(`${apiBase}/api/contract-address?_t=${ts}`, { cache: 'no-store' });
         const data = await res.json();
-        if (data.contractAddress && data.contractAddress.startsWith('0x')) {
+        if (data?.contractAddress && data.contractAddress.startsWith('0x') && data.contractAddress.length === 42) {
           localStorage.setItem('ponscore_deployed_game_contract', data.contractAddress);
+          localStorage.setItem('ponspot_deployed_game_contract', data.contractAddress);
+        } else {
+          localStorage.removeItem('ponscore_deployed_game_contract');
+          localStorage.removeItem('ponspot_deployed_game_contract');
         }
       } catch (e) {
-        console.warn('Could not sync contract address from server', e);
+        console.warn('Could not sync game contract address from server', e);
       }
+
+      try {
+        const tokenRes = await fetch(`${apiBase}/api/token-contract-address?_t=${ts}`, { cache: 'no-store' });
+        const tokenData = await tokenRes.json();
+        if (tokenData?.tokenAddress && tokenData.tokenAddress.startsWith('0x') && tokenData.tokenAddress.length === 42) {
+          localStorage.setItem('ponscore_token_contract', tokenData.tokenAddress);
+          localStorage.setItem('ponspot_token_contract', tokenData.tokenAddress);
+        }
+      } catch (e) {
+        console.warn('Could not sync token contract address from server', e);
+      }
+
+      try {
+        await refreshBalances?.();
+      } catch {}
     };
-    syncContract();
-  }, []);
+    syncContracts();
+  }, [refreshBalances]);
 
   // Request unclaimed games whenever account changes
   useEffect(() => {
@@ -343,6 +364,14 @@ export default function PonscorePage() {
     socket.on('ponscore_contract_updated', (data: any) => {
       if (data?.contractAddress) {
         localStorage.setItem('ponscore_deployed_game_contract', data.contractAddress);
+        localStorage.setItem('ponspot_deployed_game_contract', data.contractAddress);
+      }
+    });
+
+    socket.on('ponscore_token_updated', (data: any) => {
+      if (data?.tokenAddress) {
+        localStorage.setItem('ponscore_token_contract', data.tokenAddress);
+        localStorage.setItem('ponspot_token_contract', data.tokenAddress);
       }
     });
 
@@ -480,22 +509,34 @@ export default function PonscorePage() {
   // Handle Approve Token
   const handleApprove = async () => {
     if (!account) {
-      connectWallet();
+      setShowWalletModal(true);
       return;
     }
+
     try {
       const tx = await approveTokens(betAmount);
       if (tx) {
         setToastMsg({
           ok: true,
-          title: 'PONSPOT Token Approved!',
-          desc: `Approved ${betAmount.toLocaleString()} PONSPOT for the game contract.`,
+          title: 'Token Approved!',
+          desc: `Token marcopolo (PONSPOT) berhasil di-approve! Anda sekarang dapat memasang taruhan.`,
           txHash: tx,
         });
         setTimeout(() => setToastMsg(null), 5000);
       }
     } catch (e: any) {
-      setToastMsg({ ok: false, title: 'Approval Cancelled', desc: e?.message || 'Failed to approve token' });
+      const isUserRejected =
+        e?.code === 4001 ||
+        e?.code === 'ACTION_REJECTED' ||
+        e?.message?.includes('user rejected') ||
+        e?.message?.includes('User denied');
+      setToastMsg({
+        ok: false,
+        title: isUserRejected ? 'Approval Dibatalkan' : 'Approval Gagal',
+        desc: isUserRejected
+          ? 'Transaksi persetujuan token dibatalkan di wallet.'
+          : e?.reason || e?.message || 'Gagal menyetujui token PONSPOT.',
+      });
       setTimeout(() => setToastMsg(null), 4000);
     }
   };
@@ -503,7 +544,7 @@ export default function PonscorePage() {
   // Handle Place Bet
   const handleBet = async () => {
     if (!account) {
-      connectWallet();
+      setShowWalletModal(true);
       return;
     }
     if (!game) return;
@@ -793,6 +834,23 @@ export default function PonscorePage() {
                       <span>EDIT PROFILE & AVATAR</span>
                     </button>
 
+                    {/* Free Faucet Button for Testing */}
+                    <button
+                      onClick={() => {
+                        faucet();
+                        setToastMsg({
+                          ok: true,
+                          title: 'Faucet Berhasil!',
+                          desc: 'Berhasil menambahkan +500,000 PONSPOT ke saldo Anda.',
+                        });
+                        setTimeout(() => setToastMsg(null), 3500);
+                      }}
+                      className="w-full py-2 bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 active:scale-95"
+                    >
+                      <Gift className="w-3.5 h-3.5" />
+                      <span>Claim Free Faucet (+500k)</span>
+                    </button>
+
                     <div className="p-2.5 bg-white/60 dark:bg-[#14241d]/70 rounded-xl border border-white/80 dark:border-[#718D76]/30 flex justify-between items-center text-[11px]">
                       <span className="text-[#526256] dark:text-[#8fa596]">Approved Allowance:</span>
                       <span className="text-[#243329] dark:text-emerald-300 font-bold">{ponsAllowance.toLocaleString()} PONSPOT</span>
@@ -1002,10 +1060,13 @@ export default function PonscorePage() {
                   <button
                     onClick={handleApprove}
                     disabled={txState === 'approving'}
-                    className="btn-primary-sage px-6 py-2.5 font-black rounded-xl text-xs transition-all flex items-center gap-1.5 flex-shrink-0"
+                    className="btn-primary-sage px-6 py-2.5 font-black rounded-xl text-xs transition-all flex items-center gap-1.5 flex-shrink-0 active:scale-95 disabled:opacity-75 disabled:cursor-not-allowed shadow-md"
                   >
                     {txState === 'approving' ? (
-                      <span className="animate-pulse">APPROVING...</span>
+                      <>
+                        <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                        <span className="animate-pulse">APPROVING...</span>
+                      </>
                     ) : (
                       <>
                         <Lock className="w-3.5 h-3.5" />
@@ -1023,12 +1084,15 @@ export default function PonscorePage() {
                     }
                     className={`tactile-btn px-6 py-2.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 flex-shrink-0 ${
                       (game?.status === 'waiting' || game?.status === 'open') && ponsBalance >= betAmount
-                        ? 'btn-primary-sage'
+                        ? 'btn-primary-sage active:scale-95 shadow-md'
                         : 'bg-white/40 dark:bg-white/10 text-[#526256]/60 dark:text-slate-500 border border-white/60 dark:border-white/10 cursor-not-allowed'
                     }`}
                   >
                     {txState === 'betting' ? (
-                      <span className="animate-pulse">SIGNING TX...</span>
+                      <>
+                        <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                        <span className="animate-pulse">SIGNING TX...</span>
+                      </>
                     ) : game?.status === 'spinning' ? (
                       'DRAWING...'
                     ) : (
@@ -1407,6 +1471,7 @@ export default function PonscorePage() {
         onClose={() => setShowWalletModal(false)}
         onSelect={(type) => connectWallet(type)}
       />
+
     </div>
   );
 }

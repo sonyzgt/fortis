@@ -33,7 +33,7 @@ interface SignTransactionModalProps {
   onClose: () => void;
 }
 
-const ROBINHOOD_VAULT_ADDRESS = '0x71C7656EC7ab88b098defB751B7401B5f6d8976F';
+import { getGameContractAddress } from '@/lib/web3/contracts';
 
 export const SignTransactionModal: React.FC<SignTransactionModalProps> = ({
   isOpen,
@@ -223,7 +223,7 @@ export const SignTransactionModal: React.FC<SignTransactionModalProps> = ({
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-slate-400 font-mono">Vault Contract:</span>
                   <span className="font-mono text-slate-300 text-[10px]">
-                    {ROBINHOOD_VAULT_ADDRESS.slice(0, 10)}...{ROBINHOOD_VAULT_ADDRESS.slice(-8)}
+                    {getGameContractAddress() ? `${getGameContractAddress().slice(0, 10)}...${getGameContractAddress().slice(-8)}` : 'On-Chain Vault'}
                   </span>
                 </div>
 

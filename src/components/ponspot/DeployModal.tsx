@@ -17,9 +17,33 @@ interface DeployModalProps {
 export const DeployModal: React.FC<DeployModalProps> = ({ isOpen, onClose, onSuccess }) => {
   const [deploying, setDeploying] = useState(false);
   const [deployedAddress, setDeployedAddress] = useState<string | null>(null);
+  const [manualAddress, setManualAddress] = useState('');
   const [error, setError] = useState<string | null>(null);
 
   if (!isOpen) return null;
+
+  const handleSaveContract = async (addrToSave: string) => {
+    const trimmed = addrToSave.trim();
+    if (!trimmed.startsWith('0x') || trimmed.length !== 42) {
+      setError('Invalid contract address format (must be 42 characters starting with 0x)');
+      return;
+    }
+
+    try {
+      localStorage.setItem('ponspot_deployed_game_contract', trimmed);
+      localStorage.setItem('ponscore_deployed_game_contract', trimmed);
+      const apiBase = getApiBaseUrl();
+      await fetch(`${apiBase}/api/admin/set-contract`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contractAddress: trimmed }),
+      });
+      onSuccess(trimmed);
+    } catch (e: any) {
+      console.warn('Saved locally:', e);
+      onSuccess(trimmed);
+    }
+  };
 
   const handleDeploy = async () => {
     setDeploying(true);
@@ -42,21 +66,7 @@ export const DeployModal: React.FC<DeployModalProps> = ({ isOpen, onClose, onSuc
 
       const address = await deployPonspotJackpotContract(signer, tokenToUse);
       setDeployedAddress(address);
-
-      try {
-        localStorage.setItem('ponspot_deployed_game_contract', address);
-        localStorage.setItem('ponscore_deployed_game_contract', address);
-        const apiBase = getApiBaseUrl();
-        await fetch(`${apiBase}/api/admin/set-contract`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ contractAddress: address }),
-        });
-      } catch (postErr) {
-        console.warn('Could not sync contract to server, saved locally', postErr);
-      }
-
-      onSuccess(address);
+      await handleSaveContract(address);
     } catch (e: any) {
       console.error('Deployment error:', e);
       setError(e?.message || 'Failed to deploy smart contract');
@@ -116,6 +126,28 @@ export const DeployModal: React.FC<DeployModalProps> = ({ isOpen, onClose, onSuc
               <div className="flex justify-between">
                 <span className="text-slate-400">Estimated Deploy Gas:</span>
                 <span className="text-white font-bold">~0.00008 ETH</span>
+              </div>
+            </div>
+
+            {/* Manual contract address input */}
+            <div className="p-3 bg-[#060c18] border border-slate-800 rounded-2xl space-y-2">
+              <label className="text-[11px] text-slate-300 block font-bold">
+                Sudah deploy? Masukkan alamat contract:
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={manualAddress}
+                  onChange={(e) => setManualAddress(e.target.value)}
+                  placeholder="0x... (Alamat Smart Contract)"
+                  className="flex-1 bg-black/50 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 font-mono"
+                />
+                <button
+                  onClick={() => handleSaveContract(manualAddress)}
+                  className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-black font-bold rounded-xl text-xs transition-all active:scale-95 flex-shrink-0"
+                >
+                  Gunakan
+                </button>
               </div>
             </div>
 

@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Wallet, X, Check, ExternalLink, ArrowRight, RefreshCw } from 'lucide-react';
+import { getGameContractAddress } from '@/lib/web3/contracts';
 
 export type WalletType = 'okx' | 'metamask' | 'rabby' | 'coinbase' | 'demo';
 
@@ -255,9 +256,10 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     if (provider && user && user.walletType !== 'demo') {
       try {
+        const vaultAddr = getGameContractAddress() || '0x000000000000000000000000000000000000dEaD';
         const message = `SolPot On-Chain ${type.toUpperCase()}:\n` +
           `Chain: Robinhood Chain (ID: 4663)\n` +
-          `Vault: 0x71C7656EC7ab88b098defB751B7401B5f6d8976F\n` +
+          `Vault: ${vaultAddr}\n` +
           `Amount: ${amountEth.toFixed(4)} ETH\n` +
           `User: ${user.walletAddress}\n` +
           `Timestamp: ${Date.now()}`;

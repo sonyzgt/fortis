@@ -1,4 +1,4 @@
-﻿# Dependencies
+# Dependencies
 /node_modules
 /.pnp
 .pnp.js
@@ -26,7 +26,12 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# OS Files
+# OS & Temp Files
 .DS_Store
 *.pem
 Thumbs.db
+*.swp
+..*.swp
+tsconfig.tsbuildinfo
+contracts/out/
+

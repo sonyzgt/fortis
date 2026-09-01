@@ -55,7 +55,7 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
     try {
       const hash = await claimWinnings(
         game.gameId,
-        winner?.prizePons,
+        winner?.totalPoolPons,   // Pass total pool (100%), contract splits 5% burn / 95% winner internally
         game.revealedServerSeed || '',
         game.serverSeedHash || ''
       );
