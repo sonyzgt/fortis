@@ -164,8 +164,8 @@ export default function PonscorePage() {
       }
       setToastMsg({
         ok: true,
-        title: 'Airdrop Telah Di-Reset!',
-        desc: 'Riwayat klaim telah di-reset oleh admin. Semua wallet kini dapat mencoba klaim ulang.',
+        title: 'Airdrop Reset!',
+        desc: 'Claim history has been reset by admin. All eligible wallets can now claim again.',
       });
       setTimeout(() => setToastMsg(null), 4000);
     };
@@ -519,7 +519,7 @@ export default function PonscorePage() {
         setToastMsg({
           ok: true,
           title: 'Token Approved!',
-          desc: `Token marcopolo (PONSPOT) berhasil di-approve! Anda sekarang dapat memasang taruhan.`,
+          desc: `PONSPOT token successfully approved! You can now place bets on-chain.`,
           txHash: tx,
         });
         setTimeout(() => setToastMsg(null), 5000);
@@ -532,10 +532,10 @@ export default function PonscorePage() {
         e?.message?.includes('User denied');
       setToastMsg({
         ok: false,
-        title: isUserRejected ? 'Approval Dibatalkan' : 'Approval Gagal',
+        title: isUserRejected ? 'Approval Cancelled' : 'Approval Failed',
         desc: isUserRejected
-          ? 'Transaksi persetujuan token dibatalkan di wallet.'
-          : e?.reason || e?.message || 'Gagal menyetujui token PONSPOT.',
+          ? 'Token approval transaction was cancelled in wallet.'
+          : e?.reason || e?.message || 'Failed to approve PONSPOT tokens.',
       });
       setTimeout(() => setToastMsg(null), 4000);
     }
@@ -840,8 +840,8 @@ export default function PonscorePage() {
                         faucet();
                         setToastMsg({
                           ok: true,
-                          title: 'Faucet Berhasil!',
-                          desc: 'Berhasil menambahkan +500,000 PONSPOT ke saldo Anda.',
+                          title: 'Faucet Claimed!',
+                          desc: 'Successfully credited +500,000 PONSPOT to your demo balance.',
                         });
                         setTimeout(() => setToastMsg(null), 3500);
                       }}

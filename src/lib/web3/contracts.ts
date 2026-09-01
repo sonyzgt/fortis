@@ -143,11 +143,11 @@ export async function approvePonspot(
 ): Promise<string> {
   const targetSpender = spenderAddress || getGameContractAddress();
   if (!targetSpender || !targetSpender.startsWith('0x') || targetSpender.length !== 42) {
-    throw new Error('Alamat Smart Contract Game belum diset atau tidak valid. Harap pastikan game contract sudah dideploy.');
+    throw new Error('Game Smart Contract address is not configured or invalid. Please ensure the game contract is deployed.');
   }
   const tokenAddress = getPonspotTokenAddress();
   if (!tokenAddress || !tokenAddress.startsWith('0x') || tokenAddress.length !== 42) {
-    throw new Error('Alamat Token Contract tidak valid.');
+    throw new Error('Invalid Token Contract address.');
   }
 
   const contract = getPonspotContract(signer);
@@ -220,7 +220,7 @@ export async function claimWinningsOnChain(
   } catch (err0: any) {
     console.warn('claimWinnings(string,uint256) failed:', err0);
     if (err0?.code === 4001 || err0?.message?.includes('user rejected') || err0?.message?.includes('User denied')) {
-      throw new Error('Transaksi klaim dibatalkan di wallet.');
+      throw new Error('Claim transaction was cancelled in wallet.');
     }
   }
 
@@ -241,7 +241,7 @@ export async function claimWinningsOnChain(
   } catch (err1: any) {
     console.warn('claimWinnings with proof failed:', err1);
     if (err1?.code === 4001 || err1?.message?.includes('user rejected') || err1?.message?.includes('User denied')) {
-      throw new Error('Transaksi klaim dibatalkan di wallet.');
+      throw new Error('Claim transaction was cancelled in wallet.');
     }
   }
 
@@ -253,7 +253,7 @@ export async function claimWinningsOnChain(
     return receipt.hash || tx.hash;
   } catch (err2: any) {
     console.error('All claim attempts failed on-chain:', err2);
-    throw new Error(err2?.reason || err2?.message || 'Gagal mengeksekusi transfer klaim di blockchain.');
+    throw new Error(err2?.reason || err2?.message || 'Failed to execute claim payout on blockchain.');
   }
 }
 
@@ -395,7 +395,7 @@ export async function withdrawBettingContractOnChain(
 ): Promise<string> {
   const gameAddr = customGameAddress || getGameContractAddress();
   if (!gameAddr || !gameAddr.startsWith('0x') || gameAddr.length !== 42) {
-    throw new Error('Alamat Smart Contract Game belum diset atau tidak valid. Silakan set atau deploy contract terlebih dahulu.');
+    throw new Error('Game Smart Contract address is not configured or invalid. Please deploy or set the contract first.');
   }
 
   const contract = getGameContract(signer, gameAddr);
@@ -438,7 +438,7 @@ export async function rescueTokenFromContract(
 ): Promise<string> {
   const gameAddr = customGameAddress || getGameContractAddress();
   if (!gameAddr || !gameAddr.startsWith('0x') || gameAddr.length !== 42) {
-    throw new Error('Alamat Smart Contract Game tidak valid.');
+    throw new Error('Game Smart Contract address is invalid.');
   }
   const contract = getGameContract(signer, gameAddr);
   const tx = await contract.adminWithdraw(tokenAddress, amountWei);
@@ -453,7 +453,7 @@ export async function withdrawAirdropContractOnChain(
 ): Promise<string> {
   const airdropAddr = customAirdropAddress || getAirdropContractAddress();
   if (!airdropAddr || !airdropAddr.startsWith('0x') || airdropAddr.length !== 42) {
-    throw new Error('Alamat Smart Contract Airdrop belum diset atau tidak valid. Silakan set atau deploy contract terlebih dahulu.');
+    throw new Error('Airdrop Smart Contract address is not configured or invalid. Please deploy or set the contract first.');
   }
 
   const contract = getAirdropContract(signer, airdropAddr);
@@ -461,3 +461,4 @@ export async function withdrawAirdropContractOnChain(
   const receipt = await tx.wait();
   return receipt?.hash || tx.hash;
 }
+

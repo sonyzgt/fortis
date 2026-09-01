@@ -97,12 +97,12 @@ export default function TermsOfUsePage() {
                 Terms of Use & General Conditions
               </h1>
               <p className="text-xs text-[#526256] dark:text-[#8fa596] font-mono mt-0.5">
-                Terakhir Diperbarui: 31 Agustus 2026 • Berlaku Efektif untuk Seluruh Pengguna
+                Last Updated: August 31, 2026 • Effective for All Users
               </p>
             </div>
           </div>
           <p className="text-xs sm:text-sm text-[#3a4d3f] dark:text-slate-300 leading-relaxed pt-2">
-            Harap baca syarat dan ketentuan ini secara cermat sebelum menghubungkan wallet Web3 Anda ke platform <strong className="text-[#243329] dark:text-white font-bold">Ponspot</strong>. Dengan mengakses, menghubungkan wallet, atau memasang taruhan token di platform ini, Anda secara hukum menyatakan bahwa Anda menyetujui seluruh ketentuan yang tercantum di bawah ini.
+            Please read these terms and conditions carefully before connecting your Web3 wallet to the <strong className="text-[#243329] dark:text-white font-bold">Ponspot</strong> platform. By accessing, connecting your wallet, or placing token bets on this platform, you legally agree to be bound by all the terms set forth below.
           </p>
         </motion.div>
 
@@ -112,13 +112,13 @@ export default function TermsOfUsePage() {
           <section className="p-6 rounded-3xl bg-white/70 dark:bg-[#0c1611]/80 backdrop-blur-xl border border-white/80 dark:border-[#718D76]/25 shadow-md space-y-3">
             <div className="flex items-center gap-2.5 pb-2 border-b border-black/5 dark:border-white/10 text-[#243329] dark:text-white">
               <ShieldCheck className="w-5 h-5 text-[#718D76] dark:text-emerald-400" />
-              <h2 className="text-base font-black uppercase tracking-wide">1. Persyaratan Usia & Kepatuhan Hukum (18+)</h2>
+              <h2 className="text-base font-black uppercase tracking-wide">1. Age Requirement & Legal Compliance (18+)</h2>
             </div>
             <p>
-              Partisipasi dalam permainan terdesentralisasi di Ponspot hanya diizinkan untuk individu yang berusia sekurang-kurangnya <strong>18 (delapan belas) tahun</strong> atau usia legal mayoritas yang berlaku di yurisdiksi tempat tinggal Anda.
+              Participation in decentralized games on Ponspot is strictly permitted only for individuals who are at least <strong>18 (eighteen) years of age</strong> or the legal age of majority in your jurisdiction.
             </p>
             <p>
-              Pengguna bertanggung jawab penuh untuk memastikan bahwa interaksi dengan smart contract game blockchain tidak melanggar peraturan atau undang-undang yang berlaku di wilayah hukum tempat pengguna berada.
+              Users are fully responsible for ensuring that interacting with blockchain smart contracts does not violate any local laws or regulations in their jurisdiction.
             </p>
           </section>
 
@@ -126,17 +126,17 @@ export default function TermsOfUsePage() {
           <section className="p-6 rounded-3xl bg-white/70 dark:bg-[#0c1611]/80 backdrop-blur-xl border border-white/80 dark:border-[#718D76]/25 shadow-md space-y-3">
             <div className="flex items-center gap-2.5 pb-2 border-b border-black/5 dark:border-white/10 text-[#243329] dark:text-white">
               <Lock className="w-5 h-5 text-[#718D76] dark:text-emerald-400" />
-              <h2 className="text-base font-black uppercase tracking-wide">2. Sifat Game Terdesentralisasi (*Non-Custodial Escrow*)</h2>
+              <h2 className="text-base font-black uppercase tracking-wide">2. Decentralized Non-Custodial Escrow</h2>
             </div>
             <p>
-              Ponspot beroperasi secara penuh di atas jaringan <strong>Robinhood Chain (L2)</strong> melalui smart contract otonom:
+              Ponspot operates entirely on <strong>Robinhood Chain (L2)</strong> through autonomous smart contracts:
             </p>
             <ul className="list-disc list-inside space-y-1.5 pl-2 font-mono text-xs text-[#243329] dark:text-emerald-300">
-              <li>Token Taruhan: <code className="bg-black/5 dark:bg-black/40 px-2 py-0.5 rounded">0x5cc01710b1c710d94703fb0e81f3c21ccb047e22</code></li>
-              <li>Platform Vault: <code className="bg-black/5 dark:bg-black/40 px-2 py-0.5 rounded">Smart Contract Terverifikasi On-Chain</code></li>
+              <li>Betting Token: <code className="bg-black/5 dark:bg-black/40 px-2 py-0.5 rounded">Verified ERC-20 Token</code></li>
+              <li>Platform Vault: <code className="bg-black/5 dark:bg-black/40 px-2 py-0.5 rounded">On-Chain Verified Escrow Contract</code></li>
             </ul>
             <p>
-              Dana taruhan pemain dipegang langsung oleh smart contract escrow di blockchain dan tidak disimpan oleh pihak ketiga terpusat. Klaim kemenangan dicairkan secara otonom oleh pemenang langsung ke wallet pribadinya tanpa memerlukan izin manual dari admin.
+              Player betting funds are held strictly by the blockchain escrow smart contract and never by a centralized third party. Winner prizes are disbursed autonomously directly to the winner's wallet without requiring manual admin approval.
             </p>
           </section>
 
@@ -144,15 +144,15 @@ export default function TermsOfUsePage() {
           <section className="p-6 rounded-3xl bg-white/70 dark:bg-[#0c1611]/80 backdrop-blur-xl border border-white/80 dark:border-[#718D76]/25 shadow-md space-y-3">
             <div className="flex items-center gap-2.5 pb-2 border-b border-black/5 dark:border-white/10 text-[#243329] dark:text-white">
               <CheckCircle2 className="w-5 h-5 text-[#718D76] dark:text-emerald-400" />
-              <h2 className="text-base font-black uppercase tracking-wide">3. Protokol Keadilan Terbukti (*Provably Fair*)</h2>
+              <h2 className="text-base font-black uppercase tracking-wide">3. Provably Fair Protocol</h2>
             </div>
             <p>
-              Setiap putaran game Jackpot di Ponspot dijamin adil 100% menggunakan algoritma kriptografi <strong>HMAC-SHA256</strong>:
+              Every Jackpot game round on Ponspot is 100% provably fair using the cryptographic <strong>HMAC-SHA256</strong> algorithm:
             </p>
             <ul className="list-disc list-inside space-y-1 pl-2">
-              <li><strong>Server Seed Pre-Commitment:</strong> Hash rahasia dibuat dan dipublikasikan sebelum taruhan pertama dibuka.</li>
-              <li><strong>Public Block Seed:</strong> Dikombinasikan dengan data putaran unik secara transparan.</li>
-              <li><strong>Verifikasi Bebas:</strong> Setiap pemain dapat memverifikasi keabsahan matematis dari setiap tiket pemenang melalui modal verifikasi atau kode verifikasi independen.</li>
+              <li><strong>Server Seed Pre-Commitment:</strong> A secret cryptographic hash is generated and published before the first bet opens.</li>
+              <li><strong>Public Block Seed:</strong> Combined transparently with unique round parameters.</li>
+              <li><strong>Independent Verification:</strong> Any player can independently verify the mathematical authenticity of winning tickets using the verification modal or custom verification code.</li>
             </ul>
           </section>
 
@@ -160,19 +160,19 @@ export default function TermsOfUsePage() {
           <section className="p-6 rounded-3xl bg-white/70 dark:bg-[#0c1611]/80 backdrop-blur-xl border border-white/80 dark:border-[#718D76]/25 shadow-md space-y-3">
             <div className="flex items-center gap-2.5 pb-2 border-b border-black/5 dark:border-white/10 text-[#243329] dark:text-white">
               <Flame className="w-5 h-5 text-amber-500" />
-              <h2 className="text-base font-black uppercase tracking-wide">4. Pembagian Hadiah & 5% Deflationary Burn</h2>
+              <h2 className="text-base font-black uppercase tracking-wide">4. Prize Distribution & 5% Deflationary Burn</h2>
             </div>
             <p>
-              Total pot taruhan dalam setiap ronde jackpot didistribusikan sebagai berikut:
+              The total pot in each jackpot round is distributed as follows:
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
               <div className="p-3.5 rounded-2xl bg-white/60 dark:bg-[#14241d]/70 border border-white/80 dark:border-[#718D76]/30">
-                <span className="text-xs font-black text-[#243329] dark:text-emerald-400 block font-mono">🏆 95% HADIAH PEMENANG</span>
-                <span className="text-xs text-[#526256] dark:text-slate-400">Ditransfer langsung ke wallet pemenang saat klaim.</span>
+                <span className="text-xs font-black text-[#243329] dark:text-emerald-400 block font-mono">🏆 95% WINNER PRIZE</span>
+                <span className="text-xs text-[#526256] dark:text-slate-400">Transferred directly to the winner's wallet upon claim.</span>
               </div>
               <div className="p-3.5 rounded-2xl bg-white/60 dark:bg-[#14241d]/70 border border-white/80 dark:border-[#718D76]/30">
                 <span className="text-xs font-black text-amber-600 dark:text-amber-400 block font-mono">🔥 5% TOKEN BURN</span>
-                <span className="text-xs text-[#526256] dark:text-slate-400">Ditransfer permanen ke Dead Address (<code className="text-[10px]">0x0000...dEaD</code>).</span>
+                <span className="text-xs text-[#526256] dark:text-slate-400">Burned permanently to the Dead Address (<code className="text-[10px]">0x0000...dEaD</code>).</span>
               </div>
             </div>
           </section>
@@ -181,10 +181,10 @@ export default function TermsOfUsePage() {
           <section className="p-6 rounded-3xl bg-white/70 dark:bg-[#0c1611]/80 backdrop-blur-xl border border-rose-200 dark:border-rose-900/40 shadow-md space-y-3 bg-rose-50/20">
             <div className="flex items-center gap-2.5 pb-2 border-b border-rose-200 dark:border-rose-900/30 text-rose-800 dark:text-rose-300">
               <AlertTriangle className="w-5 h-5 text-rose-600" />
-              <h2 className="text-base font-black uppercase tracking-wide">5. Penafian Risiko & Tanggung Jawab Pengguna</h2>
+              <h2 className="text-base font-black uppercase tracking-wide">5. Risk Disclaimer & User Responsibility</h2>
             </div>
             <p className="text-xs leading-relaxed">
-              Permainan bertaruh token crypto melibatkan risiko finansial. Hasil taruhan didasarkan pada probabilitas acak yang adil secara kriptografis. Anda bertanggung jawab penuh atas segala keputusan taruhan Anda. Ponspot tidak bertanggung jawab atas kerugian finansial yang diakibatkan oleh volatilitas harga token, biaya gas jaringan, atau kegagalan koneksi internet pihak pengguna.
+              Playing token wagering games involves financial risk. Outcomes are determined strictly by cryptographically provably fair random probability. You are solely responsible for all your betting decisions. Ponspot is not responsible for financial losses caused by token price volatility, network gas fees, or user internet connectivity failures.
             </p>
           </section>
         </div>
@@ -195,11 +195,12 @@ export default function TermsOfUsePage() {
             href="/privacy"
             className="flex items-center gap-1.5 text-[#718D76] dark:text-emerald-400 hover:underline font-bold"
           >
-            <span>Baca Kebijakan Privasi (Privacy Policy)</span>
+            <span>Read Privacy Policy</span>
             <ChevronRight className="w-4 h-4" />
           </Link>
           <span className="text-[#526256] dark:text-slate-400">© 2026 Ponspot. All rights reserved.</span>
         </div>
+
       </main>
     </div>
   );

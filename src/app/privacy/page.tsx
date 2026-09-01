@@ -94,12 +94,12 @@ export default function PrivacyPolicyPage() {
                 Privacy Policy & Data Transparency
               </h1>
               <p className="text-xs text-[#526256] dark:text-[#8fa596] font-mono mt-0.5">
-                Prinsip Desentralisasi Penuh • Tanpa KYC • Zero Personal Data Tracking
+                Full Decentralization Principle • No KYC • Zero Personal Data Tracking
               </p>
             </div>
           </div>
           <p className="text-xs sm:text-sm text-[#3a4d3f] dark:text-slate-300 leading-relaxed pt-2">
-            Di <strong className="text-[#243329] dark:text-white font-bold">Ponspot</strong>, kami memegang teguh filosofi desentralisasi Web3: privasi dan kedaulatan data pengguna adalah hak mutlak. Platform ini dirancang agar dapat digunakan tanpa perlu registrasi email, identitas pribadi (KTP/Paspor), atau data perbankan.
+            At <strong className="text-[#243329] dark:text-white font-bold">Ponspot</strong>, we strictly adhere to the Web3 decentralized philosophy: user privacy and data sovereignty are absolute rights. This platform is designed to operate without requiring email registration, government-issued IDs, or financial banking data.
           </p>
         </motion.div>
 
@@ -109,16 +109,16 @@ export default function PrivacyPolicyPage() {
           <section className="p-6 rounded-3xl bg-white/70 dark:bg-[#0c1611]/80 backdrop-blur-xl border border-white/80 dark:border-[#718D76]/25 shadow-md space-y-3">
             <div className="flex items-center gap-2.5 pb-2 border-b border-black/5 dark:border-white/10 text-[#243329] dark:text-white">
               <ShieldCheck className="w-5 h-5 text-[#718D76] dark:text-emerald-400" />
-              <h2 className="text-base font-black uppercase tracking-wide">1. Data Pribadi yang TIDAK Kami Kumpulkan</h2>
+              <h2 className="text-base font-black uppercase tracking-wide">1. Personal Data We DO NOT Collect</h2>
             </div>
             <p>
-              Ponspot <strong>tidak pernah meminta atau mengumpulkan</strong>:
+              Ponspot <strong>never asks for or collects</strong>:
             </p>
             <ul className="list-disc list-inside space-y-1 pl-2">
-              <li>Nama lengkap asli, tanggal lahir, atau alamat domisili.</li>
-              <li>Nomor telepon, email wajib, atau dokumen identitas (KTP, SIM, Paspor).</li>
-              <li>Nomor rekening bank, kartu kredit, atau informasi fiat finansial.</li>
-              <li><strong>Private Key atau Seed Phrase:</strong> Private key wallet Anda tidak pernah menyentuh server kami dan selalu aman di dalam ekstensi wallet Web3 Anda.</li>
+              <li>Full legal names, dates of birth, or residential addresses.</li>
+              <li>Phone numbers, mandatory email addresses, or government identification documents (Passport, Driver License, National ID).</li>
+              <li>Bank account numbers, credit cards, or fiat financial information.</li>
+              <li><strong>Private Keys or Seed Phrases:</strong> Your wallet private key never touches our server and remains securely stored inside your Web3 wallet extension.</li>
             </ul>
           </section>
 
@@ -126,17 +126,17 @@ export default function PrivacyPolicyPage() {
           <section className="p-6 rounded-3xl bg-white/70 dark:bg-[#0c1611]/80 backdrop-blur-xl border border-white/80 dark:border-[#718D76]/25 shadow-md space-y-3">
             <div className="flex items-center gap-2.5 pb-2 border-b border-black/5 dark:border-white/10 text-[#243329] dark:text-white">
               <Database className="w-5 h-5 text-[#718D76] dark:text-emerald-400" />
-              <h2 className="text-base font-black uppercase tracking-wide">2. Data Publik Blockchain Robinhood Chain</h2>
+              <h2 className="text-base font-black uppercase tracking-wide">2. Robinhood Chain Public Blockchain Data</h2>
             </div>
             <p>
-              Ketika Anda melakukan interaksi on-chain (seperti persetujuan token, taruhan jackpot, atau klaim hadiah), transaksi Anda dicatat di buku besar publik <strong>Robinhood Chain (L2)</strong>. Data yang bersifat publik meliputi:
+              When you perform on-chain interactions (such as token approvals, jackpot bets, or prize claims), your transaction is permanently recorded on the public <strong>Robinhood Chain (L2)</strong> ledger. Public data includes:
             </p>
             <ul className="list-disc list-inside space-y-1 pl-2">
-              <li>Alamat wallet publik (Public Key Address e.g. <code className="text-xs">0x...</code>).</li>
-              <li>Hash transaksi (*TxHash*), jumlah token yang dipertaruhkan, dan riwayat kemenangan.</li>
+              <li>Public wallet address (e.g. <code className="text-xs">0x...</code>).</li>
+              <li>Transaction hash (*TxHash*), token bet amounts, and winning payouts history.</li>
             </ul>
             <p className="text-xs text-[#526256] dark:text-slate-400">
-              Data ini dapat diverifikasi oleh siapa saja secara independen melalui block explorer publik seperti Robinhood Chain Blockscout.
+              This data can be independently verified by anyone using public block explorers like Robinhood Chain Blockscout.
             </p>
           </section>
 
@@ -144,18 +144,18 @@ export default function PrivacyPolicyPage() {
           <section className="p-6 rounded-3xl bg-white/70 dark:bg-[#0c1611]/80 backdrop-blur-xl border border-white/80 dark:border-[#718D76]/25 shadow-md space-y-3">
             <div className="flex items-center gap-2.5 pb-2 border-b border-black/5 dark:border-white/10 text-[#243329] dark:text-white">
               <Cookie className="w-5 h-5 text-[#718D76] dark:text-emerald-400" />
-              <h2 className="text-base font-black uppercase tracking-wide">3. Penyimpanan Lokal Browser (*Local Storage*)</h2>
+              <h2 className="text-base font-black uppercase tracking-wide">3. Browser Local Storage Preferences</h2>
             </div>
             <p>
-              Untuk memberikan pengalaman pengguna yang mulus dan personal, aplikasi menyimpan beberapa preferensi non-sensitif di memori lokal (*Local Storage*) browser Anda:
+              To provide a smooth and personalized user experience, the application stores non-sensitive preferences in your browser's Local Storage:
             </p>
             <ul className="list-disc list-inside space-y-1 pl-2">
-              <li><strong>Profil Kustom:</strong> Nama tampilan (*Display Nickname*) dan avatar pilihan Anda.</li>
-              <li><strong>Pengaturan Tampilan:</strong> Preferensi mode gelap/terang (*Dark/Light theme*) dan efek suara.</li>
-              <li><strong>Persetujuan Syarat:</strong> Status konfirmasi Terms of Use & batas usia 18+.</li>
+              <li><strong>Custom Profile:</strong> Your chosen display nickname and avatar.</li>
+              <li><strong>Appearance:</strong> Dark/Light theme mode preferences and sound effects toggle.</li>
+              <li><strong>Terms Agreement:</strong> Confirmation status of Terms of Use & 18+ age verification.</li>
             </ul>
             <p className="text-xs text-[#526256] dark:text-slate-400">
-              Data ini hanya tersimpan di perangkat Anda dan dapat dihapus kapan saja melalui menu pengaturan browser (*Clear Cache / Cookies*).
+              This data is stored solely on your local device and can be cleared at any time via your browser settings (*Clear Cache / Cookies*).
             </p>
           </section>
 
@@ -163,10 +163,10 @@ export default function PrivacyPolicyPage() {
           <section className="p-6 rounded-3xl bg-white/70 dark:bg-[#0c1611]/80 backdrop-blur-xl border border-white/80 dark:border-[#718D76]/25 shadow-md space-y-3">
             <div className="flex items-center gap-2.5 pb-2 border-b border-black/5 dark:border-white/10 text-[#243329] dark:text-white">
               <Mail className="w-5 h-5 text-[#718D76] dark:text-emerald-400" />
-              <h2 className="text-base font-black uppercase tracking-wide">4. Keamanan & Layanan Dukungan</h2>
+              <h2 className="text-base font-black uppercase tracking-wide">4. Security & Support Inquiries</h2>
             </div>
             <p>
-              Seluruh komunikasi jaringan antara antarmuka web dan server diamankan menggunakan enkripsi SSL/TLS tingkat tinggi. Jika Anda memiliki pertanyaan atau masukan terkait privasi dan desentralisasi, hubungi tim kami melalui:
+              All network communications between the web client and server are secured using high-grade SSL/TLS encryption. If you have any inquiries regarding privacy or decentralization, contact our team:
             </p>
             <div className="pt-2">
               <a
@@ -186,11 +186,12 @@ export default function PrivacyPolicyPage() {
             href="/terms"
             className="flex items-center gap-1.5 text-[#718D76] dark:text-emerald-400 hover:underline font-bold"
           >
-            <span>Baca Syarat & Ketentuan (Terms of Use)</span>
+            <span>Read Terms of Use</span>
             <ChevronRight className="w-4 h-4" />
           </Link>
           <span className="text-[#526256] dark:text-slate-400">© 2026 Ponspot. All rights reserved.</span>
         </div>
+
       </main>
     </div>
   );

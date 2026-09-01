@@ -143,12 +143,12 @@ export const SignTransactionModal: React.FC<SignTransactionModalProps> = ({
 
               <div>
                 <h4 className="text-base font-black text-white">
-                  {isBet ? 'Transaksi Taruhan Berhasil Ditandatangani!' : 'Hadiah Pot Berhasil Diklaim!'}
+                  {isBet ? 'Bet Transaction Successfully Signed!' : 'Jackpot Prize Successfully Claimed!'}
                 </h4>
                 <p className="text-xs text-slate-400 font-mono mt-1">
                   {isBet
-                    ? `${(details as BetSignDetails).betQty} tiket telah masuk ke pot. Peluang menang Anda terakumulasi!`
-                    : `Hadiah sebesar ${(details as ClaimSignDetails).ethAmount.toFixed(3)} ETH berhasil ditransfer ke wallet.`}
+                    ? `${(details as BetSignDetails).betQty} tickets entered into the pot. Your winning odds are accumulated!`
+                    : `Prize of ${(details as ClaimSignDetails).ethAmount.toFixed(3)} ETH successfully transferred to wallet.`}
                 </p>
               </div>
 
@@ -164,7 +164,7 @@ export const SignTransactionModal: React.FC<SignTransactionModalProps> = ({
                     rel="noreferrer"
                     className="inline-flex items-center gap-1.5 text-[11px] font-bold text-[#00f0ff] hover:underline pt-1"
                   >
-                    <span>Cek di Blockscout Explorer</span>
+                    <span>View on Blockscout Explorer</span>
                     <ExternalLink className="w-3 h-3" />
                   </a>
                 </div>
@@ -174,7 +174,7 @@ export const SignTransactionModal: React.FC<SignTransactionModalProps> = ({
                 onClick={handleDone}
                 className="tactile-btn w-full py-3 bg-gradient-to-r from-cyan-500 to-teal-400 text-black font-black rounded-xl text-xs transition-all shadow-[0_0_15px_rgba(0,240,255,0.4)]"
               >
-                Selesai
+                Done
               </button>
             </div>
           ) : status === 'rejected' ? (
@@ -183,14 +183,14 @@ export const SignTransactionModal: React.FC<SignTransactionModalProps> = ({
                 <X className="w-8 h-8" />
               </div>
               <div>
-                <h4 className="text-base font-black text-white">Tanda Tangan Dibatalkan</h4>
+                <h4 className="text-base font-black text-white">Signature Cancelled</h4>
                 <p className="text-xs text-rose-300/80 font-mono mt-1">{errorMsg}</p>
               </div>
               <button
                 onClick={() => setStatus('idle')}
                 className="tactile-btn w-full py-2.5 bg-[#0e172a] text-slate-200 hover:bg-[#132039] border border-slate-700 font-bold rounded-xl text-xs transition-all"
               >
-                Coba Lagi
+                Try Again
               </button>
             </div>
           ) : status === 'signing' || status === 'confirming' ? (
@@ -199,9 +199,9 @@ export const SignTransactionModal: React.FC<SignTransactionModalProps> = ({
                 <RefreshCw className="w-8 h-8 animate-spin" />
               </div>
               <div>
-                <h4 className="text-base font-black text-white animate-pulse">Menunggu Konfirmasi Wallet...</h4>
+                <h4 className="text-base font-black text-white animate-pulse">Waiting for Wallet Confirmation...</h4>
                 <p className="text-xs text-slate-400 font-mono mt-1">
-                  Harap periksa prompt tanda tangan di ekstensi <b>OKX / MetaMask Wallet</b> Anda di Robinhood Chain.
+                  Please review and confirm the signature prompt in your <b>OKX / MetaMask Wallet</b> on Robinhood Chain.
                 </p>
               </div>
               <div className="p-3 bg-[#050a16] rounded-xl border border-cyan-500/15 text-[11px] text-slate-400 font-mono">
@@ -242,7 +242,7 @@ export const SignTransactionModal: React.FC<SignTransactionModalProps> = ({
 
                 {isBet && (
                   <div className="pt-2 border-t border-cyan-500/15 flex items-center justify-between text-xs">
-                    <span className="text-slate-400 font-mono">Akumulasi Peluang (Chance):</span>
+                    <span className="text-slate-400 font-mono">Accumulated Odds (Chance):</span>
                     <div className="flex items-center gap-1.5 font-mono">
                       <span className="text-slate-500 text-[11px]">
                         {((details as BetSignDetails).currentTickets > 0 ? (details as BetSignDetails).currentTickets : 0)} tkts
@@ -275,7 +275,7 @@ export const SignTransactionModal: React.FC<SignTransactionModalProps> = ({
               <div className="flex items-start gap-2 p-2.5 rounded-xl bg-cyan-950/20 border border-cyan-500/15 text-[10px] text-cyan-300/80 font-mono">
                 <ShieldCheck className="w-4 h-4 text-[#00f0ff] flex-shrink-0 mt-0.5" />
                 <span>
-                  Transaksi ini dienkripsi dan diproses on-chain di Robinhood Chain (Arbitrum L2). Dana Anda terlindungi secara provably fair.
+                  This transaction is encrypted and settled on-chain on Robinhood Chain (Arbitrum L2). Your funds are provably fair.
                 </span>
               </div>
 
@@ -285,7 +285,7 @@ export const SignTransactionModal: React.FC<SignTransactionModalProps> = ({
                   onClick={handleDone}
                   className="flex-1 py-3 bg-[#0d1424] hover:bg-[#121c33] text-slate-300 font-bold rounded-xl text-xs transition-colors border border-cyan-500/20"
                 >
-                  Batal
+                  Cancel
                 </button>
                 <button
                   onClick={handleSign}
@@ -293,6 +293,7 @@ export const SignTransactionModal: React.FC<SignTransactionModalProps> = ({
                 >
                   <Sparkles className="w-4 h-4" />
                   <span>SIGN & CONFIRM ON-CHAIN</span>
+
                 </button>
               </div>
             </div>

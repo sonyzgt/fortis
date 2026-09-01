@@ -70,25 +70,25 @@ export function TermsModal({ isOpen, onAccept, onDecline }: TermsModalProps) {
           <div className="p-4 rounded-2xl bg-white/60 dark:bg-[#14241d]/70 border border-white/80 dark:border-[#718D76]/30 space-y-2.5 text-xs font-sans text-[#3a4d3f] dark:text-slate-300">
             <div className="flex items-center gap-2 text-xs font-bold text-[#243329] dark:text-white font-mono">
               <ShieldCheck className="w-4 h-4 text-[#718D76] dark:text-emerald-400" />
-              <span>Prinsip Game Terdesentralisasi Web3:</span>
+              <span>Web3 Decentralized Principles:</span>
             </div>
             <ul className="space-y-1.5 pl-2 text-[11px] leading-relaxed">
               <li className="flex items-start gap-1.5">
                 <span className="text-[#718D76] dark:text-emerald-400 font-bold">•</span>
                 <span>
-                  <strong>Non-Custodial Escrow:</strong> Taruhan dikelola langsung oleh Smart Contract di Robinhood Chain, hadiah dicairkan otonom ke wallet pemenang.
+                  <strong>Non-Custodial Escrow:</strong> Bets are held directly by smart contracts on Robinhood Chain, with winner prizes disbursed autonomously.
                 </span>
               </li>
               <li className="flex items-start gap-1.5">
                 <span className="text-[#718D76] dark:text-emerald-400 font-bold">•</span>
                 <span>
-                  <strong>100% Provably Fair:</strong> Hasil tiket acak dijamin transparan dan dapat diverifikasi secara independen dengan kriptografi SHA-256.
+                  <strong>100% Provably Fair:</strong> Random ticket outcomes are guaranteed transparent and independently verifiable with SHA-256 cryptography.
                 </span>
               </li>
               <li className="flex items-start gap-1.5">
                 <span className="text-amber-600 dark:text-amber-400 font-bold">•</span>
                 <span>
-                  <strong>5% Deflationary Burn:</strong> Biaya 5% dari setiap pot round otomatis dibakar permanen ke Dead Address (<code className="font-mono text-[10px]">0x0000...dEaD</code>).
+                  <strong>5% Deflationary Burn:</strong> A 5% fee from every round is permanently burned to the Dead Address (<code className="font-mono text-[10px]">0x0000...dEaD</code>).
                 </span>
               </li>
             </ul>
@@ -113,7 +113,7 @@ export function TermsModal({ isOpen, onAccept, onDecline }: TermsModalProps) {
                 )}
               </div>
               <span className="text-xs leading-snug">
-                Saya menyatakan bahwa saya telah berusia <strong>18 tahun ke atas</strong> (atau usia legal mayoritas) dan berhak secara hukum untuk berpartisipasi dalam permainan on-chain ini.
+                I declare that I am <strong>18 years of age or older</strong> (or legal age of majority) and legally entitled to participate in on-chain games.
               </span>
             </label>
 
@@ -134,7 +134,7 @@ export function TermsModal({ isOpen, onAccept, onDecline }: TermsModalProps) {
                 )}
               </div>
               <span className="text-xs leading-snug" onClick={(e) => e.stopPropagation()}>
-                Saya telah membaca, memahami, dan menyetujui{' '}
+                I have read, understood, and agreed to the{' '}
                 <Link
                   href="/terms"
                   target="_blank"
@@ -142,7 +142,7 @@ export function TermsModal({ isOpen, onAccept, onDecline }: TermsModalProps) {
                 >
                   Terms of Use <ExternalLink className="w-2.5 h-2.5 inline" />
                 </Link>{' '}
-                dan{' '}
+                and{' '}
                 <Link
                   href="/privacy"
                   target="_blank"
@@ -150,7 +150,7 @@ export function TermsModal({ isOpen, onAccept, onDecline }: TermsModalProps) {
                 >
                   Privacy Policy <ExternalLink className="w-2.5 h-2.5 inline" />
                 </Link>{' '}
-                Ponspot.
+                of Ponspot.
               </span>
             </label>
           </div>
@@ -161,7 +161,7 @@ export function TermsModal({ isOpen, onAccept, onDecline }: TermsModalProps) {
               onClick={onDecline}
               className="flex-1 py-3 rounded-2xl border border-black/10 dark:border-white/10 bg-white/50 hover:bg-white/80 dark:bg-white/5 dark:hover:bg-white/10 text-xs font-mono font-bold text-[#526256] dark:text-slate-400 transition-colors"
             >
-              Batal
+              Cancel
             </button>
 
             <button
@@ -178,7 +178,7 @@ export function TermsModal({ isOpen, onAccept, onDecline }: TermsModalProps) {
               }`}
             >
               <Sparkles className="w-4 h-4" />
-              <span>SETUJU & MASUK KE GAME</span>
+              <span>Agree & Enter Game</span>
             </button>
           </div>
         </motion.div>

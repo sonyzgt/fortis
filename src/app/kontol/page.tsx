@@ -275,6 +275,7 @@ export default function AdminPanelPage() {
       });
       const data = await res.json();
       if (data.success || res.ok) {
+        localStorage.setItem('ponspot_token_contract', trimmed);
         localStorage.setItem('ponscore_token_contract', trimmed);
         setActiveTokenContract(trimmed);
         setStatusMsg({ ok: true, text: `Active betting token successfully updated to: ${trimmed}` });
@@ -283,6 +284,7 @@ export default function AdminPanelPage() {
         throw new Error(data.error || 'Failed to update token');
       }
     } catch (e: any) {
+      localStorage.setItem('ponspot_token_contract', trimmed);
       localStorage.setItem('ponscore_token_contract', trimmed);
       setActiveTokenContract(trimmed);
       setStatusMsg({ ok: true, text: `Betting token saved locally in browser: ${trimmed}` });

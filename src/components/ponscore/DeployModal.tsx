@@ -92,24 +92,24 @@ export const DeployModal: React.FC<DeployModalProps> = ({ isOpen, onClose, onSuc
             <div className="p-3 bg-cyan-950/30 border border-cyan-500/25 rounded-2xl space-y-1 text-slate-300">
               <p className="font-bold text-white flex items-center gap-1.5 text-xs">
                 <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                Mengapa Smart Contract Harus Di-deploy?
+                Why Deploy a Smart Contract?
               </p>
               <p className="text-[11px] text-slate-300">
-                Agar pemenang bisa **menerima dana secara otomatis** saat mengklik <span className="text-[#00f0ff] font-bold">[ CLAIM WINNINGS ]</span> tanpa memerlukan wallet server terpusat, kontrak pintar harus di-deploy ke jaringan Robinhood Chain.
+                To allow winners to **receive automated on-chain payouts** when clicking <span className="text-[#00f0ff] font-bold">[ CLAIM WINNINGS ]</span> without relying on a centralized server wallet, the smart contract is deployed to Robinhood Chain.
               </p>
             </div>
 
             <div className="p-3 bg-[#060c18] border border-slate-800 rounded-2xl space-y-1.5 text-[11px]">
               <div className="flex justify-between">
-                <span className="text-slate-400">Token Taruhan:</span>
-                <span className="text-[#00f0ff] font-bold">0x5cc0...7e22 (marcopolo)</span>
+                <span className="text-slate-400">Betting Token:</span>
+                <span className="text-[#00f0ff] font-bold">Verified ERC-20 Token</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-400">Platform Fee:</span>
-                <span className="text-emerald-400 font-bold">5% on-chain</span>
+                <span className="text-emerald-400 font-bold">5% on-chain burn</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-400">Estimasi Gas Deploy:</span>
+                <span className="text-slate-400">Estimated Gas:</span>
                 <span className="text-white font-bold">~0.00008 ETH</span>
               </div>
             </div>
@@ -125,7 +125,7 @@ export const DeployModal: React.FC<DeployModalProps> = ({ isOpen, onClose, onSuc
               <div className="p-3.5 bg-emerald-950/40 border border-emerald-500/40 rounded-2xl text-emerald-300 text-xs space-y-1">
                 <div className="flex items-center gap-1.5 font-bold">
                   <Check className="w-4 h-4 text-emerald-400" />
-                  <span>SMART CONTRACT BERHASIL DIDEPLOY!</span>
+                  <span>SMART CONTRACT DEPLOYED SUCCESSFULLY!</span>
                 </div>
                 <p className="text-[10px] break-all font-mono text-white pt-1">{deployedAddress}</p>
                 <a
@@ -134,7 +134,7 @@ export const DeployModal: React.FC<DeployModalProps> = ({ isOpen, onClose, onSuc
                   rel="noreferrer"
                   className="inline-flex items-center gap-1 text-[10px] text-cyan-400 hover:underline pt-1"
                 >
-                  <span>Lihat di Robinhood Blockscout</span>
+                  <span>View on Robinhood Blockscout</span>
                   <ExternalLink className="w-3 h-3" />
                 </a>
               </div>

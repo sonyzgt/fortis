@@ -18,7 +18,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({ entries, pastRounds })
       {/* Header */}
       <div className="flex items-center gap-2 px-4 py-3 border-b border-purple-500/20">
         <Trophy className="w-4 h-4 text-yellow-400" />
-        <h3 className="text-xs font-bold text-slate-200">Leaderboard & Pemenang</h3>
+        <h3 className="text-xs font-bold text-slate-200">Leaderboard & Winners</h3>
       </div>
 
       {/* Tabs */}
@@ -53,7 +53,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({ entries, pastRounds })
               className="p-2 space-y-1"
             >
               {entries.length === 0 ? (
-                <p className="text-center text-slate-500 text-xs py-6 italic">Belum ada pemenang</p>
+                <p className="text-center text-slate-500 text-xs py-6 italic">No winners yet</p>
               ) : (
                 entries.map((e, idx) => (
                   <div
@@ -75,11 +75,11 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({ entries, pastRounds })
                     />
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-bold text-slate-200 truncate">{e.playerName}</p>
-                      <p className="text-[10px] text-slate-500">{e.winsCount}x Menang</p>
+                      <p className="text-[10px] text-slate-500">{e.winsCount}x Wins</p>
                     </div>
                     <div className="text-right flex-shrink-0">
                       <p className="text-xs font-black text-emerald-400">{e.totalWon.toLocaleString()}</p>
-                      <p className="text-[10px] text-slate-500">koin</p>
+                      <p className="text-[10px] text-slate-500">coins</p>
                     </div>
                   </div>
                 ))
@@ -94,8 +94,9 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({ entries, pastRounds })
               className="p-2 space-y-1"
             >
               {pastRounds.length === 0 ? (
-                <p className="text-center text-slate-500 text-xs py-6 italic">Belum ada round selesai</p>
+                <p className="text-center text-slate-500 text-xs py-6 italic">No rounds completed yet</p>
               ) : (
+
                 pastRounds.map((r) => {
                   const w = r.winner;
                   const ago = Math.floor((Date.now() - r.timestamp) / 60000);

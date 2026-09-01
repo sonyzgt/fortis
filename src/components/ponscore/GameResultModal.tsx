@@ -202,14 +202,14 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
                   rel="noreferrer"
                   className="inline-flex items-center gap-1 text-[10px] text-[#718D76] dark:text-emerald-400 hover:underline font-mono"
                 >
-                  <span>Cek Payout Claim di Blockscout</span>
+                  <span>View Claim Payout on Blockscout</span>
                   <ExternalLink className="w-3 h-3" />
                 </a>
               )}
             </div>
           ) : (
             <div className="p-2.5 bg-white/50 dark:bg-[#101c16]/60 rounded-xl border border-white/70 dark:border-[#718D76]/25 text-[10px] text-[#526256] dark:text-slate-300 font-mono mb-3">
-              Klaim hadiah hanya dapat dilakukan oleh dompet pemenang.
+              Prize claim can only be executed by the winner's wallet.
             </div>
           )}
 

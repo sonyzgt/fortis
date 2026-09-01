@@ -124,7 +124,7 @@ export const PrivyAuthButton: React.FC<{ compact?: boolean }> = ({ compact }) =>
                 className="tactile-btn flex items-center gap-2.5 w-full px-3 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500/20 to-teal-500/15 hover:from-cyan-500/30 hover:to-teal-500/25 text-xs font-black text-[#00f0ff] transition-all border border-cyan-500/30"
               >
                 <ArrowDownToLine className="w-4 h-4 text-[#00f0ff]" />
-                <span>Kirim Hadiah (Withdraw)</span>
+                <span>Withdraw Payout</span>
               </button>
 
               <button
@@ -132,7 +132,7 @@ export const PrivyAuthButton: React.FC<{ compact?: boolean }> = ({ compact }) =>
                 className="flex items-center gap-2.5 w-full px-3 py-2 rounded-xl hover:bg-cyan-950/30 text-xs text-slate-300 transition-colors"
               >
                 <Gift className="w-4 h-4 text-cyan-400" />
-                <span>Ambil 10,000 Faucet</span>
+                <span>Claim 10,000 Faucet</span>
               </button>
 
               <button
