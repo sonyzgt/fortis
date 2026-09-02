@@ -1239,104 +1239,227 @@ export default function PonscorePage() {
             </div>
           </div>
 
-          {/* ═══════════ MAIN SITE FOOTER ═══════════ */}
-          <footer
-            className="w-full bg-[#03060e] border-t border-cyan-500/20 mt-16 lg:mt-[420px] pt-8 pb-20 lg:pb-4 px-4 lg:px-6 select-none font-sans text-xs text-slate-400"
-          >
-            <div className="max-w-4xl xl:max-w-5xl mx-auto space-y-4">
-              {/* Top Card: About Ponspot & Terms */}
-                <div className="p-5 sm:p-6 rounded-xl bg-[#070d1c] border border-cyan-500/25 shadow-md flex flex-col md:flex-row items-center gap-6">
-                  {/* Left Logo */}
-                  <div className="flex flex-col items-center justify-center flex-shrink-0">
-                    <div className="relative w-18 h-18 rounded-xl bg-[#0a1226] border border-cyan-400/40 p-2 shadow-inner flex items-center justify-center overflow-hidden">
+          {/* ═══════════ MAIN CYBERPUNK SITE FOOTER ═══════════ */}
+          <footer className="w-full bg-[#03060f] border-t border-cyan-500/25 mt-12 pt-10 pb-28 lg:pb-10 px-4 sm:px-6 select-none font-sans text-xs text-slate-400 relative overflow-hidden">
+            {/* Background cyber grid & ambient glows */}
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(0,240,255,0.06),rgba(255,255,255,0))] pointer-events-none" />
+            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-3/4 h-24 bg-cyan-500/5 blur-3xl pointer-events-none" />
+
+            <div className="max-w-6xl mx-auto space-y-8 relative z-10">
+              {/* Top Row: Brand & Live Protocol Telemetry */}
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-6 pb-6 border-b border-cyan-500/15">
+                {/* Brand & Ecosystem */}
+                <div className="md:col-span-5 space-y-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-[#081226] border border-cyan-400/50 p-1.5 shadow-[0_0_15px_rgba(0,240,255,0.3)] flex items-center justify-center flex-shrink-0">
                       <img
                         src="/image/logo.png"
                         alt="Ponspot Logo"
-                        className="w-full h-full object-contain rounded-lg select-none pointer-events-none drop-shadow-[0_0_10px_rgba(0,240,255,0.4)]"
+                        className="w-full h-full object-contain"
                       />
                     </div>
-                    <span className="text-sm font-black tracking-widest text-white mt-2 font-orbitron text-neon-cyan">
-                      PONSPOT
-                    </span>
+                    <div>
+                      <h3 className="text-base font-black text-white tracking-widest font-orbitron text-neon-cyan">
+                        PONSPOT.FUN
+                      </h3>
+                      <p className="text-[10px] text-cyan-400 font-mono tracking-wide">
+                        NEXT-GEN DECENTRALIZED JACKPOT ARENA
+                      </p>
+                    </div>
                   </div>
-
-                  {/* Right Terms & Description */}
-                  <div className="space-y-2 text-slate-300 text-[11px] leading-relaxed text-center md:text-left">
-                    <p>
-                      Welcome to <strong className="text-white font-black font-cyber">PONSPOT</strong>. Decentralized on-chain jackpot protocol built exclusively for Robinhood Chain and PONSPOT ecosystem. 100% non-custodial smart contract escrow, SHA-256 provably fair outcomes, and automated 5% deflationary burn per round.
-                    </p>
-                    <p className="text-[10px] text-slate-400">
-                      Participation signifies agreement to our <strong className="text-cyan-400 font-bold">Protocol Terms of Use</strong>. Winnings are disbursed directly via autonomous smart contract transactions.
-                    </p>
+                  <p className="text-[11px] text-slate-300 leading-relaxed font-sans">
+                    The premier non-custodial gaming protocol on <strong className="text-white">Robinhood Chain L2</strong>. Wagers are escrowed directly in immutable smart contracts with 100% provably fair cryptographic outcomes.
+                  </p>
+                  <div className="flex items-center gap-2 pt-1">
+                    <span className="flex h-2 w-2 relative">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#00ff88] opacity-75" />
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-[#00ff88]" />
+                    </span>
+                    <span className="text-[10px] font-mono text-[#00ff88] font-bold tracking-wider">
+                      ROBINHOOD CHAIN L2 // STATUS: ONLINE (4663)
+                    </span>
                   </div>
                 </div>
 
-                {/* Middle Card: Smart Contract Verification */}
-                <div className="p-4 rounded-xl bg-[#070d1c] border border-cyan-500/20 flex flex-col md:flex-row items-center justify-between gap-4 font-mono">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-emerald-950/80 border border-[#00ff88]/40 flex items-center justify-center text-[#00ff88] flex-shrink-0">
-                      <CheckCircle2 className="w-4 h-4" />
-                    </div>
-                    <p className="text-[10px] text-slate-400 leading-normal">
-                      <strong className="text-white font-bold">Ponspot.fun</strong> contracts verified on Robinhood Chain (Vault: <code className="text-[#00f0ff]">{GAME_CONTRACT_ADDRESS ? `${GAME_CONTRACT_ADDRESS.slice(0, 6)}...${GAME_CONTRACT_ADDRESS.slice(-4)}` : 'Decentralized'}</code>, Token: <code className="text-[#00f0ff]">{PONS_TOKEN_ADDRESS ? `${PONS_TOKEN_ADDRESS.slice(0, 6)}...${PONS_TOKEN_ADDRESS.slice(-4)}` : 'ERC-20'}</code>).
-                    </p>
-                  </div>
-                  <a
-                    href={`${ROBINHOOD_CHAIN_CONFIG.blockExplorer}/address/${GAME_CONTRACT_ADDRESS}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="cyber-btn-glass px-3.5 py-2 rounded-lg text-[10px] font-black text-cyan-300 flex items-center gap-1.5 flex-shrink-0"
-                    title="View verified smart contract on Robinhood Blockscout"
-                  >
-                    <ExternalLink className="w-3.5 h-3.5 text-cyan-400" />
-                    <span>VIEW ON EXPLORER</span>
-                  </a>
+                {/* Quick Protocol Links */}
+                <div className="md:col-span-3 space-y-2.5">
+                  <h4 className="text-[10px] font-black uppercase text-cyan-400 font-orbitron tracking-widest">
+                    PROTOCOL & GOVERNANCE
+                  </h4>
+                  <ul className="space-y-1.5 text-[11px] font-mono">
+                    <li>
+                      <button
+                        onClick={() => setShowTermsModal(true)}
+                        className="text-slate-300 hover:text-[#00f0ff] transition-colors flex items-center gap-1.5"
+                      >
+                        <span>›</span>
+                        <span>Protocol Rules & Terms</span>
+                      </button>
+                    </li>
+                    <li>
+                      <Link
+                        href="/terms"
+                        className="text-slate-300 hover:text-[#00f0ff] transition-colors flex items-center gap-1.5"
+                      >
+                        <span>›</span>
+                        <span>Terms of Service</span>
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        href="/privacy"
+                        className="text-slate-300 hover:text-[#00f0ff] transition-colors flex items-center gap-1.5"
+                      >
+                        <span>›</span>
+                        <span>Privacy Policy</span>
+                      </Link>
+                    </li>
+                    <li>
+                      <button
+                        onClick={() => {
+                          setVerifyTargetGameId(game?.gameId || null);
+                          setShowVerifyModal(true);
+                        }}
+                        className="text-slate-300 hover:text-[#00f0ff] transition-colors flex items-center gap-1.5"
+                      >
+                        <span>›</span>
+                        <span>Cryptographic Verifier</span>
+                      </button>
+                    </li>
+                  </ul>
                 </div>
 
-                {/* Bottom Row: Copyright & Legal on Left, X / Twitter on Right */}
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-3 pb-2 text-[11px] text-slate-400 font-mono border-t border-white/10 flex-wrap">
-                  {/* Left: Copyright & Legal Links */}
-                  <div className="flex items-center gap-2.5 flex-wrap">
-                    <span>© 2026 Ponspot.fun Protocol</span>
-                    <span>•</span>
-                    <Link
-                      href="/terms"
-                      className="text-cyan-400 hover:underline font-bold"
+                {/* Social & Explorer */}
+                <div className="md:col-span-4 space-y-3">
+                  <h4 className="text-[10px] font-black uppercase text-cyan-400 font-orbitron tracking-widest">
+                    OFFICIAL COMMS & EXPLORER
+                  </h4>
+                  <div className="space-y-2">
+                    <a
+                      href="https://x.com/play_ponspot"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex items-center justify-between p-2.5 rounded-lg bg-[#081226] border border-cyan-500/30 hover:border-cyan-400 transition-all group"
                     >
-                      Terms of Use
-                    </Link>
-                    <span>•</span>
-                    <Link
-                      href="/privacy"
-                      className="text-cyan-400 hover:underline font-bold"
-                    >
-                      Privacy Policy
-                    </Link>
-                  </div>
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-6 h-6 rounded bg-black/60 border border-white/10 flex items-center justify-center text-xs font-black text-white font-mono">
+                          𝕏
+                        </div>
+                        <div>
+                          <span className="text-xs font-bold text-white group-hover:text-cyan-300 transition-colors">
+                            Official X / Twitter
+                          </span>
+                          <span className="text-[9px] text-slate-400 block font-mono">@play_ponspot</span>
+                        </div>
+                      </div>
+                      <ExternalLink className="w-3.5 h-3.5 text-slate-500 group-hover:text-cyan-400 transition-colors" />
+                    </a>
 
-                  {/* Right: X / Twitter */}
-                  <a
-                    href="https://x.com/play_ponspot"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="flex items-center gap-2.5 px-3.5 py-1.5 rounded-lg bg-[#091224] border border-cyan-500/30 hover:border-cyan-400 transition-all shadow-sm group flex-shrink-0"
-                  >
-                    <div className="w-4 h-4 rounded bg-white/10 flex items-center justify-center text-[10px] font-black text-white font-mono">
-                      𝕏
-                    </div>
-                    <div className="text-left leading-none">
-                      <span className="text-[8px] text-slate-400 block">Follow our</span>
-                      <span className="text-[11px] font-black text-white">@play_ponspot</span>
-                    </div>
-                    <span className="px-2 py-0.5 rounded bg-cyan-950 text-[#00f0ff] text-[8px] font-black border border-cyan-500/30 ml-1">
-                      Follow
-                    </span>
-                  </a>
+                    <a
+                      href={`${ROBINHOOD_CHAIN_CONFIG.blockExplorer}/address/${GAME_CONTRACT_ADDRESS}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex items-center justify-between p-2.5 rounded-lg bg-[#081226] border border-cyan-500/30 hover:border-cyan-400 transition-all group"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-6 h-6 rounded bg-emerald-950/80 border border-emerald-500/40 flex items-center justify-center text-xs text-[#00ff88]">
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                        </div>
+                        <div>
+                          <span className="text-xs font-bold text-white group-hover:text-emerald-300 transition-colors font-cyber">
+                            Blockscout Explorer
+                          </span>
+                          <span className="text-[9px] text-slate-400 block font-mono">Robinhood Mainnet Vault</span>
+                        </div>
+                      </div>
+                      <ExternalLink className="w-3.5 h-3.5 text-slate-500 group-hover:text-[#00ff88] transition-colors" />
+                    </a>
+                  </div>
                 </div>
               </div>
-            </footer>
+
+              {/* Middle Row: Contract Addresses with 1-Click Copy */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                {/* Token Contract Card */}
+                <div className="p-3.5 rounded-xl bg-[#060c1c] border border-cyan-500/25 flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <span className="px-1.5 py-0.5 rounded bg-cyan-950 border border-cyan-500/40 text-[9px] font-mono font-bold text-[#00f0ff]">
+                        $PONS TOKEN
+                      </span>
+                      <span className="text-[10px] text-slate-400 font-mono">ERC-20 Betting Asset</span>
+                    </div>
+                    <p className="text-xs font-mono text-white truncate font-bold select-all">
+                      {PONS_TOKEN_ADDRESS}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(PONS_TOKEN_ADDRESS);
+                      setToastMsg({ ok: true, title: 'TOKEN COPIED', desc: 'Token contract copied to clipboard' });
+                      setTimeout(() => setToastMsg(null), 2500);
+                    }}
+                    className="cyber-btn-glass px-3 py-1.5 rounded-lg text-[10px] font-mono font-bold text-cyan-300 flex-shrink-0 hover:border-cyan-400 active:scale-95"
+                    title="Copy Token CA"
+                  >
+                    COPY CA
+                  </button>
+                </div>
+
+                {/* Vault Contract Card */}
+                <div className="p-3.5 rounded-xl bg-[#060c1c] border border-cyan-500/25 flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <span className="px-1.5 py-0.5 rounded bg-emerald-950 border border-emerald-500/40 text-[9px] font-mono font-bold text-[#00ff88]">
+                        ESCROW VAULT
+                      </span>
+                      <span className="text-[10px] text-slate-400 font-mono">Robinhood Smart Contract</span>
+                    </div>
+                    <p className="text-xs font-mono text-white truncate font-bold select-all">
+                      {GAME_CONTRACT_ADDRESS}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(GAME_CONTRACT_ADDRESS);
+                      setToastMsg({ ok: true, title: 'VAULT COPIED', desc: 'Game contract copied to clipboard' });
+                      setTimeout(() => setToastMsg(null), 2500);
+                    }}
+                    className="cyber-btn-glass px-3 py-1.5 rounded-lg text-[10px] font-mono font-bold text-emerald-300 flex-shrink-0 hover:border-emerald-400 active:scale-95"
+                    title="Copy Vault Address"
+                  >
+                    COPY VAULT
+                  </button>
+                </div>
+              </div>
+
+              {/* Protocol Economics Badge */}
+              <div className="p-3 rounded-xl bg-[#050914] border border-cyan-500/20 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left text-[10px] font-mono">
+                <div className="flex items-center gap-2">
+                  <ShieldCheck className="w-4 h-4 text-[#00ff88] flex-shrink-0" />
+                  <span className="text-slate-300">
+                    <strong className="text-white">Economics:</strong> 95% Claimed by Winner • 5% Permanently Burned to <code className="text-[#ff007a]">0x00...dEaD</code>
+                  </span>
+                </div>
+                <div className="text-slate-400">
+                  Dev Security Verified // Non-Custodial
+                </div>
+              </div>
+
+              {/* Bottom Copyright & Security Disclaimer */}
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-cyan-500/15 text-[10px] text-slate-400 font-mono">
+                <div>
+                  © 2026 <strong className="text-white font-cyber">PONSPOT.FUN</strong> — ALL RIGHTS RESERVED.
+                </div>
+                <div className="text-slate-400 text-center sm:text-right">
+                  Decentralized Web3 protocol. Always verify contract address before placing wagers.
+                </div>
+              </div>
+            </div>
+          </footer>
         </main>
         </div>
+
 
         {/* Right: Round History Sidebar */}
         <div className={`${mobileTab === 'history' ? 'flex' : 'hidden'} lg:flex flex-col w-full lg:w-auto h-full`}>
