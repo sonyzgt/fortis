@@ -134,7 +134,7 @@ export class JackpotEngine {
     this.broadcast();
 
     if (this.onSystemMessage) {
-      this.onSystemMessage('🎲 Waktu habis! Roda berputar dari kencang ke lambat untuk memilih pemenang...');
+      this.onSystemMessage('🎲 Time is up! Wheel is spinning to select the winner...');
     }
 
     // 8.5 seconds of dramatic slow-motion deceleration animation on client
@@ -169,7 +169,7 @@ export class JackpotEngine {
     if (this.onWinner) this.onWinner(this.winner);
     if (this.onSystemMessage) {
       this.onSystemMessage(
-        `🏆 ${this.winner.playerName} memenangkan ${this.winner.potWon.toLocaleString()} koin dengan ${this.winner.odds}% peluang!`
+        `🏆 ${this.winner.playerName} won ${this.winner.potWon.toLocaleString()} coins with ${this.winner.odds}% odds!`
       );
     }
 
@@ -185,11 +185,11 @@ export class JackpotEngine {
     txHash?: string
   ): { success: boolean; message: string; cost: number; txHash?: string } {
     if (this.status === 'spinning' || this.status === 'complete') {
-      return { success: false, message: 'Round sedang drawing atau sudah selesai. Tunggu round berikutnya.', cost: 0 };
+      return { success: false, message: 'Round is spinning or completed. Please wait for the next round.', cost: 0 };
     }
 
     if (quantity < 1 || quantity > 500) {
-      return { success: false, message: 'Jumlah tiket harus antara 1 - 500', cost: 0 };
+      return { success: false, message: 'Ticket quantity must be between 1 - 500', cost: 0 };
     }
 
     const cost = quantity * TICKET_PRICE;
@@ -246,11 +246,12 @@ export class JackpotEngine {
 
     if (this.onSystemMessage) {
       this.onSystemMessage(
-        `🎟️ ${playerName} membeli ${quantity} tiket (${cost.toLocaleString()} koin)`
+        `🎟️ ${playerName} bought ${quantity} tickets (${cost.toLocaleString()} coins)`
       );
     }
 
-    return { success: true, message: `Berhasil membeli ${quantity} tiket!`, cost };
+    return { success: true, message: `Successfully bought ${quantity} tickets!`, cost };
+
   }
 
   public getState(): JackpotRound {

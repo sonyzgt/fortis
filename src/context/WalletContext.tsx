@@ -124,17 +124,17 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       if (type === 'okx') {
         provider = window.okxwallet || window.ethereum;
         if (!provider) {
-          throw new Error('OKX Wallet tidak terdeteksi. Silakan pasang ekstensi OKX Wallet.');
+          throw new Error('OKX Wallet not detected. Please install the OKX Wallet extension.');
         }
       } else if (type === 'metamask') {
         provider = window.ethereum;
         if (!provider) {
-          throw new Error('MetaMask tidak terdeteksi.');
+          throw new Error('MetaMask not detected.');
         }
       } else if (type === 'rabby' || type === 'coinbase') {
         provider = window.ethereum;
         if (!provider) {
-          throw new Error('Web3 Wallet tidak terdeteksi.');
+          throw new Error('Web3 Wallet not detected.');
         }
       } else if (type === 'demo') {
         // Generate valid-looking 0x Ethereum/Robinhood Chain address
@@ -150,7 +150,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         // Request accounts
         const accounts = await provider.request({ method: 'eth_requestAccounts' });
         if (!accounts || accounts.length === 0) {
-          throw new Error('Tidak ada akun yang dipilih.');
+          throw new Error('No account selected.');
         }
         address = accounts[0];
 
@@ -176,7 +176,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }
 
       if (!address) {
-        throw new Error('Gagal mendapatkan alamat wallet.');
+        throw new Error('Failed to retrieve wallet address.');
       }
 
       const displayName = `${type.toUpperCase()}_${address.slice(0, 5)}..${address.slice(-4)}`;
@@ -200,7 +200,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setIsModalOpen(false);
     } catch (err: any) {
       console.error('Wallet connect error:', err);
-      setConnectError(err.message || 'Gagal menyambungkan wallet.');
+      setConnectError(err.message || 'Failed to connect wallet.');
     } finally {
       setConnectingType(null);
     }
@@ -216,13 +216,14 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (!user) return;
     const amount = Number(withdrawAmount);
     if (isNaN(amount) || amount <= 0) {
-      alert('Masukkan jumlah penarikan yang valid!');
+      alert('Please enter a valid withdrawal amount!');
       return;
     }
     if (amount > user.chips) {
-      alert(`Saldo tidak cukup! Kamu memiliki ${user.chips.toLocaleString()} koin.`);
+      alert(`Insufficient balance! You have ${user.chips.toLocaleString()} coins.`);
       return;
     }
+
 
     setPayoutLoading(true);
 
@@ -455,7 +456,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                     Ξ
                   </div>
                   <div>
-                    <h3 className="text-base font-black text-white">Kirim Hadiah ke Wallet</h3>
+                    <h3 className="text-base font-black text-white">Withdraw Payout to Wallet</h3>
                     <p className="text-xs text-emerald-400 font-semibold">Robinhood Chain (L2)</p>
                   </div>
                 </div>
@@ -470,7 +471,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
               {/* Destination Address */}
               <div className="mb-4 p-3 rounded-2xl bg-[#15152a] border border-[#232342]">
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-[11px] text-slate-400">Alamat EVM Tujuan:</span>
+                  <span className="text-[11px] text-slate-400">Destination EVM Address:</span>
                   <span className="text-[10px] font-bold text-emerald-400 uppercase">{user.walletType} Wallet</span>
                 </div>
                 <p className="text-xs font-mono font-bold text-white break-all">{user.walletAddress}</p>
@@ -479,8 +480,8 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
               {/* Amount Input */}
               <div className="mb-4">
                 <div className="flex items-center justify-between text-xs text-slate-400 mb-1.5">
-                  <span>Jumlah Koin Ditarik:</span>
-                  <span>Saldo: <strong className="text-white">{user.chips.toLocaleString()}</strong> koin</span>
+                  <span>Withdraw Amount:</span>
+                  <span>Balance: <strong className="text-white">{user.chips.toLocaleString()}</strong> coins</span>
                 </div>
                 <div className="relative">
                   <input
@@ -499,7 +500,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                   </button>
                 </div>
                 <p className="text-[11px] text-slate-500 mt-1">
-                  Estimasi diterima: <span className="text-emerald-400 font-bold">{(Number(withdrawAmount || 0) / 1000).toFixed(3)} ETH</span> on Robinhood Chain
+                  Estimated payout: <span className="text-emerald-400 font-bold">{(Number(withdrawAmount || 0) / 1000).toFixed(3)} ETH</span> on Robinhood Chain
                 </p>
               </div>
 
@@ -510,12 +511,12 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                     {lastPayout.status === 'confirmed' ? (
                       <>
                         <Check className="w-4 h-4" />
-                        <span>HADIAH BERHASIL DIKIRIM KE ROBINHOOD CHAIN!</span>
+                        <span>PAYOUT SUCCESSFULLY TRANSFERRED ON ROBINHOOD CHAIN!</span>
                       </>
                     ) : (
                       <>
                         <RefreshCw className="w-4 h-4 animate-spin" />
-                        <span>SEDANG MENGIRIM ON-CHAIN (BLOCKSCOUT)...</span>
+                        <span>BROADCASTING ON-CHAIN (BLOCKSCOUT)...</span>
                       </>
                     )}
                   </div>
@@ -556,10 +557,11 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                   </>
                 ) : (
                   <>
-                    <span>⚡ Kirim Hadiah Sekarang</span>
+                    <span>⚡ Withdraw Payout Now</span>
                   </>
                 )}
               </button>
+
             </motion.div>
           </div>
         )}

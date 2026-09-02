@@ -196,7 +196,7 @@ export const PonspotWeb3Provider: React.FC<{ children: React.ReactNode }> = ({ c
           }
         }
       } else {
-        throw new Error('Web3 Provider tidak ditemukan. Pastikan wallet ekstensi aktif.');
+        throw new Error('Web3 Provider not found. Please make sure your wallet extension is active.');
       }
 
       setAccount(selectedAccount);
@@ -283,11 +283,11 @@ export const PonspotWeb3Provider: React.FC<{ children: React.ReactNode }> = ({ c
       const tokenAddr = getPonspotTokenAddress();
 
       if (!gameAddr || !gameAddr.startsWith('0x') || gameAddr.length !== 42) {
-        throw new Error('Smart Contract game belum dideploy di Robinhood Chain. Harap deploy smart contract terlebih dahulu.');
+        throw new Error('Game Smart Contract is not deployed on Robinhood Chain. Please deploy the smart contract first.');
       }
 
       if (!providerObj) {
-        throw new Error('Provider OKX / Web3 Wallet tidak ditemukan. Pastikan ekstensi OKX Wallet aktif.');
+        throw new Error('OKX / Web3 Wallet provider not found. Please make sure your wallet extension is active.');
       }
 
       const browserProvider = new ethers.BrowserProvider(providerObj);
@@ -335,8 +335,9 @@ export const PonspotWeb3Provider: React.FC<{ children: React.ReactNode }> = ({ c
   const placeBet = useCallback(async (gameId: string, amountPons: number): Promise<string | null> => {
     if (!account) throw new Error('Wallet not connected');
     if (ponsBalance < amountPons) {
-      throw new Error(`Saldo PONSPOT tidak mencukupi. Anda memiliki ${ponsBalance.toLocaleString()} PONSPOT di wallet`);
+      throw new Error(`Insufficient PONSPOT balance. You have ${ponsBalance.toLocaleString()} PONSPOT in your wallet.`);
     }
+
 
     setTxState('betting');
     setErrorMessage(null);

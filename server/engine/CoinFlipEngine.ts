@@ -18,12 +18,12 @@ export class CoinFlipEngine {
     // Check if creator already has open game
     for (const g of this.games.values()) {
       if (g.creatorId === creatorId && g.status === 'waiting') {
-        return { success: false, message: 'Kamu sudah punya permainan yang sedang menunggu lawan.' };
+        return { success: false, message: 'You already have an active game waiting for an opponent.' };
       }
     }
 
     if (betAmount < 50 || betAmount > 50000) {
-      return { success: false, message: 'Taruhan harus antara 50 - 50,000 koin.' };
+      return { success: false, message: 'Bet amount must be between 50 - 50,000 coins.' };
     }
 
     const game: CoinFlipGame = {
@@ -41,10 +41,10 @@ export class CoinFlipEngine {
     this.broadcast();
 
     if (this.onSystemMessage) {
-      this.onSystemMessage(`🪙 ${creatorName} membuat coinflip ${betAmount.toLocaleString()} koin (sisi: ${side === 'heads' ? '🦅 Heads' : '🔢 Tails'})`);
+      this.onSystemMessage(`🪙 ${creatorName} created a coinflip for ${betAmount.toLocaleString()} coins (side: ${side === 'heads' ? '🦅 Heads' : '🔢 Tails'})`);
     }
 
-    return { success: true, game, message: 'Permainan coinflip dibuat!' };
+    return { success: true, game, message: 'Coinflip game created!' };
   }
 
   public joinGame(
@@ -55,13 +55,13 @@ export class CoinFlipEngine {
   ): { success: boolean; message: string; game?: CoinFlipGame } {
     const game = this.games.get(gameId);
     if (!game) {
-      return { success: false, message: 'Permainan tidak ditemukan.' };
+      return { success: false, message: 'Game not found.' };
     }
     if (game.status !== 'waiting') {
-      return { success: false, message: 'Permainan sudah berlangsung atau selesai.' };
+      return { success: false, message: 'Game is already in progress or completed.' };
     }
     if (game.creatorId === challengerId) {
-      return { success: false, message: 'Kamu tidak bisa menantang dirimu sendiri.' };
+      return { success: false, message: 'You cannot challenge yourself.' };
     }
 
     game.challengerId = challengerId;
@@ -72,7 +72,7 @@ export class CoinFlipEngine {
     this.broadcast();
 
     if (this.onSystemMessage) {
-      this.onSystemMessage(`⚡ ${challengerName} bergabung melawan ${game.creatorName}! Koin sedang dilempar...`);
+      this.onSystemMessage(`⚡ ${challengerName} joined against ${game.creatorName}! Flipping coin...`);
     }
 
     // Flip after animation delay
@@ -80,7 +80,7 @@ export class CoinFlipEngine {
       this.resolveGame(game);
     }, 2500);
 
-    return { success: true, message: 'Berhasil bergabung!', game };
+    return { success: true, message: 'Successfully joined game!', game };
   }
 
   private resolveGame(game: CoinFlipGame): void {

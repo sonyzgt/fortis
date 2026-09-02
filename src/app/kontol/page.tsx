@@ -350,7 +350,7 @@ export default function AdminPanelPage() {
     }
 
     if (!targetContract || !targetContract.startsWith('0x') || targetContract.length !== 42) {
-      setStatusMsg({ ok: false, text: `Alamat Smart Contract (${targetContract}) tidak valid. Pastikan 42 karakter diawali 0x.` });
+      setStatusMsg({ ok: false, text: `Smart Contract address (${targetContract}) is invalid. Must be 42 characters starting with 0x.` });
       return;
     }
 

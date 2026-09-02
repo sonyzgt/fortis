@@ -132,21 +132,21 @@ export const DeployModal: React.FC<DeployModalProps> = ({ isOpen, onClose, onSuc
             {/* Manual contract address input */}
             <div className="p-3 bg-[#060c18] border border-slate-800 rounded-2xl space-y-2">
               <label className="text-[11px] text-slate-300 block font-bold">
-                Sudah deploy? Masukkan alamat contract:
+                Already deployed? Enter contract address:
               </label>
               <div className="flex gap-2">
                 <input
                   type="text"
                   value={manualAddress}
                   onChange={(e) => setManualAddress(e.target.value)}
-                  placeholder="0x... (Alamat Smart Contract)"
+                  placeholder="0x... (Smart Contract Address)"
                   className="flex-1 bg-black/50 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 font-mono"
                 />
                 <button
                   onClick={() => handleSaveContract(manualAddress)}
                   className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-black font-bold rounded-xl text-xs transition-all active:scale-95 flex-shrink-0"
                 >
-                  Gunakan
+                  Apply
                 </button>
               </div>
             </div>

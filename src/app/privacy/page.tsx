@@ -55,7 +55,7 @@ export default function PrivacyPolicyPage() {
             className="flex items-center gap-1.5 px-3.5 py-2 bg-white/60 hover:bg-white/90 dark:bg-[#14241d]/70 dark:hover:bg-[#1c3328] border border-white/80 dark:border-[#718D76]/35 rounded-xl text-xs font-mono font-bold transition-all shadow-sm text-[#243329] dark:text-emerald-300"
           >
             <ArrowLeft className="w-4 h-4" />
-            <span>Kembali ke Game</span>
+            <span>Back to Game</span>
           </Link>
           <div className="h-5 w-[1px] bg-black/10 dark:bg-white/10 hidden sm:block" />
           <div className="flex items-center gap-2">

@@ -234,7 +234,7 @@ app.post('/api/admin/force-refresh', requireAdmin, (req, res) => {
   // Broadcast reload event to all connected player clients
   io.emit('force_client_reload', {
     timestamp: Date.now(),
-    message: 'Admin memicu refresh server. Memuat ulang browser...',
+    message: 'Admin triggered server refresh. Reloading browser...',
   });
 
   // Re-broadcast fresh game states
@@ -243,7 +243,7 @@ app.post('/api/admin/force-refresh', requireAdmin, (req, res) => {
 
   res.json({
     success: true,
-    message: 'Perintah refresh server berhasil disiarkan ke semua browser pemain!',
+    message: 'Server refresh command successfully broadcasted to all player browsers!',
   });
 });
 
@@ -302,20 +302,21 @@ app.post('/api/admin/fund-airdrop', requireAdmin, async (req, res) => {
   const { amount, txHash } = req.body;
   const num = Number(amount);
   if (isNaN(num) || num <= 0) {
-    return res.status(400).json({ error: 'Jumlah deposit token tidak valid' });
+    return res.status(400).json({ error: 'Invalid token deposit amount' });
   }
   ponscore.fundAirdropPool(num, txHash);
   await syncOnChainAirdropBalance();
   io.emit('airdrop_state', ponscore.getAirdropState());
-  res.json({ success: true, poolBalance: ponscore.airdropPoolBalance, message: `Berhasil mendeposit ${num.toLocaleString()} PONS ke Airdrop Vault!` });
+  res.json({ success: true, poolBalance: ponscore.airdropPoolBalance, message: `Successfully deposited ${num.toLocaleString()} PONS to Airdrop Vault!` });
 });
 
 app.post('/api/admin/set-airdrop-reward', requireAdmin, (req, res) => {
   const { reward } = req.body;
   const num = Number(reward);
   if (isNaN(num) || num <= 0) {
-    return res.status(400).json({ error: 'Jumlah reward tidak valid' });
+    return res.status(400).json({ error: 'Invalid reward amount' });
   }
+
   ponscore.setAirdropReward(num);
   io.emit('airdrop_state', ponscore.getAirdropState());
   res.json({ success: true, rewardPerClaim: num });

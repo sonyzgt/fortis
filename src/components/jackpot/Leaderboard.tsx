@@ -115,12 +115,12 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({ entries, pastRounds })
                         <p className="text-[10px] text-slate-500 flex items-center gap-1">
                           <span className="text-emerald-400 font-mono">{w.odds}% odds</span>
                           <span>·</span>
-                          <span>{ago < 1 ? 'baru saja' : `${ago}m lalu`}</span>
+                          <span>{ago < 1 ? 'just now' : `${ago}m ago`}</span>
                         </p>
                       </div>
                       <div className="text-right flex-shrink-0">
                         <p className="text-xs font-black text-yellow-400">{r.totalPot.toLocaleString()}</p>
-                        <p className="text-[10px] text-slate-500">koin</p>
+                        <p className="text-[10px] text-slate-500">coins</p>
                       </div>
                     </div>
                   );
