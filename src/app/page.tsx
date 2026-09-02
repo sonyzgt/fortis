@@ -834,23 +834,6 @@ export default function PonscorePage() {
                       <span>EDIT PROFILE & AVATAR</span>
                     </button>
 
-                    {/* Free Faucet Button for Testing */}
-                    <button
-                      onClick={() => {
-                        faucet();
-                        setToastMsg({
-                          ok: true,
-                          title: 'Faucet Claimed!',
-                          desc: 'Successfully credited +500,000 PONSPOT to your demo balance.',
-                        });
-                        setTimeout(() => setToastMsg(null), 3500);
-                      }}
-                      className="w-full py-2 bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 active:scale-95"
-                    >
-                      <Gift className="w-3.5 h-3.5" />
-                      <span>Claim Free Faucet (+500k)</span>
-                    </button>
-
                     <div className="p-2.5 bg-white/60 dark:bg-[#14241d]/70 rounded-xl border border-white/80 dark:border-[#718D76]/30 flex justify-between items-center text-[11px]">
                       <span className="text-[#526256] dark:text-[#8fa596]">Approved Allowance:</span>
                       <span className="text-[#243329] dark:text-emerald-300 font-bold">{ponsAllowance.toLocaleString()} PONSPOT</span>

@@ -128,14 +128,6 @@ export const PrivyAuthButton: React.FC<{ compact?: boolean }> = ({ compact }) =>
               </button>
 
               <button
-                onClick={handleFaucet}
-                className="flex items-center gap-2.5 w-full px-3 py-2 rounded-xl hover:bg-cyan-950/30 text-xs text-slate-300 transition-colors"
-              >
-                <Gift className="w-4 h-4 text-cyan-400" />
-                <span>Claim 10,000 Faucet</span>
-              </button>
-
-              <button
                 onClick={() => {
                   logout();
                   setShowDropdown(false);
