@@ -738,76 +738,69 @@ export default function PonscorePage() {
   const displayAvatar = userProfile.avatar || '/image/logo.png';
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden cyber-grid-bg font-sans text-white dark">
-      {/* ═══════════ TOP CYBERPUNK HUD NAVBAR ═══════════ */}
-      <header className="flex-shrink-0 h-[64px] sm:h-[88px] lg:h-[96px] flex items-center border-b border-cyan-500/20 bg-[#060b17]/95 backdrop-blur-2xl z-40 shadow-[0_4px_30px_rgba(0,0,0,0.8)] transition-colors">
+    <div className="h-screen flex flex-col overflow-hidden cyber-grid-bg font-sans text-[#F5F8F3] dark">
+      {/* ═══════════ TOP MINIMALIST TRADING NAVBAR ═══════════ */}
+      <header className="flex-shrink-0 h-[60px] sm:h-[96px] lg:h-[104px] flex items-center border-b border-white/60 dark:border-[#718D76]/30 bg-[#A4BAA2]/80 dark:bg-[#0c1611]/90 backdrop-blur-2xl z-40 shadow-sm transition-colors">
         {/* Left: Branding Video Banner (hidden on mobile, shown on lg) */}
-        <div className="hidden lg:flex w-[285px] h-full flex-shrink-0 border-r border-cyan-500/20 overflow-hidden items-center justify-center p-0 m-0 relative">
+        <div className="hidden lg:flex w-[275px] h-full flex-shrink-0 border-r border-white/50 dark:border-[#718D76]/30 overflow-hidden items-center justify-center p-0 m-0">
           <video
             src="/image/banner.mp4"
             autoPlay
             loop
             muted
             playsInline
-            className="w-full h-full object-cover select-none pointer-events-none block opacity-85"
+            className="w-full h-full object-cover select-none pointer-events-none block"
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent to-[#060b17]/80 pointer-events-none" />
         </div>
 
         {/* Mobile: Logo + Name */}
-        <div className="flex lg:hidden items-center gap-2.5 pl-3.5 flex-shrink-0">
-          <img src="/image/logo.png" alt="Ponspot" className="w-8 h-8 rounded-lg object-contain border border-cyan-400/50 shadow-[0_0_10px_rgba(0,240,255,0.4)]" />
-          <span className="text-base font-black text-white tracking-widest font-orbitron text-neon-cyan">PONSPOT</span>
+        <div className="flex lg:hidden items-center gap-2 pl-3 flex-shrink-0">
+          <img src="/image/logo.png" alt="Ponspot" className="w-7 h-7 rounded-lg object-contain" />
+          <span className="text-sm font-black text-[#243329] dark:text-white tracking-widest font-mono">PONSPOT</span>
         </div>
 
-        {/* Center: System Telemetry Badges (hidden on mobile) */}
-        <div className="hidden sm:flex flex-1 items-center gap-3 px-5">
+        {/* Center: System Proof Badges (hidden on mobile) */}
+        <div className="hidden sm:flex flex-1 items-center gap-3 px-4">
           <a
             href={`${ROBINHOOD_CHAIN_CONFIG.blockExplorer}/token/${getPonspotTokenAddress() || PONSPOT_TOKEN_ADDRESS}`}
             target="_blank"
             rel="noreferrer"
-            className="flex items-center gap-2 px-3.5 py-1.5 bg-[#091224] hover:bg-[#0f1d38] border border-cyan-500/30 hover:border-cyan-400 rounded-lg text-[11px] font-mono transition-all shadow-[0_0_10px_rgba(0,240,255,0.1)] group"
+            className="flex items-center gap-2 px-3.5 py-1.5 bg-white/50 hover:bg-white/70 dark:bg-white/10 dark:hover:bg-white/15 border border-white/80 dark:border-[#718D76]/35 rounded-xl text-[11px] font-mono transition-colors shadow-sm"
             title="Inspect PONSPOT token contract on Robinhood Blockscout"
           >
-            <span className="w-2 h-2 rounded-full bg-[#00f0ff] animate-ping" />
-            <span className="text-slate-400">CA:</span>
-            <span className="text-[#00f0ff] font-bold group-hover:underline">
-              {getPonspotTokenAddress() ? `${getPonspotTokenAddress().slice(0, 6)}...${getPonspotTokenAddress().slice(-4)}` : 'Robinhood L2'}
+            <span className="w-2 h-2 rounded-full bg-[#718D76] animate-pulse shadow-[0_0_6px_#718D76]" />
+            <span className="text-[#526256] dark:text-slate-400">Token:</span>
+            <span className="text-[#243329] dark:text-emerald-300 font-bold">
+              {getPonspotTokenAddress() ? `${getPonspotTokenAddress().slice(0, 6)}...${getPonspotTokenAddress().slice(-4)}` : 'Robinhood ERC-20'}
             </span>
-            <ExternalLink className="w-3 h-3 text-cyan-400 opacity-70 group-hover:opacity-100" />
+            <ExternalLink className="w-2.5 h-2.5 text-[#718D76] dark:text-emerald-400" />
           </a>
-
-          <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-[#091224] border border-emerald-500/30 rounded-lg text-[11px] font-mono text-slate-400">
-            <span className="w-2 h-2 rounded-full bg-[#00ff88]" />
-            <span>CHAIN:</span>
-            <span className="text-[#00ff88] font-bold">ROBINHOOD L2 (4663)</span>
-          </div>
         </div>
 
         {/* Spacer on mobile */}
         <div className="flex-1 sm:hidden" />
 
         {/* Right: Wallet & Sound Controls */}
-        <div className="flex items-center gap-2.5 sm:gap-3 justify-end pr-3.5 sm:pr-5">
+        <div className="flex items-center gap-2 sm:gap-2.5 justify-end pr-3 sm:pr-4">
           {/* Connected Wallet Pill / Connect Button */}
           {isConnected && account ? (
             <div className="relative">
               <button
                 onClick={() => setShowWalletDropdown(!showWalletDropdown)}
-                className="tactile-btn flex items-center gap-2.5 px-2.5 sm:px-3.5 py-1.5 bg-[#091224] hover:bg-[#0e1b36] border border-cyan-500/40 rounded-xl transition-all shadow-[0_0_15px_rgba(0,240,255,0.2)] text-white"
+                className="tactile-btn flex items-center gap-2 px-2 sm:px-3 py-1.5 bg-white/65 hover:bg-white/85 dark:bg-[#14241d]/75 dark:hover:bg-[#1b3127] backdrop-blur-xl border border-white/80 dark:border-[#718D76]/35 rounded-xl transition-all shadow-sm text-[#243329] dark:text-white"
               >
-                <div className="w-7 h-7 rounded-lg bg-black/60 p-0.5 border border-cyan-400/50 shadow-inner flex items-center justify-center overflow-hidden flex-shrink-0">
-                  <img src={displayAvatar} alt="" className="w-full h-full rounded-md object-cover" />
+                <div className="w-7 h-7 rounded-xl bg-white/80 dark:bg-black/50 p-0.5 border border-white/90 dark:border-white/20 shadow-sm flex items-center justify-center overflow-hidden flex-shrink-0">
+                  <img src={displayAvatar} alt="" className="w-full h-full rounded-lg object-cover" />
                 </div>
                 <div className="text-left hidden sm:block">
-                  <p className="text-xs font-black text-white truncate max-w-[110px] leading-tight font-cyber">
+                  <p className="text-xs font-black text-[#243329] dark:text-white truncate max-w-[110px] leading-tight">
                     {displayName}
                   </p>
-                  <p className="text-[10px] font-mono text-cyan-400 leading-none mt-0.5 font-bold">
-                    {ponsBalance.toLocaleString()} <span className="text-slate-400 font-normal">PONS</span>
+                  <p className="text-[10px] font-mono text-[#526256] dark:text-[#8fa596] leading-none mt-0.5">
+                    {ponsBalance.toLocaleString()} <span className="text-[#718D76] dark:text-emerald-400 font-bold">PONSPOT</span>
                   </p>
                 </div>
-                <ChevronDown className={`w-3.5 h-3.5 text-cyan-400 transition-transform ${showWalletDropdown ? 'rotate-180' : ''}`} />
+                <ChevronDown className={`w-3.5 h-3.5 text-[#526256] dark:text-[#8fa596] transition-transform ${showWalletDropdown ? 'rotate-180' : ''}`} />
               </button>
 
               <AnimatePresence>
@@ -816,16 +809,16 @@ export default function PonscorePage() {
                     initial={{ opacity: 0, y: -8 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -8 }}
-                    className="absolute right-0 top-full mt-2 w-72 bg-[#060b17]/98 backdrop-blur-2xl border border-cyan-500/40 rounded-xl shadow-[0_12px_40px_rgba(0,0,0,0.95)] p-3.5 z-50 space-y-2.5 text-xs font-mono text-white"
+                    className="absolute right-0 top-full mt-2 w-72 bg-[#F5F8F3]/95 dark:bg-[#0c1611]/95 backdrop-blur-2xl border border-white/90 dark:border-[#718D76]/35 rounded-2xl shadow-2xl p-3.5 z-50 space-y-2.5 text-xs font-mono text-[#243329] dark:text-[#F5F8F3]"
                   >
                     {/* User Profile Pod */}
-                    <div className="p-3 bg-[#091224] rounded-lg border border-cyan-500/30 flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-black/60 p-0.5 border border-[#00f0ff] shadow-sm flex items-center justify-center overflow-hidden flex-shrink-0">
-                        <img src={displayAvatar} alt="" className="w-full h-full rounded-md object-cover" />
+                    <div className="p-3 bg-white/70 dark:bg-[#14241d]/80 rounded-xl border border-white/80 dark:border-[#718D76]/30 flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-white/90 dark:bg-black/50 p-0.5 border border-[#718D76] dark:border-emerald-400 shadow-sm flex items-center justify-center overflow-hidden flex-shrink-0">
+                        <img src={displayAvatar} alt="" className="w-full h-full rounded-lg object-cover" />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="text-xs font-black text-white truncate font-cyber">{displayName}</p>
-                        <p className="text-[10px] text-slate-400 truncate">{account}</p>
+                        <p className="text-xs font-black text-[#243329] dark:text-white truncate">{displayName}</p>
+                        <p className="text-[10px] text-[#526256] dark:text-slate-400 truncate">{account}</p>
                       </div>
                     </div>
 
@@ -835,7 +828,7 @@ export default function PonscorePage() {
                         setShowWalletDropdown(false);
                         setShowProfileModal(true);
                       }}
-                      className="w-full cyber-btn-cyan py-2.5 rounded-lg text-xs font-black transition-all flex items-center justify-center gap-2 shadow-sm font-cyber uppercase tracking-wider"
+                      className="w-full btn-primary-sage py-2.5 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 shadow-sm"
                     >
                       <Edit3 className="w-3.5 h-3.5" />
                       <span>EDIT PROFILE & AVATAR</span>
@@ -848,19 +841,19 @@ export default function PonscorePage() {
                         setToastMsg({
                           ok: true,
                           title: 'Faucet Claimed!',
-                          desc: 'Successfully credited +500,000 PONSPOT to your balance.',
+                          desc: 'Successfully credited +500,000 PONSPOT to your demo balance.',
                         });
                         setTimeout(() => setToastMsg(null), 3500);
                       }}
-                      className="w-full py-2 bg-emerald-950/60 hover:bg-emerald-900/80 border border-emerald-500/40 text-[#00ff88] rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 active:scale-95 font-mono"
+                      className="w-full py-2 bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 active:scale-95"
                     >
                       <Gift className="w-3.5 h-3.5" />
-                      <span>CLAIM FREE FAUCET (+500K)</span>
+                      <span>Claim Free Faucet (+500k)</span>
                     </button>
 
-                    <div className="p-2.5 bg-[#091224] rounded-lg border border-cyan-500/20 flex justify-between items-center text-[11px]">
-                      <span className="text-slate-400">Approved Allowance:</span>
-                      <span className="text-[#00ff88] font-bold">{ponsAllowance.toLocaleString()} PONS</span>
+                    <div className="p-2.5 bg-white/60 dark:bg-[#14241d]/70 rounded-xl border border-white/80 dark:border-[#718D76]/30 flex justify-between items-center text-[11px]">
+                      <span className="text-[#526256] dark:text-[#8fa596]">Approved Allowance:</span>
+                      <span className="text-[#243329] dark:text-emerald-300 font-bold">{ponsAllowance.toLocaleString()} PONSPOT</span>
                     </div>
 
                     <button
@@ -868,7 +861,7 @@ export default function PonscorePage() {
                         disconnectWallet();
                         setShowWalletDropdown(false);
                       }}
-                      className="w-full flex items-center justify-center gap-2 py-2 bg-rose-950/60 hover:bg-rose-900/80 text-rose-300 rounded-lg text-xs font-bold transition-colors border border-rose-500/30 font-mono"
+                      className="w-full flex items-center justify-center gap-2 py-2 bg-rose-100 dark:bg-rose-950/50 hover:bg-rose-200 dark:hover:bg-rose-900/60 text-rose-700 dark:text-rose-300 rounded-xl text-xs font-bold transition-colors border border-rose-200 dark:border-rose-800"
                     >
                       <LogOut className="w-3.5 h-3.5" />
                       <span>Disconnect Wallet</span>
@@ -880,19 +873,22 @@ export default function PonscorePage() {
           ) : (
             <button
               onClick={() => setShowWalletModal(true)}
-              className="cyber-btn-cyan px-3.5 sm:px-4 py-2 font-black rounded-lg text-xs transition-all flex items-center gap-1.5 shadow-[0_0_15px_rgba(0,240,255,0.4)] active:scale-95 font-orbitron"
+              className="btn-primary-sage px-3 sm:px-4 py-2 font-black rounded-xl text-xs transition-all flex items-center gap-1.5 shadow-sm active:scale-95"
             >
               <Wallet className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">CONNECT WALLET</span>
-              <span className="sm:hidden">CONNECT</span>
+              <span className="sm:hidden">Connect</span>
             </button>
           )}
         </div>
       </header>
 
       {/* ═══════════ MAIN 3-COLUMN LAYOUT ═══════════ */}
+      {/* On mobile: show one panel at a time controlled by mobileTab state */}
+      {/* On desktop lg+: show all 3 columns side by side */}
       <div className="flex-1 flex overflow-hidden min-h-0 pb-[56px] lg:pb-0">
         {/* Left: Chat Feed */}
+        {/* Mobile: only show when mobileTab === 'chat'; Desktop: always show */}
         <div className={`${mobileTab === 'chat' ? 'flex' : 'hidden'} lg:flex flex-col w-full lg:w-auto h-full`}>
           <LeftChatSidebar
             messages={messages}
@@ -907,7 +903,7 @@ export default function PonscorePage() {
           />
         </div>
 
-        {/* Center: Main Arena */}
+        {/* Center: Main Arena – always visible on desktop; show only on 'arena' tab on mobile */}
         <div className={`${mobileTab === 'arena' ? 'flex' : 'hidden'} lg:flex flex-col flex-1 min-w-0 h-full`}>
         <main className="flex-1 overflow-y-auto min-w-0 bg-transparent p-0 flex flex-col justify-between">
           <div className="px-4 lg:px-6 pt-4">
@@ -921,23 +917,23 @@ export default function PonscorePage() {
                   initial={{ opacity: 0, y: -20, scale: 0.96 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: -20, scale: 0.96 }}
-                  className="p-4 rounded-xl bg-[#091b29] border-2 border-[#00ff88] shadow-[0_0_30px_rgba(0,255,136,0.3)] flex items-center justify-between flex-wrap gap-3"
+                  className="p-4 rounded-3xl bg-white/75 dark:bg-[#122019]/90 backdrop-blur-xl border-2 border-[#718D76]/50 dark:border-emerald-500/50 shadow-lg flex items-center justify-between flex-wrap gap-3"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-11 h-11 rounded-lg bg-emerald-950/80 border border-[#00ff88] flex items-center justify-center text-[#00ff88] shadow-[0_0_10px_rgba(0,255,136,0.4)] flex-shrink-0">
-                      <Trophy className="w-6 h-6 animate-bounce" />
+                    <div className="w-11 h-11 rounded-2xl bg-[#718D76]/15 dark:bg-emerald-500/20 border border-[#718D76]/30 flex items-center justify-center text-[#718D76] dark:text-emerald-400 shadow-sm flex-shrink-0">
+                      <Trophy className="w-6 h-6 animate-pulse" />
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="text-xs font-black text-white tracking-widest uppercase flex items-center gap-1.5 font-orbitron">
-                          <span>🎉 UNCLAIMED JACKPOT VICTORY DETECTED</span>
+                        <span className="text-xs font-black text-[#243329] dark:text-white tracking-wide uppercase flex items-center gap-1.5">
+                          <span>🎉 YOU HAVE UNCLAIMED JACKPOT PRIZES!</span>
                         </span>
-                        <span className="px-2 py-0.5 bg-emerald-950/90 text-[#00ff88] text-[10px] font-mono font-black rounded border border-[#00ff88]/40">
-                          {unclaimedGames.length} Rounds
+                        <span className="px-2 py-0.5 bg-[#718D76]/15 dark:bg-emerald-500/20 text-[#243329] dark:text-emerald-300 text-[10px] font-mono font-black rounded-full border border-[#718D76]/30">
+                          {unclaimedGames.length} Rounds Awaiting Claim
                         </span>
                       </div>
-                      <p className="text-[11px] text-slate-300 font-mono mt-0.5">
-                        You won <span className="text-[#00ff88] font-bold">{unclaimedGames[0]?.winner?.prizePons?.toLocaleString()} PONSPOT</span> in Round <span className="text-cyan-400 font-bold">#{unclaimedGames[0]?.gameId}</span>. Claim on-chain now!
+                      <p className="text-[11px] text-[#526256] dark:text-slate-300 font-mono mt-0.5">
+                        You won <span className="text-[#243329] dark:text-emerald-300 font-bold">{unclaimedGames[0]?.winner?.prizePons?.toLocaleString()} PONSPOT</span> in Round <span className="text-[#718D76] dark:text-emerald-400 font-bold">#{unclaimedGames[0]?.gameId}</span>. Withdraw now directly to your wallet!
                       </p>
                     </div>
                   </div>
@@ -947,10 +943,10 @@ export default function PonscorePage() {
                       setSelectedResultGame(unclaimedGames[0]);
                       setShowResultModal(true);
                     }}
-                    className="bg-gradient-to-r from-emerald-400 to-[#00ff88] text-black px-5 py-2.5 font-black rounded-lg text-xs flex items-center gap-2 shadow-[0_0_20px_rgba(0,255,136,0.6)] font-orbitron tracking-wider active:scale-95"
+                    className="btn-primary-sage px-5 py-2.5 font-black rounded-xl text-xs flex items-center gap-2 shadow-md tracking-wider"
                   >
-                    <Zap className="w-4 h-4 fill-black" />
-                    <span>CLAIM WINNINGS ({unclaimedGames[0]?.winner?.prizePons?.toLocaleString()} PONS)</span>
+                    <Zap className="w-4 h-4 fill-white" />
+                    <span>CLAIM WINNINGS ({unclaimedGames[0]?.winner?.prizePons?.toLocaleString()} PONSPOT)</span>
                   </button>
                 </motion.div>
               )}
@@ -959,44 +955,44 @@ export default function PonscorePage() {
             {/* ── 1. CORE GAME HEADER & STATS ── */}
             <div className="grid grid-cols-3 gap-2.5">
               {/* Prize Pool */}
-              <div className="p-3.5 rounded-xl cyber-panel text-center relative overflow-hidden">
-                <p className="text-[10px] font-mono text-cyan-400 uppercase tracking-widest mb-0.5 font-bold">LIVE PRIZE POOL</p>
-                <div className="text-xl font-black font-mono text-white flex items-center justify-center gap-1.5">
-                  <span className="text-neon-cyan">{(game?.totalPool || 0).toLocaleString()}</span>
-                  <span className="text-xs font-bold text-cyan-400">PONS</span>
+              <div className="p-3.5 rounded-2xl glass-panel text-center relative overflow-hidden">
+                <p className="text-[10px] font-mono text-[#526256] dark:text-[#8fa596] uppercase tracking-wider mb-0.5 font-bold">PRIZE POOL</p>
+                <div className="text-xl font-black font-mono text-[#243329] dark:text-[#F5F8F3] flex items-center justify-center gap-1">
+                  <span>{(game?.totalPool || 0).toLocaleString()}</span>
+                  <span className="text-sm font-bold text-[#718D76] dark:text-emerald-400">PONSPOT</span>
                 </div>
-                <span className="text-[9px] font-mono text-slate-400 font-bold block mt-0.5">
-                  95% Winner • <span className="text-[#ff007a]">🔥 5% Burn</span>
+                <span className="text-[9px] font-mono text-[#526256]/80 dark:text-[#8fa596]/80 font-bold">
+                  ~95% to Winner • <span className="text-amber-600 dark:text-amber-400">🔥 5% Burned</span>
                 </span>
               </div>
 
               {/* Total Players */}
-              <div className="p-3.5 rounded-xl cyber-panel text-center relative overflow-hidden">
-                <p className="text-[10px] font-mono text-cyan-400 uppercase tracking-widest mb-0.5 font-bold">ACTIVE PLAYERS</p>
-                <div className="text-xl font-black font-mono text-white flex items-center justify-center gap-1.5">
-                  <Users className="w-4 h-4 text-[#00f0ff]" />
+              <div className="p-3.5 rounded-2xl glass-panel text-center relative overflow-hidden">
+                <p className="text-[10px] font-mono text-[#526256] dark:text-[#8fa596] uppercase tracking-wider mb-0.5 font-bold">PLAYERS</p>
+                <div className="text-xl font-black font-mono text-[#243329] dark:text-[#F5F8F3] flex items-center justify-center gap-1.5">
+                  <Users className="w-4 h-4 text-[#718D76] dark:text-emerald-400" />
                   <span>{game?.totalPlayers || 0}</span>
                 </div>
-                <span className="text-[9px] font-mono text-slate-400 block mt-0.5">
-                  {game?.status === 'waiting' ? 'Waiting 2 Players' : 'Round Active'}
+                <span className="text-[9px] font-mono text-[#526256]/80 dark:text-[#8fa596]/80">
+                  {game?.status === 'waiting' ? 'Waiting for 2 players' : 'Countdown Active'}
                 </span>
               </div>
 
               {/* Time Remaining */}
-              <div className="p-3.5 rounded-xl cyber-panel text-center relative overflow-hidden">
-                <p className="text-[10px] font-mono text-cyan-400 uppercase tracking-widest mb-0.5 font-bold">COUNTDOWN</p>
+              <div className="p-3.5 rounded-2xl glass-panel text-center relative overflow-hidden">
+                <p className="text-[10px] font-mono text-[#526256] dark:text-[#8fa596] uppercase tracking-wider mb-0.5 font-bold">TIME REMAINING</p>
                 <div
                   className={`text-xl font-black font-mono tracking-tight ${
                     game?.status === 'waiting'
-                      ? 'text-slate-500'
+                      ? 'text-[#526256]/60 dark:text-[#8fa596]/60'
                       : timeRemaining <= 5
-                      ? 'text-[#ff007a] text-neon-pink animate-pulse'
-                      : 'text-white'
+                      ? 'text-rose-600 dark:text-rose-400 animate-pulse'
+                      : 'text-[#243329] dark:text-[#F5F8F3]'
                   }`}
                 >
                   {game?.status === 'waiting' ? '-- : --' : `${mm} : ${ss}`}
                 </div>
-                <span className="text-[9px] font-mono text-slate-400 block mt-0.5">15s Fast Round</span>
+                <span className="text-[9px] font-mono text-[#526256]/80 dark:text-[#8fa596]/80">15s Fast Round</span>
               </div>
             </div>
 
@@ -1007,56 +1003,56 @@ export default function PonscorePage() {
               winner={carouselWinner}
             />
 
-            {/* ── 3. YOUR BET SECTION (CYBERPUNK BETTING DECK) ── */}
-            <div className="p-4 rounded-xl cyber-panel space-y-3 shadow-[0_8px_30px_rgba(0,0,0,0.7)]">
+            {/* ── 3. YOUR BET SECTION (PONSPOT BETTING & APPROVAL) ── */}
+            <div className="p-4 rounded-3xl glass-panel space-y-3 shadow-md">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Coins className="w-4 h-4 text-[#00f0ff]" />
-                  <span className="text-xs font-black tracking-wider text-white font-orbitron">WAGER CONTROL DECK</span>
+                  <Coins className="w-4 h-4 text-[#718D76] dark:text-emerald-400" />
+                  <span className="text-xs font-black tracking-wide text-[#243329] dark:text-[#F5F8F3]">YOUR PONSPOT BET</span>
                 </div>
-                <span className="text-[10px] font-mono text-slate-400">
-                  Wallet Balance:{' '}
-                  <span className="text-[#00ff88] font-bold">{ponsBalance.toLocaleString()} PONS</span>
+                <span className="text-[10px] font-mono text-[#526256] dark:text-[#8fa596]">
+                  Balance:{' '}
+                  <span className="text-[#243329] dark:text-emerald-300 font-bold">{ponsBalance.toLocaleString()} PONSPOT</span>
                 </span>
               </div>
 
-              {/* Quick Multiplier Presets */}
+              {/* Quick Presets */}
               <div className="grid grid-cols-4 gap-2">
                 {BET_PRESETS.map((preset) => (
                   <button
                     key={preset}
                     onClick={() => setBetAmount(preset)}
-                    className={`tactile-btn py-2.5 rounded-lg text-xs font-mono font-bold transition-all border ${
+                    className={`tactile-btn py-2.5 rounded-xl text-xs font-mono font-bold transition-all border ${
                       betAmount === preset
-                        ? 'bg-[#00f0ff] border-white text-black font-black shadow-[0_0_15px_rgba(0,240,255,0.6)]'
-                        : 'bg-[#091224] hover:bg-[#0e1b36] border-cyan-500/30 text-slate-200'
+                        ? 'bg-[#718D76] border-[#5E7A63] text-[#F5F8F3] shadow-sm'
+                        : 'bg-white/45 hover:bg-white/70 dark:bg-white/10 dark:hover:bg-white/20 border-white/70 dark:border-[#718D76]/30 text-[#243329] dark:text-[#F5F8F3]'
                     }`}
                   >
-                    {preset.toLocaleString()} PONS
+                    {preset.toLocaleString()} PONSPOT
                   </button>
                 ))}
               </div>
 
               {/* Custom Input & Action Button */}
-              <div className="flex items-center gap-2.5">
-                <div className="flex items-center gap-2 flex-1 bg-[#091224] border border-cyan-500/30 rounded-lg px-3.5 py-2.5 focus-within:border-[#00f0ff] focus-within:shadow-[0_0_12px_rgba(0,240,255,0.3)] transition-all">
-                  <span className="text-xs font-mono font-bold text-[#00f0ff]">PONS:</span>
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-1 bg-white/70 dark:bg-[#0c1611]/80 border border-white/90 dark:border-[#718D76]/40 rounded-xl px-3 py-2.5 focus-within:border-[#718D76] dark:focus-within:border-emerald-400 transition-colors">
+                  <span className="text-xs font-mono font-bold text-[#718D76] dark:text-emerald-400">PONSPOT:</span>
                   <input
                     type="number"
                     min={100000}
                     step={10000}
                     value={betAmount}
                     onChange={(e) => setBetAmount(Math.max(100000, Number(e.target.value)))}
-                    className="w-full bg-transparent text-sm font-mono font-bold text-white focus:outline-none placeholder-slate-600"
+                    className="w-full bg-transparent text-sm font-mono font-bold text-[#243329] dark:text-[#F5F8F3] focus:outline-none placeholder-[#526256]/50 dark:placeholder-[#8fa596]/50"
                   />
-                  <span className="text-[10px] font-mono text-cyan-400/80">{betAmount} tix</span>
+                  <span className="text-[10px] font-mono text-[#526256] dark:text-[#8fa596]">{betAmount} tix</span>
                 </div>
 
-                {/* Dynamic Action Button: Approve vs Bet */}
+                {/* Dynamic Button: Approve vs Bet */}
                 {!isConnected ? (
                   <button
                     onClick={() => setShowWalletModal(true)}
-                    className="cyber-btn-cyan px-6 py-2.5 font-black rounded-lg text-xs transition-all flex-shrink-0 active:scale-95 font-orbitron"
+                    className="btn-primary-sage px-6 py-2.5 font-black rounded-xl text-xs transition-all flex-shrink-0 active:scale-95 shadow-md"
                   >
                     CONNECT WALLET
                   </button>
@@ -1064,7 +1060,7 @@ export default function PonscorePage() {
                   <button
                     onClick={handleApprove}
                     disabled={txState === 'approving'}
-                    className="cyber-btn-cyan px-6 py-2.5 font-black rounded-lg text-xs transition-all flex items-center gap-1.5 flex-shrink-0 active:scale-95 disabled:opacity-75 disabled:cursor-not-allowed font-orbitron"
+                    className="btn-primary-sage px-6 py-2.5 font-black rounded-xl text-xs transition-all flex items-center gap-1.5 flex-shrink-0 active:scale-95 disabled:opacity-75 disabled:cursor-not-allowed shadow-md"
                   >
                     {txState === 'approving' ? (
                       <>
@@ -1074,7 +1070,7 @@ export default function PonscorePage() {
                     ) : (
                       <>
                         <Lock className="w-3.5 h-3.5" />
-                        <span>APPROVE PONS</span>
+                        <span>APPROVE PONSPOT</span>
                       </>
                     )}
                   </button>
@@ -1086,10 +1082,10 @@ export default function PonscorePage() {
                       (game?.status !== 'waiting' && game?.status !== 'open') ||
                       ponsBalance < betAmount
                     }
-                    className={`tactile-btn px-6 py-2.5 rounded-lg text-xs font-black transition-all flex items-center gap-1.5 flex-shrink-0 font-orbitron ${
+                    className={`tactile-btn px-6 py-2.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 flex-shrink-0 ${
                       (game?.status === 'waiting' || game?.status === 'open') && ponsBalance >= betAmount
-                        ? 'cyber-btn-cyan active:scale-95 shadow-[0_0_20px_rgba(0,240,255,0.5)]'
-                        : 'bg-[#091224] text-slate-500 border border-white/10 cursor-not-allowed'
+                        ? 'btn-primary-sage active:scale-95 shadow-md'
+                        : 'bg-white/40 dark:bg-white/10 text-[#526256]/60 dark:text-slate-500 border border-white/60 dark:border-white/10 cursor-not-allowed'
                     }`}
                   >
                     {txState === 'betting' ? (
@@ -1111,28 +1107,28 @@ export default function PonscorePage() {
 
               {/* Approval Info Tooltip */}
               {!hasApproved && isConnected && (
-                <div className="flex items-center gap-1.5 text-[10px] font-mono text-slate-400 bg-[#091224] border border-cyan-500/20 px-3 py-1.5 rounded-lg">
-                  <Info className="w-3.5 h-3.5 flex-shrink-0 text-[#00f0ff]" />
+                <div className="flex items-center gap-1.5 text-[10px] font-mono text-[#526256] dark:text-[#8fa596] bg-white/50 dark:bg-[#0c1611]/60 border border-white/70 dark:border-[#718D76]/30 px-3 py-1.5 rounded-xl">
+                  <Info className="w-3 h-3 flex-shrink-0 text-[#718D76] dark:text-emerald-400" />
                   <span>
-                    ERC-20 standard requires token approval before the smart contract can accept PONSPOT wagers.
+                    ERC-20 standard requires token approval before the smart contract can accept PONSPOT bets.
                   </span>
                 </div>
               )}
             </div>
 
-            {/* ── 4. CURRENT PLAYERS LIST (CYBERPUNK CARDS) ── */}
+            {/* ── 4. CURRENT PLAYERS LIST (AESTHETIC CASINO CARDS) ── */}
             <div className="space-y-3">
               {/* Header Bar */}
               <div className="flex items-center justify-between px-1">
                 <div className="flex items-center gap-2.5 flex-wrap">
-                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#091224] border border-cyan-500/30 text-xs font-black text-white font-orbitron">
-                    <Users className="w-3.5 h-3.5 text-[#00f0ff]" />
-                    <span>{game?.players?.length || 0} PLAYERS</span>
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/70 dark:bg-[#121f19]/80 border border-white/80 dark:border-[#718D76]/30 shadow-sm text-xs font-black text-[#243329] dark:text-white">
+                    <Users className="w-3.5 h-3.5 text-[#718D76] dark:text-emerald-400" />
+                    <span>{game?.players?.length || 0} Players</span>
                   </div>
 
-                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-950/60 border border-emerald-500/30 text-[11px] font-bold text-[#00ff88] font-mono">
-                    <span className="w-3 h-3 rounded-full bg-[#00ff88] flex items-center justify-center text-[7px] font-black text-black">✓</span>
-                    <span>100% NON-CUSTODIAL ESCROW</span>
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#718D76]/15 dark:bg-[#1a3828]/80 border border-[#718D76]/30 dark:border-emerald-500/30 text-[11px] font-bold text-[#243329] dark:text-emerald-300 shadow-sm">
+                    <span className="w-3.5 h-3.5 rounded-full bg-gradient-to-br from-[#8ba790] to-[#516d56] dark:from-emerald-400 dark:to-emerald-600 flex items-center justify-center text-[7px] font-black text-white dark:text-black shadow-sm">P</span>
+                    <span>Payouts are settled in PONSPOT</span>
                   </div>
 
                   {/* Provably Fair Button */}
@@ -1141,27 +1137,27 @@ export default function PonscorePage() {
                       setVerifyTargetGameId(game?.gameId || null);
                       setShowVerifyModal(true);
                     }}
-                    className="tactile-btn flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#091224] hover:bg-[#0f1e3c] border border-cyan-500/40 text-[11px] font-bold text-cyan-300 transition-all font-mono group"
-                    title="Verify cryptographic provable fairness"
+                    className="tactile-btn flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/70 hover:bg-white dark:bg-[#14261e]/90 dark:hover:bg-[#1a3828] border border-white/80 dark:border-[#718D76]/35 text-[11px] font-bold text-[#718D76] dark:text-emerald-400 shadow-sm transition-all group"
+                    title="Verify smart contract cryptographic provable fairness"
                   >
-                    <ShieldCheck className="w-3.5 h-3.5 text-[#00f0ff] group-hover:scale-110 transition-transform" />
-                    <span>PROVABLY FAIR</span>
+                    <ShieldCheck className="w-3.5 h-3.5 text-[#718D76] dark:text-emerald-400 group-hover:scale-110 transition-transform" />
+                    <span>Provably Fair</span>
                     <ExternalLink className="w-2.5 h-2.5 opacity-60" />
                   </button>
                 </div>
 
-                <div className="flex items-center gap-1 text-xs font-mono font-bold text-slate-400">
-                  <span className="text-[#00f0ff]">#</span>
-                  <span>ROUND:</span>
-                  <span className="text-white font-black">{game?.gameId?.replace('PONSPOT-', '') || '371667'}</span>
+                <div className="flex items-center gap-1 text-xs font-mono font-bold text-[#526256] dark:text-slate-400">
+                  <span className="text-[#718D76] dark:text-emerald-400 font-black">#</span>
+                  <span>Round:</span>
+                  <span className="text-[#243329] dark:text-white font-black">{game?.gameId?.replace('PONSPOT-', '') || '371667'}</span>
                 </div>
               </div>
 
               {/* Player Card Stack */}
               <div className="space-y-2.5">
                 {(!game?.players || game.players.length === 0) ? (
-                  <div className="text-center py-10 rounded-xl bg-[#091224]/60 border border-cyan-500/20 text-xs text-slate-400 font-mono italic">
-                    NO ACTIVE WAGERS IN THIS ROUND. PLACE THE FIRST BET!
+                  <div className="text-center py-10 rounded-2xl bg-white/40 dark:bg-[#101c16]/50 border border-white/70 dark:border-[#718D76]/20 text-xs text-[#526256] dark:text-[#8fa596] font-mono italic">
+                    No players in this pot yet. Be the first to place a PONSPOT bet!
                   </div>
                 ) : (
                   game.players.map((p: any) => {
@@ -1170,32 +1166,32 @@ export default function PonscorePage() {
                     return (
                       <div
                         key={p.address}
-                        className={`relative flex items-center justify-between p-3.5 sm:p-4 rounded-xl border transition-all overflow-hidden ${
+                        className={`relative flex items-center justify-between p-3.5 sm:p-4 rounded-2xl border transition-all overflow-hidden ${
                           isMe
-                            ? 'bg-[#0c1830]/95 border-[#00f0ff] shadow-[0_0_20px_rgba(0,240,255,0.3)]'
-                            : 'bg-[#091224]/85 border-cyan-500/20 hover:border-cyan-500/40'
+                            ? 'bg-white/85 dark:bg-[#14261e]/95 border-[#718D76] dark:border-emerald-500/60 shadow-[0_4px_16px_rgba(0,0,0,0.15)]'
+                            : 'bg-white/60 dark:bg-[#0f1c16]/90 border-white/80 dark:border-[#718D76]/25 hover:bg-white/75 dark:hover:bg-[#15271f] shadow-sm'
                         }`}
                       >
                         {/* Right vertical glowing accent indicator bar */}
-                        <div className="absolute right-0 top-2 bottom-2 w-1 rounded-l-full bg-[#00f0ff] shadow-[0_0_10px_#00f0ff]" />
+                        <div className="absolute right-0 top-3 bottom-3 w-1.5 rounded-l-full bg-gradient-to-b from-[#718D76] to-emerald-400 shadow-[0_0_10px_#718D76] dark:shadow-[0_0_12px_#34d399]" />
 
                         {/* Left: Avatar, Name, Level Badge */}
                         <div className="flex items-center gap-3 min-w-0">
-                          <div className="relative w-12 h-12 rounded-lg bg-black/60 p-0.5 border border-cyan-400/40 shadow-inner flex-shrink-0 overflow-hidden flex items-center justify-center">
+                          <div className="relative w-12 h-12 rounded-2xl bg-white/80 dark:bg-black/50 p-0.5 border border-white/90 dark:border-white/20 shadow-inner flex-shrink-0 overflow-hidden flex items-center justify-center">
                             <img
                               src={p.avatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${p.address}`}
                               alt=""
-                              className="w-full h-full rounded-md object-cover"
+                              className="w-full h-full rounded-xl object-cover"
                             />
                           </div>
                           <div className="min-w-0 space-y-1">
-                            <p className="text-sm font-black text-white truncate tracking-tight font-cyber">
+                            <p className="text-sm font-black text-[#243329] dark:text-white truncate tracking-tight">
                               {p.name || `${p.address.slice(0, 6)}...${p.address.slice(-4)}`}
-                              {isMe && <span className="text-[#00f0ff] text-xs ml-1.5 font-bold font-mono">(YOU)</span>}
+                              {isMe && <span className="text-[#718D76] dark:text-emerald-400 text-xs ml-1.5 font-bold">(You)</span>}
                             </p>
                             <div className="flex items-center gap-1.5">
-                              <span className="px-2 py-0.5 rounded bg-cyan-950/80 border border-cyan-400/30 text-[10px] font-mono font-black text-[#00f0ff]">
-                                LV. {playerLevel}
+                              <span className="px-2 py-0.5 rounded-md bg-[#718D76]/20 dark:bg-[#1a3828] border border-[#718D76]/30 dark:border-emerald-500/30 text-[10px] font-mono font-black text-[#718D76] dark:text-emerald-400">
+                                Lv. {playerLevel}
                               </span>
                             </div>
                           </div>
@@ -1203,7 +1199,7 @@ export default function PonscorePage() {
 
                         {/* Middle: Token Coin Badge & Bet Amount */}
                         <div className="flex items-center gap-3 px-4">
-                          <div className="relative w-8 h-8 rounded-full bg-cyan-950/60 border border-cyan-400/40 flex items-center justify-center flex-shrink-0 p-1">
+                          <div className="relative w-9 h-9 rounded-full bg-gradient-to-br from-[#718D76]/25 to-emerald-500/10 border border-[#718D76]/40 dark:border-emerald-500/40 flex items-center justify-center shadow-inner flex-shrink-0 p-1">
                             <img
                               src="/image/logo.png"
                               alt="PONSPOT"
@@ -1211,21 +1207,21 @@ export default function PonscorePage() {
                             />
                           </div>
                           <div className="text-left font-mono">
-                            <p className="text-base sm:text-lg font-black text-white tracking-tight leading-tight">
+                            <p className="text-base sm:text-lg font-black text-[#243329] dark:text-white tracking-tight leading-tight">
                               {p.totalBetPons.toLocaleString()}
                             </p>
-                            <p className="text-[11px] text-cyan-400 font-bold">
-                              PONS
+                            <p className="text-[11px] text-[#718D76] dark:text-emerald-400 font-bold">
+                              PONSPOT
                             </p>
                           </div>
                         </div>
 
                         {/* Right: Chance Label & Percentage */}
                         <div className="text-right pr-3 sm:pr-4">
-                          <span className="text-[10px] font-bold text-slate-400 block tracking-widest uppercase font-mono">
-                            ODDS
+                          <span className="text-[11px] font-bold text-[#526256] dark:text-slate-400 block tracking-wider">
+                            Chance
                           </span>
-                          <span className="text-base sm:text-lg font-black font-mono text-[#00ff88] tracking-tight">
+                          <span className="text-base sm:text-lg font-black font-mono text-[#243329] dark:text-white tracking-tight">
                             {p.odds}%
                           </span>
                         </div>
@@ -1239,229 +1235,107 @@ export default function PonscorePage() {
             </div>
           </div>
 
-          {/* ═══════════ MAIN CYBERPUNK SITE FOOTER ═══════════ */}
-          <footer className="w-full bg-[#03060f] border-t border-cyan-500/25 mt-12 pt-10 pb-28 lg:pb-10 px-4 sm:px-6 select-none font-sans text-xs text-slate-400 relative overflow-hidden">
-            {/* Background cyber grid & ambient glows */}
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(0,240,255,0.06),rgba(255,255,255,0))] pointer-events-none" />
-            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-3/4 h-24 bg-cyan-500/5 blur-3xl pointer-events-none" />
-
-            <div className="max-w-6xl mx-auto space-y-8 relative z-10">
-              {/* Top Row: Brand & Live Protocol Telemetry */}
-              <div className="grid grid-cols-1 md:grid-cols-12 gap-6 pb-6 border-b border-cyan-500/15">
-                {/* Brand & Ecosystem */}
-                <div className="md:col-span-5 space-y-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-[#081226] border border-cyan-400/50 p-1.5 shadow-[0_0_15px_rgba(0,240,255,0.3)] flex items-center justify-center flex-shrink-0">
+          {/* ═══════════ MAIN SITE FOOTER (100% EDGE-TO-EDGE FULL BLACK) ═══════════ */}
+          <footer
+            className="w-full bg-black dark:bg-[#050a07] border-t border-black/80 dark:border-[#718D76]/20 mt-16 lg:mt-[420px] pt-8 pb-20 lg:pb-4 px-4 lg:px-6 select-none font-sans text-xs"
+          >
+            <div className="max-w-4xl xl:max-w-5xl mx-auto space-y-4">
+              {/* Top Card: About Ponspot & Terms */}
+                <div className="p-5 sm:p-6 rounded-3xl bg-white/75 dark:bg-[#0e1b15]/90 backdrop-blur-2xl border border-white/80 dark:border-[#718D76]/30 shadow-md flex flex-col md:flex-row items-center gap-6">
+                  {/* Left Logo / Mascot Pod */}
+                  <div className="flex flex-col items-center justify-center flex-shrink-0">
+                    <div className="relative w-20 h-20 rounded-2xl bg-white/85 dark:bg-[#14241d] border border-white/90 dark:border-[#718D76]/40 p-2 shadow-inner flex items-center justify-center overflow-hidden">
                       <img
                         src="/image/logo.png"
                         alt="Ponspot Logo"
-                        className="w-full h-full object-contain"
+                        className="w-full h-full object-contain rounded-xl select-none pointer-events-none drop-shadow-sm"
                       />
                     </div>
-                    <div>
-                      <h3 className="text-base font-black text-white tracking-widest font-orbitron text-neon-cyan">
-                        PONSPOT.FUN
-                      </h3>
-                      <p className="text-[10px] text-cyan-400 font-mono tracking-wide">
-                        NEXT-GEN DECENTRALIZED JACKPOT ARENA
-                      </p>
-                    </div>
-                  </div>
-                  <p className="text-[11px] text-slate-300 leading-relaxed font-sans">
-                    The premier non-custodial gaming protocol on <strong className="text-white">Robinhood Chain L2</strong>. Wagers are escrowed directly in immutable smart contracts with 100% provably fair cryptographic outcomes.
-                  </p>
-                  <div className="flex items-center gap-2 pt-1">
-                    <span className="flex h-2 w-2 relative">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#00ff88] opacity-75" />
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-[#00ff88]" />
-                    </span>
-                    <span className="text-[10px] font-mono text-[#00ff88] font-bold tracking-wider">
-                      ROBINHOOD CHAIN L2 // STATUS: ONLINE (4663)
+                    <span className="text-sm font-black tracking-widest text-[#243329] dark:text-white mt-2 font-mono">
+                      PONSPOT
                     </span>
                   </div>
-                </div>
 
-                {/* Quick Protocol Links */}
-                <div className="md:col-span-3 space-y-2.5">
-                  <h4 className="text-[10px] font-black uppercase text-cyan-400 font-orbitron tracking-widest">
-                    PROTOCOL & GOVERNANCE
-                  </h4>
-                  <ul className="space-y-1.5 text-[11px] font-mono">
-                    <li>
-                      <button
-                        onClick={() => setShowTermsModal(true)}
-                        className="text-slate-300 hover:text-[#00f0ff] transition-colors flex items-center gap-1.5"
-                      >
-                        <span>›</span>
-                        <span>Protocol Rules & Terms</span>
-                      </button>
-                    </li>
-                    <li>
-                      <Link
-                        href="/terms"
-                        className="text-slate-300 hover:text-[#00f0ff] transition-colors flex items-center gap-1.5"
-                      >
-                        <span>›</span>
-                        <span>Terms of Service</span>
-                      </Link>
-                    </li>
-                    <li>
-                      <Link
-                        href="/privacy"
-                        className="text-slate-300 hover:text-[#00f0ff] transition-colors flex items-center gap-1.5"
-                      >
-                        <span>›</span>
-                        <span>Privacy Policy</span>
-                      </Link>
-                    </li>
-                    <li>
-                      <button
-                        onClick={() => {
-                          setVerifyTargetGameId(game?.gameId || null);
-                          setShowVerifyModal(true);
-                        }}
-                        className="text-slate-300 hover:text-[#00f0ff] transition-colors flex items-center gap-1.5"
-                      >
-                        <span>›</span>
-                        <span>Cryptographic Verifier</span>
-                      </button>
-                    </li>
-                  </ul>
-                </div>
-
-                {/* Social & Explorer */}
-                <div className="md:col-span-4 space-y-3">
-                  <h4 className="text-[10px] font-black uppercase text-cyan-400 font-orbitron tracking-widest">
-                    OFFICIAL COMMS & EXPLORER
-                  </h4>
-                  <div className="space-y-2">
-                    <a
-                      href="https://x.com/play_ponspot"
-                      target="_blank"
-                      rel="noreferrer"
-                      className="flex items-center justify-between p-2.5 rounded-lg bg-[#081226] border border-cyan-500/30 hover:border-cyan-400 transition-all group"
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-6 h-6 rounded bg-black/60 border border-white/10 flex items-center justify-center text-xs font-black text-white font-mono">
-                          𝕏
-                        </div>
-                        <div>
-                          <span className="text-xs font-bold text-white group-hover:text-cyan-300 transition-colors">
-                            Official X / Twitter
-                          </span>
-                          <span className="text-[9px] text-slate-400 block font-mono">@play_ponspot</span>
-                        </div>
-                      </div>
-                      <ExternalLink className="w-3.5 h-3.5 text-slate-500 group-hover:text-cyan-400 transition-colors" />
-                    </a>
-
-                    <a
-                      href={`${ROBINHOOD_CHAIN_CONFIG.blockExplorer}/address/${GAME_CONTRACT_ADDRESS}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="flex items-center justify-between p-2.5 rounded-lg bg-[#081226] border border-cyan-500/30 hover:border-cyan-400 transition-all group"
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-6 h-6 rounded bg-emerald-950/80 border border-emerald-500/40 flex items-center justify-center text-xs text-[#00ff88]">
-                          <CheckCircle2 className="w-3.5 h-3.5" />
-                        </div>
-                        <div>
-                          <span className="text-xs font-bold text-white group-hover:text-emerald-300 transition-colors font-cyber">
-                            Blockscout Explorer
-                          </span>
-                          <span className="text-[9px] text-slate-400 block font-mono">Robinhood Mainnet Vault</span>
-                        </div>
-                      </div>
-                      <ExternalLink className="w-3.5 h-3.5 text-slate-500 group-hover:text-[#00ff88] transition-colors" />
-                    </a>
-                  </div>
-                </div>
-              </div>
-
-              {/* Middle Row: Contract Addresses with 1-Click Copy */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-                {/* Token Contract Card */}
-                <div className="p-3.5 rounded-xl bg-[#060c1c] border border-cyan-500/25 flex items-center justify-between gap-3">
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-1.5 mb-1">
-                      <span className="px-1.5 py-0.5 rounded bg-cyan-950 border border-cyan-500/40 text-[9px] font-mono font-bold text-[#00f0ff]">
-                        $PONS TOKEN
-                      </span>
-                      <span className="text-[10px] text-slate-400 font-mono">ERC-20 Betting Asset</span>
-                    </div>
-                    <p className="text-xs font-mono text-white truncate font-bold select-all">
-                      {PONS_TOKEN_ADDRESS}
+                  {/* Right Terms & Description */}
+                  <div className="space-y-3 text-[#3a4d3f] dark:text-slate-300 text-[11px] leading-relaxed text-center md:text-left">
+                    <p>
+                      Welcome to <strong className="text-[#243329] dark:text-white font-black">Ponspot</strong>. Play 100% fair on-chain Jackpot games powered by Robinhood Chain and PONSPOT token. Ponspot provides instant decentralized deposits and transparent smart contract prize distribution for bets of any size. Dedicated to decentralized gaming exclusively for the Robinhood ecosystem.
+                    </p>
+                    <p className="text-[10px] text-[#526256] dark:text-slate-400">
+                      In order to participate on this website, the user is required to accept the <strong className="text-[#243329] dark:text-white font-bold">General Terms and Conditions</strong>. In the event the <strong className="text-[#243329] dark:text-white font-bold">General Terms and Conditions</strong> are updated, existing users may choose to discontinue using the platform before the said update becomes effective.
                     </p>
                   </div>
-                  <button
-                    onClick={() => {
-                      navigator.clipboard.writeText(PONS_TOKEN_ADDRESS);
-                      setToastMsg({ ok: true, title: 'TOKEN COPIED', desc: 'Token contract copied to clipboard' });
-                      setTimeout(() => setToastMsg(null), 2500);
-                    }}
-                    className="cyber-btn-glass px-3 py-1.5 rounded-lg text-[10px] font-mono font-bold text-cyan-300 flex-shrink-0 hover:border-cyan-400 active:scale-95"
-                    title="Copy Token CA"
-                  >
-                    COPY CA
-                  </button>
                 </div>
 
-                {/* Vault Contract Card */}
-                <div className="p-3.5 rounded-xl bg-[#060c1c] border border-cyan-500/25 flex items-center justify-between gap-3">
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-1.5 mb-1">
-                      <span className="px-1.5 py-0.5 rounded bg-emerald-950 border border-emerald-500/40 text-[9px] font-mono font-bold text-[#00ff88]">
-                        ESCROW VAULT
-                      </span>
-                      <span className="text-[10px] text-slate-400 font-mono">Robinhood Smart Contract</span>
+                {/* Middle Card: Smart Contract Verification / Regulatory Badge */}
+                <div className="p-4 sm:p-4.5 rounded-2xl bg-white/60 dark:bg-[#0c1712]/85 backdrop-blur-xl border border-white/70 dark:border-[#718D76]/25 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+                  <div className="flex items-center gap-3.5">
+                    <div className="w-9 h-9 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-600 dark:text-emerald-400 flex-shrink-0 shadow-sm">
+                      <CheckCircle2 className="w-5 h-5" />
                     </div>
-                    <p className="text-xs font-mono text-white truncate font-bold select-all">
-                      {GAME_CONTRACT_ADDRESS}
+                    <p className="text-[10px] text-[#526256] dark:text-slate-400 leading-normal">
+                      <strong className="text-[#243329] dark:text-emerald-300 font-bold">Ponspot.fun</strong> operates via decentralized smart contracts on Robinhood Chain (Vault: <code className="text-[#718D76] dark:text-emerald-400 font-mono font-bold">{GAME_CONTRACT_ADDRESS ? `${GAME_CONTRACT_ADDRESS.slice(0, 6)}...${GAME_CONTRACT_ADDRESS.slice(-4)}` : 'Decentralized'}</code>, Token: <code className="text-[#718D76] dark:text-emerald-400 font-mono font-bold">{PONS_TOKEN_ADDRESS ? `${PONS_TOKEN_ADDRESS.slice(0, 6)}...${PONS_TOKEN_ADDRESS.slice(-4)}` : 'ERC-20'}</code>). All rounds use SHA-256 pre-commit hash verification and public block seeds for 100% cryptographic provable fairness.
                     </p>
                   </div>
-                  <button
-                    onClick={() => {
-                      navigator.clipboard.writeText(GAME_CONTRACT_ADDRESS);
-                      setToastMsg({ ok: true, title: 'VAULT COPIED', desc: 'Game contract copied to clipboard' });
-                      setTimeout(() => setToastMsg(null), 2500);
-                    }}
-                    className="cyber-btn-glass px-3 py-1.5 rounded-lg text-[10px] font-mono font-bold text-emerald-300 flex-shrink-0 hover:border-emerald-400 active:scale-95"
-                    title="Copy Vault Address"
+                  <a
+                    href={`${ROBINHOOD_CHAIN_CONFIG.blockExplorer}/address/${GAME_CONTRACT_ADDRESS}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="tactile-btn px-3.5 py-2 rounded-xl bg-white/80 hover:bg-white dark:bg-[#14241d] dark:hover:bg-[#1c3328] border border-emerald-500/30 text-[10px] font-black text-emerald-700 dark:text-emerald-300 flex items-center gap-1.5 flex-shrink-0 shadow-sm"
+                    title="View verified smart contract on Robinhood Blockscout"
                   >
-                    COPY VAULT
-                  </button>
+                    <ExternalLink className="w-3.5 h-3.5 text-emerald-500" />
+                    <span>View on Blockscout</span>
+                  </a>
                 </div>
-              </div>
 
-              {/* Protocol Economics Badge */}
-              <div className="p-3 rounded-xl bg-[#050914] border border-cyan-500/20 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left text-[10px] font-mono">
-                <div className="flex items-center gap-2">
-                  <ShieldCheck className="w-4 h-4 text-[#00ff88] flex-shrink-0" />
-                  <span className="text-slate-300">
-                    <strong className="text-white">Economics:</strong> 95% Claimed by Winner • 5% Permanently Burned to <code className="text-[#ff007a]">0x00...dEaD</code>
-                  </span>
-                </div>
-                <div className="text-slate-400">
-                  Dev Security Verified // Non-Custodial
-                </div>
-              </div>
+                {/* Unified Bottom Row: Copyright & Legal on Left, X / Twitter on Right */}
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-3 pb-2 text-[11px] text-[#526256] dark:text-slate-400 font-mono border-t border-white/40 dark:border-white/10 flex-wrap">
+                  {/* Left: Copyright & Legal Links */}
+                  <div className="flex items-center gap-2.5 flex-wrap">
+                    <span>© 2026 Ponspot.fun All Rights Reserved</span>
+                    <span>•</span>
+                    <Link
+                      href="/terms"
+                      className="text-[#718D76] dark:text-emerald-400 hover:underline font-bold"
+                    >
+                      Terms of Use
+                    </Link>
+                    <span>•</span>
+                    <Link
+                      href="/privacy"
+                      className="text-[#718D76] dark:text-emerald-400 hover:underline font-bold"
+                    >
+                      Privacy Policy
+                    </Link>
+                  </div>
 
-              {/* Bottom Copyright & Security Disclaimer */}
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-cyan-500/15 text-[10px] text-slate-400 font-mono">
-                <div>
-                  © 2026 <strong className="text-white font-cyber">PONSPOT.FUN</strong> — ALL RIGHTS RESERVED.
-                </div>
-                <div className="text-slate-400 text-center sm:text-right">
-                  Decentralized Web3 protocol. Always verify contract address before placing wagers.
+                  {/* Right: X / Twitter */}
+                  <a
+                    href="https://x.com/ponspotdotfun"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex items-center gap-2.5 px-3.5 py-1.5 rounded-xl bg-white/70 dark:bg-[#122019] border border-white/80 dark:border-[#718D76]/35 hover:bg-white dark:hover:bg-[#182b22] transition-all shadow-sm group flex-shrink-0"
+                  >
+                    <div className="w-4 h-4 rounded-md bg-black/10 dark:bg-white/10 flex items-center justify-center text-[10px] font-black text-[#243329] dark:text-white font-mono">
+                      𝕏
+                    </div>
+                    <div className="text-left leading-none">
+                      <span className="text-[8px] text-[#526256] dark:text-slate-400 block">Follow our</span>
+                      <span className="text-[11px] font-black text-[#243329] dark:text-white">@ponspotdotfun</span>
+                    </div>
+                    <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-[8px] font-black border border-emerald-500/30 ml-1">
+                      Follow now
+                    </span>
+                  </a>
                 </div>
               </div>
-            </div>
-          </footer>
+            </footer>
         </main>
-        </div>
-
+        </div>{/* end arena div */}
 
         {/* Right: Round History Sidebar */}
+        {/* Mobile: only show when mobileTab === 'history'; Desktop: always show */}
         <div className={`${mobileTab === 'history' ? 'flex' : 'hidden'} lg:flex flex-col w-full lg:w-auto h-full`}>
           <RightWinnerSidebar pastRounds={pastGames.map((g) => ({
             roundNumber: g.nonce,
@@ -1484,24 +1358,24 @@ export default function PonscorePage() {
       </div>
 
       {/* ═══════════ MOBILE BOTTOM NAV BAR ═══════════ */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 flex lg:hidden items-stretch h-14 bg-[#060b17]/98 backdrop-blur-2xl border-t border-cyan-500/30 shadow-2xl">
+      <nav className="fixed bottom-0 left-0 right-0 z-50 flex lg:hidden items-stretch h-14 bg-[#0c1611]/95 dark:bg-[#0a1209]/95 backdrop-blur-2xl border-t border-[#718D76]/30 shadow-2xl">
         <button
           onClick={() => setMobileTab('chat')}
-          className={`flex-1 flex flex-col items-center justify-center gap-0.5 text-[10px] font-black tracking-widest font-orbitron transition-all active:scale-95 ${mobileTab === 'chat' ? 'text-[#00f0ff] bg-cyan-400/10' : 'text-slate-500 hover:text-slate-300'}`}
+          className={`flex-1 flex flex-col items-center justify-center gap-0.5 text-[10px] font-black tracking-wide transition-all active:scale-95 ${mobileTab === 'chat' ? 'text-emerald-400 bg-emerald-400/10' : 'text-slate-500 hover:text-slate-300'}`}
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
           <span>CHAT</span>
         </button>
         <button
           onClick={() => setMobileTab('arena')}
-          className={`flex-1 flex flex-col items-center justify-center gap-0.5 text-[10px] font-black tracking-widest font-orbitron transition-all active:scale-95 ${mobileTab === 'arena' ? 'text-[#00f0ff] bg-cyan-400/10' : 'text-slate-500 hover:text-slate-300'}`}
+          className={`flex-1 flex flex-col items-center justify-center gap-0.5 text-[10px] font-black tracking-wide transition-all active:scale-95 ${mobileTab === 'arena' ? 'text-emerald-400 bg-emerald-400/10' : 'text-slate-500 hover:text-slate-300'}`}
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
           <span>ARENA</span>
         </button>
         <button
           onClick={() => setMobileTab('history')}
-          className={`flex-1 flex flex-col items-center justify-center gap-0.5 text-[10px] font-black tracking-widest font-orbitron transition-all active:scale-95 ${mobileTab === 'history' ? 'text-[#00f0ff] bg-cyan-400/10' : 'text-slate-500 hover:text-slate-300'}`}
+          className={`flex-1 flex flex-col items-center justify-center gap-0.5 text-[10px] font-black tracking-wide transition-all active:scale-95 ${mobileTab === 'history' ? 'text-emerald-400 bg-emerald-400/10' : 'text-slate-500 hover:text-slate-300'}`}
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>
           <span>HISTORY</span>
@@ -1516,32 +1390,32 @@ export default function PonscorePage() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -20, scale: 0.92 }}
             transition={{ type: 'spring', damping: 22, stiffness: 320 }}
-            className={`fixed top-20 right-6 z-50 flex items-center gap-3 px-4 py-3 rounded-xl backdrop-blur-2xl shadow-2xl border select-none ${
+            className={`fixed top-20 right-6 z-50 flex items-center gap-3 px-4 py-3 rounded-2xl backdrop-blur-2xl shadow-2xl border select-none ${
               toastMsg.ok
-                ? 'bg-[#060b17]/95 border-[#00ff88]/50 shadow-[0_0_20px_rgba(0,255,136,0.3)] text-white'
-                : 'bg-[#060b17]/95 border-[#ff007a]/50 shadow-[0_0_20px_rgba(255,0,122,0.3)] text-white'
+                ? 'bg-white/95 dark:bg-[#0c1611]/95 border-emerald-500/40 shadow-lg text-[#243329] dark:text-[#F5F8F3]'
+                : 'bg-white/95 dark:bg-[#0c1611]/95 border-rose-500/40 shadow-lg text-[#243329] dark:text-[#F5F8F3]'
             }`}
           >
             <div
-              className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
+              className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${
                 toastMsg.ok
-                  ? 'bg-emerald-950/80 text-[#00ff88] border border-[#00ff88]/40'
-                  : 'bg-rose-950/80 text-[#ff007a] border border-[#ff007a]/40'
+                  ? 'bg-[#718D76]/15 dark:bg-[#718D76]/30 text-[#718D76] dark:text-emerald-400 border border-[#718D76]/30'
+                  : 'bg-rose-100 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 border border-rose-300 dark:border-rose-800'
               }`}
             >
               {toastMsg.ok ? <Check className="w-4 h-4" /> : <X className="w-4 h-4" />}
             </div>
             <div>
-              <p className={`text-xs font-black tracking-wide font-cyber ${toastMsg.ok ? 'text-[#00ff88]' : 'text-[#ff007a]'}`}>
+              <p className={`text-xs font-black tracking-wide ${toastMsg.ok ? 'text-[#718D76] dark:text-emerald-400' : 'text-rose-700 dark:text-rose-400'}`}>
                 {toastMsg.title}
               </p>
-              <p className="text-[11px] text-slate-300 font-mono mt-0.5">{toastMsg.desc}</p>
-              {lastTxHash && (
+              <p className="text-[11px] text-[#526256] dark:text-slate-300 font-mono mt-0.5">{toastMsg.desc}</p>
+              {toastMsg.txHash && (
                 <a
-                  href={`${ROBINHOOD_CHAIN_CONFIG.blockExplorer}/tx/${lastTxHash}`}
+                  href={`${ROBINHOOD_CHAIN_CONFIG.blockExplorer}/tx/${toastMsg.txHash}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex items-center gap-1 text-[10px] text-[#00f0ff] hover:underline font-mono mt-1"
+                  className="inline-flex items-center gap-1 text-[10px] text-[#718D76] dark:text-emerald-400 hover:underline font-mono mt-1"
                 >
                   <span>View on Robinhood Explorer</span>
                   <ExternalLink className="w-2.5 h-2.5" />
@@ -1551,7 +1425,6 @@ export default function PonscorePage() {
           </motion.div>
         )}
       </AnimatePresence>
-
 
       {/* ── 7. GAME RESULT POPUP (WINNER CLAIM & NON-WINNER STATE) ── */}
       <GameResultModal
