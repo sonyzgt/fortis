@@ -238,7 +238,15 @@ app.get('/api/token-contract-address', (_, res) => {
     const addr = fs.readFileSync(file, 'utf8').trim();
     if (addr.startsWith('0x') && addr.length === 42) return res.json({ tokenAddress: addr });
   }
-  res.json({ tokenAddress: (process.env.NEXT_PUBLIC_PONS_TOKEN_ADDRESS || '').trim() });
+  res.json({
+    tokenAddress: (
+      process.env.NEXT_PUBLIC_CASHFLIP_TOKEN_ADDRESS ||
+      process.env.NEXT_PUBLIC_PONSPOT_TOKEN_ADDRESS ||
+      process.env.NEXT_PUBLIC_PONS_TOKEN_ADDRESS ||
+      process.env.PONS_TOKEN_ADDRESS ||
+      '0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168'
+    ).trim(),
+  });
 });
 
 app.post('/api/admin/force-refresh', requireAdmin, (req, res) => {

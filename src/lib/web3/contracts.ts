@@ -29,16 +29,27 @@ export function getCashFlipTokenAddress(): string {
       return saved;
     }
   }
-  const envAddr = (process.env.NEXT_PUBLIC_CASHFLIP_TOKEN_ADDRESS || '').trim();
+  const envAddr = (
+    process.env.NEXT_PUBLIC_CASHFLIP_TOKEN_ADDRESS ||
+    process.env.NEXT_PUBLIC_PONSPOT_TOKEN_ADDRESS ||
+    process.env.NEXT_PUBLIC_PONS_TOKEN_ADDRESS ||
+    process.env.PONS_TOKEN_ADDRESS ||
+    ''
+  ).trim();
   if (envAddr && envAddr.startsWith('0x') && envAddr.length === 42) {
     return envAddr;
   }
   return DEFAULT_TOKEN_ADDRESS;
 }
 
-
 export const CASHFLIP_TOKEN_ADDRESS =
-  (process.env.NEXT_PUBLIC_CASHFLIP_TOKEN_ADDRESS || DEFAULT_TOKEN_ADDRESS).trim();
+  (
+    process.env.NEXT_PUBLIC_CASHFLIP_TOKEN_ADDRESS ||
+    process.env.NEXT_PUBLIC_PONSPOT_TOKEN_ADDRESS ||
+    process.env.NEXT_PUBLIC_PONS_TOKEN_ADDRESS ||
+    process.env.PONS_TOKEN_ADDRESS ||
+    DEFAULT_TOKEN_ADDRESS
+  ).trim();
 
 export function getGameContractAddress(): string {
   if (typeof window !== 'undefined') {
