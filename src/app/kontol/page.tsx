@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
@@ -6,7 +6,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ethers } from 'ethers';
 import {
   ShieldAlert,
-  Rocket,
   RefreshCw,
   ExternalLink,
   ArrowLeft,
@@ -24,31 +23,29 @@ import {
   Sparkles,
   CheckCircle2,
   Copy,
-  Gift,
   Trash2,
   Flame,
   AlertOctagon,
+  Scroll,
+  Compass,
+  Feather,
 } from 'lucide-react';
-import { usePonspotWeb3 } from '@/context/PonspotWeb3Context';
-import { DeployModal } from '@/components/ponspot/DeployModal';
-import { DeployAirdropModal } from '@/components/ponspot/DeployAirdropModal';
+import { useCashFlipWeb3 } from '@/context/CashFlipWeb3Context';
+import { DeployModal } from '@/components/cashflip/DeployModal';
 import {
   ROBINHOOD_CHAIN_CONFIG,
   getGameContractAddress,
-  getAirdropContractAddress,
-  getPonspotTokenAddress,
-  getPonspotContract,
-  depositAirdropOnChain,
-  fetchOnChainAirdropBalance,
+  getCashFlipTokenAddress,
   withdrawBettingContractOnChain,
-  withdrawAirdropContractOnChain,
-  PONSPOT_TOKEN_ADDRESS,
-  PONS_TOKEN_ADDRESS,
+  parseTokenAmount,
+  CASHFLIP_TOKEN_ADDRESS,
 } from '@/lib/web3/contracts';
 import { getApiBaseUrl } from '@/lib/apiConfig';
+import { CelestialEmblem } from '@/components/ui/CelestialEmblem';
+import { BookplateCorner, CelestialFlourish } from '@/components/ui/CelestialFlourish';
 
 export default function AdminPanelPage() {
-  const { account, isConnected, connectWallet, refreshBalances } = usePonspotWeb3();
+  const { account, isConnected, connectWallet, refreshBalances } = useCashFlipWeb3();
 
   // Authentication State (Secure Session via Backend Token)
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
@@ -59,23 +56,11 @@ export default function AdminPanelPage() {
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [copiedToken, setCopiedToken] = useState(false);
 
-  // Airdrop Vault Management State
-  const [airdropPoolBalance, setAirdropPoolBalance] = useState<number>(10000);
-  const [airdropReward, setAirdropReward] = useState<number>(100);
-  const [airdropDepositAmount, setAirdropDepositAmount] = useState<string>('5000');
-  const [airdropCustomReward, setAirdropCustomReward] = useState<string>('100');
-  const [activeAirdropContract, setActiveAirdropContract] = useState<string>('');
-  const [manualAirdropContractInput, setManualAirdropContractInput] = useState<string>('');
-  const [showDeployAirdropModal, setShowDeployAirdropModal] = useState<boolean>(false);
-  const [isDepositingAirdrop, setIsDepositingAirdrop] = useState<boolean>(false);
-  const [airdropWithdrawAmount, setAirdropWithdrawAmount] = useState<string>('');
-  const [isWithdrawingAirdrop, setIsWithdrawingAirdrop] = useState<boolean>(false);
-
   // Contracts & Engine State
   const [activeContract, setActiveContract] = useState<string>('');
   const [activeTokenContract, setActiveTokenContract] = useState<string>('');
   const [manualTokenInput, setManualTokenInput] = useState('');
-  const [contractPonsBalance, setContractPonsBalance] = useState<string>('0');
+  const [contractVaultBalance, setContractVaultBalance] = useState<string>('0');
   const [showDeployModal, setShowDeployModal] = useState(false);
   const [bettingWithdrawAmount, setBettingWithdrawAmount] = useState<string>('');
   const [isWithdrawingBetting, setIsWithdrawingBetting] = useState<boolean>(false);
@@ -97,7 +82,7 @@ export default function AdminPanelPage() {
     const apiBase = getApiBase();
     const token =
       adminToken ||
-      (typeof window !== 'undefined' ? sessionStorage.getItem('ponspot_admin_token') || '' : '');
+      (typeof window !== 'undefined' ? sessionStorage.getItem('cashflip_admin_token') || '' : '');
     const headers = {
       'Content-Type': 'application/json',
       ...(token ? { 'x-admin-token': token } : {}),
@@ -106,10 +91,10 @@ export default function AdminPanelPage() {
     return fetch(`${apiBase}${endpoint}`, { ...options, headers });
   };
 
-  // Check saved admin session and apply theme
+  // Check saved admin session and ensure smooth scrolling
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const savedToken = sessionStorage.getItem('ponspot_admin_token');
+      const savedToken = sessionStorage.getItem('cashflip_admin_token');
       if (savedToken) {
         setAdminToken(savedToken);
         const apiBase = getApiBase();
@@ -122,27 +107,24 @@ export default function AdminPanelPage() {
             if (data.valid) {
               setIsAuthenticated(true);
               fetchContractInfo();
-              fetchAirdropInfo();
             } else {
-              sessionStorage.removeItem('ponspot_admin_token');
+              sessionStorage.removeItem('cashflip_admin_token');
               setIsAuthenticated(false);
             }
           })
           .catch(() => {
             setIsAuthenticated(true);
             fetchContractInfo();
-            fetchAirdropInfo();
           });
       }
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('ponspot_theme', 'dark');
+      document.documentElement.style.overflowY = 'auto';
+      document.body.style.overflowY = 'auto';
     }
   }, []);
 
   useEffect(() => {
     if (isAuthenticated) {
       fetchContractInfo();
-      fetchAirdropInfo();
     }
   }, [isAuthenticated]);
 
@@ -163,104 +145,89 @@ export default function AdminPanelPage() {
         body: JSON.stringify({ password: passwordInput.trim() }),
       });
       const data = await res.json();
-      if (res.ok && data.success) {
+      if (data.success && data.token) {
         setAdminToken(data.token);
         if (typeof window !== 'undefined') {
-          sessionStorage.setItem('ponspot_admin_token', data.token);
+          sessionStorage.setItem('cashflip_admin_token', data.token);
         }
         setIsAuthenticated(true);
-        setPasswordInput('');
         fetchContractInfo();
-        fetchAirdropInfo();
       } else {
-        setAuthError(data.error || 'Incorrect password! Access denied.');
+        setAuthError(data.error || 'Invalid password.');
       }
     } catch (err: any) {
-      setAuthError('Failed to communicate with game server. Make sure server is running.');
+      setAuthError('Failed to commune with authorization server.');
     } finally {
       setIsLoggingIn(false);
     }
   };
 
-  const handleLogout = async () => {
-    try {
-      await adminFetch('/api/admin/logout', { method: 'POST' });
-    } catch {}
+  const handleLogout = () => {
     setIsAuthenticated(false);
     setAdminToken('');
     if (typeof window !== 'undefined') {
-      sessionStorage.removeItem('ponspot_admin_token');
+      sessionStorage.removeItem('cashflip_admin_token');
     }
   };
 
   const fetchContractInfo = async () => {
     setLoading(true);
     const apiBase = getApiBase();
+    const ts = Date.now();
+
     try {
-      // 1. Fetch active game contract
-      try {
-        const res = await fetch(`${apiBase}/api/contract-address`);
-        const data = await res.json();
-        const addr = (data.contractAddress || getGameContractAddress() || '').trim();
-        setActiveContract(addr);
-        setManualContractInput(addr);
-      } catch {
-        const fallbackAddr = (getGameContractAddress() || '').trim();
-        setActiveContract(fallbackAddr);
-        setManualContractInput(fallbackAddr);
+      const res = await fetch(`${apiBase}/api/contract-address?_t=${ts}`);
+      const data = await res.json();
+      if (data.contractAddress) {
+        setActiveContract(data.contractAddress);
+        setManualContractInput(data.contractAddress);
       }
-
-      // 2. Fetch active token contract
-      try {
-        const tokenRes = await fetch(`${apiBase}/api/token-contract-address`);
-        const tokenData = await tokenRes.json();
-        const tAddr = (tokenData.tokenAddress || getPonspotTokenAddress() || '').trim();
-        setActiveTokenContract(tAddr);
-        setManualTokenInput(tAddr);
-      } catch {
-        const fallbackToken = (getPonspotTokenAddress() || '').trim();
-        setActiveTokenContract(fallbackToken);
-        setManualTokenInput(fallbackToken);
-      }
-
-      // 3. Fetch token balance in game contract
-      const currAddr = getGameContractAddress();
-      if (currAddr && currAddr.startsWith('0x') && currAddr.length === 42) {
-        try {
-          const token = getPonspotContract();
-          const bal = await token.balanceOf(currAddr);
-          setContractPonsBalance(ethers.formatEther(bal));
-        } catch {
-          setContractPonsBalance('0');
-        }
-      } else {
-        setContractPonsBalance('0');
-      }
-
-      // 4. Fetch current game and history
-      try {
-        const curRes = await fetch(`${apiBase}/api/game/current`);
-        setGameStats(await curRes.json());
-
-        const histRes = await fetch(`${apiBase}/api/games/history`);
-        setPastGames(await histRes.json());
-      } catch (e) {
-        console.warn('Game engine offline or fetching local', e);
-      }
-    } catch (e: any) {
-      console.error('Error fetching admin data:', e);
-    } finally {
-      setLoading(false);
+    } catch (e) {
+      console.warn('Could not load contract address', e);
     }
+
+    try {
+      const tokenRes = await fetch(`${apiBase}/api/token-contract-address?_t=${ts}`);
+      const tokenData = await tokenRes.json();
+      if (tokenData.tokenAddress) {
+        setActiveTokenContract(tokenData.tokenAddress);
+        setManualTokenInput(tokenData.tokenAddress);
+      }
+    } catch (e) {
+      console.warn('Could not load token address', e);
+    }
+
+    try {
+      const balRes = await fetch(`${apiBase}/api/admin/contract-balance?_t=${ts}`);
+      const balData = await balRes.json();
+      if (balData.balance !== undefined) {
+        setContractVaultBalance(balData.balance);
+      }
+    } catch (e) {
+      console.warn('Could not load contract balance', e);
+    }
+
+    try {
+      const stateRes = await fetch(`${apiBase}/api/game/state?_t=${ts}`);
+      const stateData = await stateRes.json();
+      setGameStats(stateData);
+    } catch (e) {
+      console.warn('Could not load game stats', e);
+    }
+
+    try {
+      const histRes = await fetch(`${apiBase}/api/game/history?_t=${ts}`);
+      const histData = await histRes.json();
+      if (Array.isArray(histData)) {
+        setPastGames(histData);
+      }
+    } catch (e) {
+      console.warn('Could not load history', e);
+    }
+
+    setLoading(false);
   };
 
-  useEffect(() => {
-    if (isAuthenticated) {
-      fetchContractInfo();
-    }
-  }, [isAuthenticated]);
-
-  // Set New Betting Token Address
   const handleSetTokenContract = async () => {
     const trimmed = manualTokenInput.trim();
     if (!trimmed.startsWith('0x') || trimmed.length !== 42) {
@@ -275,24 +242,23 @@ export default function AdminPanelPage() {
       });
       const data = await res.json();
       if (data.success || res.ok) {
-        localStorage.setItem('ponspot_token_contract', trimmed);
-        localStorage.setItem('ponscore_token_contract', trimmed);
+        localStorage.setItem('cashflip_token_contract', trimmed);
+        localStorage.setItem('cashflip_token_contract', trimmed);
         setActiveTokenContract(trimmed);
-        setStatusMsg({ ok: true, text: `Active betting token successfully updated to: ${trimmed}` });
+        setStatusMsg({ ok: true, text: `Active betting token updated to: ${trimmed}` });
         fetchContractInfo();
       } else {
         throw new Error(data.error || 'Failed to update token');
       }
     } catch (e: any) {
-      localStorage.setItem('ponspot_token_contract', trimmed);
-      localStorage.setItem('ponscore_token_contract', trimmed);
+      localStorage.setItem('cashflip_token_contract', trimmed);
+      localStorage.setItem('cashflip_token_contract', trimmed);
       setActiveTokenContract(trimmed);
       setStatusMsg({ ok: true, text: `Betting token saved locally in browser: ${trimmed}` });
       fetchContractInfo();
     }
   };
 
-  // Set Game Vault Escrow Contract Address
   const handleSetContract = async () => {
     const trimmed = manualContractInput.trim();
     if (!trimmed.startsWith('0x') || trimmed.length !== 42) {
@@ -307,8 +273,8 @@ export default function AdminPanelPage() {
       });
       const data = await res.json();
       if (data.success || res.ok) {
-        localStorage.setItem('ponspot_deployed_game_contract', trimmed);
-        localStorage.setItem('ponscore_deployed_game_contract', trimmed);
+        localStorage.setItem('cashflip_deployed_game_contract', trimmed);
+        localStorage.setItem('cashflip_deployed_game_contract', trimmed);
         setActiveContract(trimmed);
         setStatusMsg({ ok: true, text: `Active smart contract updated to: ${trimmed}` });
         fetchContractInfo();
@@ -316,8 +282,8 @@ export default function AdminPanelPage() {
         throw new Error(data.error || 'Failed to update contract');
       }
     } catch (e: any) {
-      localStorage.setItem('ponspot_deployed_game_contract', trimmed);
-      localStorage.setItem('ponscore_deployed_game_contract', trimmed);
+      localStorage.setItem('cashflip_deployed_game_contract', trimmed);
+      localStorage.setItem('cashflip_deployed_game_contract', trimmed);
       setActiveContract(trimmed);
       setStatusMsg({ ok: true, text: `Smart contract saved locally in browser: ${trimmed}` });
       fetchContractInfo();
@@ -331,9 +297,9 @@ export default function AdminPanelPage() {
       return;
     }
 
-    const availableBal = Number(contractPonsBalance);
+    const availableBal = Number(contractVaultBalance);
     if (num > availableBal) {
-      setStatusMsg({ ok: false, text: `Insufficient smart contract balance (Available: ${availableBal.toLocaleString()} PONSPOT)` });
+      setStatusMsg({ ok: false, text: `Insufficient sanctuary balance (Available: ${availableBal.toLocaleString()} USDG)` });
       return;
     }
 
@@ -350,7 +316,7 @@ export default function AdminPanelPage() {
     }
 
     if (!targetContract || !targetContract.startsWith('0x') || targetContract.length !== 42) {
-      setStatusMsg({ ok: false, text: `Smart Contract address (${targetContract}) is invalid. Must be 42 characters starting with 0x.` });
+      setStatusMsg({ ok: false, text: `Sanctuary Contract address (${targetContract}) is invalid.` });
       return;
     }
 
@@ -362,7 +328,6 @@ export default function AdminPanelPage() {
         throw new Error('Wallet extension (OKX Wallet, MetaMask, Rabby) not detected in your browser.');
       }
 
-      // 1. Ensure wallet switched to Robinhood Chain (ID: 4663)
       try {
         await providerObj.request({
           method: 'wallet_switchEthereumChain',
@@ -385,18 +350,17 @@ export default function AdminPanelPage() {
         }
       }
 
-      // 2. Connect and sign transaction
       const provider = new ethers.BrowserProvider(providerObj);
       await provider.send('eth_requestAccounts', []);
       const signer = await provider.getSigner();
-      const withdrawWei = ethers.parseEther(num.toString());
+      const withdrawWei = parseTokenAmount(num);
 
-      setStatusMsg({ ok: true, text: 'Please confirm the withdrawal transaction in your wallet...' });
+      setStatusMsg({ ok: true, text: 'Please affirm the sanctuary withdrawal in your wallet...' });
       const txHash = await withdrawBettingContractOnChain(signer, withdrawWei, targetContract);
-      
+
       setStatusMsg({
         ok: true,
-        text: `🎉 Successfully withdrew ${num.toLocaleString()} PONSPOT from Betting Smart Contract to Admin Wallet! Hash: ${txHash.slice(0, 10)}...`,
+        text: `Successfully withdrew ${num.toLocaleString()} USDG from Sanctuary Escrow to Admin Wallet! Hash: ${txHash.slice(0, 10)}...`,
       });
       setBettingWithdrawAmount('');
       fetchContractInfo();
@@ -406,88 +370,11 @@ export default function AdminPanelPage() {
       if (e?.code === 'ACTION_REJECTED' || e?.code === 4001) {
         setStatusMsg({ ok: false, text: 'Withdrawal transaction was cancelled in wallet.' });
       } else {
-        const msg = e?.info?.error?.message || e?.data?.message || e?.reason || e?.shortMessage || e?.message || 'Failed to withdraw from betting contract';
+        const msg = e?.info?.error?.message || e?.data?.message || e?.reason || e?.shortMessage || e?.message || 'Failed to withdraw from sanctuary contract';
         setStatusMsg({ ok: false, text: msg });
       }
     } finally {
       setIsWithdrawingBetting(false);
-    }
-  };
-
-  const handleWithdrawAirdrop = async () => {
-    const num = parseFloat(airdropWithdrawAmount);
-    if (isNaN(num) || num <= 0) {
-      setStatusMsg({ ok: false, text: 'Please enter a valid airdrop withdrawal amount!' });
-      return;
-    }
-
-    if (num > airdropPoolBalance) {
-      setStatusMsg({ ok: false, text: `Insufficient airdrop contract balance (Available: ${airdropPoolBalance.toLocaleString()} PONSPOT)` });
-      return;
-    }
-
-    let targetContract = (activeAirdropContract || getAirdropContractAddress() || '').trim();
-    if (!targetContract || !targetContract.startsWith('0x') || targetContract.length !== 42) {
-      setStatusMsg({ ok: false, text: 'Airdrop smart contract address is not set or invalid. Please set or deploy a contract first.' });
-      return;
-    }
-
-    setIsWithdrawingAirdrop(true);
-    try {
-      const win = typeof window !== 'undefined' ? (window as any) : {};
-      const providerObj = win.okxwallet || win.ethereum || win.rabby || win.bitkeep?.ethereum;
-      if (!providerObj) {
-        throw new Error('Wallet extension (OKX Wallet, MetaMask, Rabby) not detected in your browser.');
-      }
-
-      // 1. Ensure wallet switched to Robinhood Chain (ID: 4663)
-      try {
-        await providerObj.request({
-          method: 'wallet_switchEthereumChain',
-          params: [{ chainId: ROBINHOOD_CHAIN_CONFIG.chainHexId }],
-        });
-      } catch (switchError: any) {
-        if (switchError.code === 4902 || switchError.message?.includes('Unrecognized chain')) {
-          await providerObj.request({
-            method: 'wallet_addEthereumChain',
-            params: [
-              {
-                chainId: ROBINHOOD_CHAIN_CONFIG.chainHexId,
-                chainName: ROBINHOOD_CHAIN_CONFIG.name,
-                rpcUrls: [ROBINHOOD_CHAIN_CONFIG.rpcUrl],
-                nativeCurrency: ROBINHOOD_CHAIN_CONFIG.nativeCurrency,
-                blockExplorerUrls: [ROBINHOOD_CHAIN_CONFIG.blockExplorer],
-              },
-            ],
-          });
-        }
-      }
-
-      const provider = new ethers.BrowserProvider(providerObj);
-      await provider.send('eth_requestAccounts', []);
-      const signer = await provider.getSigner();
-      const withdrawWei = ethers.parseEther(num.toString());
-
-      setStatusMsg({ ok: true, text: 'Please confirm emergency withdrawal transaction in wallet...' });
-      const txHash = await withdrawAirdropContractOnChain(signer, withdrawWei, targetContract);
-
-      setStatusMsg({
-        ok: true,
-        text: `🎉 Successfully withdrew ${num.toLocaleString()} PONSPOT from Airdrop Contract to Admin Wallet! Hash: ${txHash.slice(0, 10)}...`,
-      });
-      setAirdropWithdrawAmount('');
-      fetchAirdropInfo();
-      refreshBalances?.();
-    } catch (e: any) {
-      console.error('Withdraw airdrop error:', e);
-      if (e?.code === 'ACTION_REJECTED' || e?.code === 4001) {
-        setStatusMsg({ ok: false, text: 'Withdrawal transaction was cancelled in wallet.' });
-      } else {
-        const msg = e?.info?.error?.message || e?.data?.message || e?.reason || e?.shortMessage || e?.message || 'Failed to execute emergency withdraw from airdrop contract';
-        setStatusMsg({ ok: false, text: msg });
-      }
-    } finally {
-      setIsWithdrawingAirdrop(false);
     }
   };
 
@@ -503,7 +390,7 @@ export default function AdminPanelPage() {
       if (data.success || res.ok) {
         setStatusMsg({
           ok: true,
-          text: '⚡ Server Refresh Triggered! All connected player browsers will automatically reload to the latest version.',
+          text: 'Sanctuary signal broadcast! All connected observers will automatically reload to the latest version.',
         });
         fetchContractInfo();
       } else {
@@ -512,7 +399,7 @@ export default function AdminPanelPage() {
     } catch (e: any) {
       setStatusMsg({
         ok: false,
-        text: e?.message || 'Failed to contact game server',
+        text: e?.message || 'Failed to contact sanctuary server',
       });
     } finally {
       setTimeout(() => setRefreshingServer(false), 1200);
@@ -535,149 +422,33 @@ export default function AdminPanelPage() {
     }
   };
 
-  const fetchAirdropInfo = async () => {
-    const apiBase = getApiBase();
-    try {
-      const res = await fetch(`${apiBase}/api/airdrop`);
-      const data = await res.json();
-      if (data) {
-        let currentAddr = data.airdropContractAddress || getAirdropContractAddress();
-        setActiveAirdropContract(currentAddr || '');
+  const [deletingHistory, setDeletingHistory] = useState(false);
 
-        let liveBalance = data.poolBalance || 0;
-        if (currentAddr && currentAddr.startsWith('0x')) {
-          const onChainBal = await fetchOnChainAirdropBalance(currentAddr);
-          if (!isNaN(onChainBal)) liveBalance = onChainBal;
-        }
-
-        setAirdropPoolBalance(liveBalance);
-        setAirdropReward(data.rewardPerClaim || 100);
-        setAirdropCustomReward(String(data.rewardPerClaim || 100));
-      }
-    } catch (e) {
-      console.warn('Failed to fetch airdrop info', e);
-    }
-  };
-
-  const handleSetAirdropContract = async () => {
-    if (!manualAirdropContractInput.trim().startsWith('0x') || manualAirdropContractInput.trim().length !== 42) {
-      setStatusMsg({ ok: false, text: 'Invalid airdrop smart contract address format (must be 0x... 42 characters)' });
+  const handleDeleteHistory = async () => {
+    if (!window.confirm('Are you sure you want to permanently delete all historical epoch manifest records? This action cannot be undone.')) {
       return;
     }
-    const targetAddr = manualAirdropContractInput.trim();
-    localStorage.setItem('ponscore_airdrop_contract', targetAddr);
-    setActiveAirdropContract(targetAddr);
+    setDeletingHistory(true);
     try {
-      await adminFetch('/api/admin/set-airdrop-contract', {
-        method: 'POST',
-        body: JSON.stringify({ airdropContractAddress: targetAddr }),
-      });
-      setStatusMsg({ ok: true, text: '🎉 Dedicated Airdrop Smart Contract synced across the entire system!' });
-    } catch (e) {
-      setStatusMsg({ ok: true, text: 'Airdrop Smart Contract saved locally!' });
-    }
-    setManualAirdropContractInput('');
-  };
-
-  const handleAirdropDeploySuccess = async (newAddress: string) => {
-    setActiveAirdropContract(newAddress);
-    setShowDeployAirdropModal(false);
-    try {
-      await adminFetch('/api/admin/set-airdrop-contract', {
-        method: 'POST',
-        body: JSON.stringify({ airdropContractAddress: newAddress }),
-      });
-    } catch (e) {
-      console.warn('Failed to sync airdrop contract to server', e);
-    }
-    fetchAirdropInfo();
-    setStatusMsg({
-      ok: true,
-      text: `🚀 Dedicated Airdrop Smart Contract Deployed & Synced! Address: ${newAddress}`,
-    });
-  };
-
-  const handleFundAirdropFromWallet = async () => {
-    const num = parseFloat(airdropDepositAmount);
-    if (isNaN(num) || num <= 0) {
-      setStatusMsg({ ok: false, text: 'Please enter a valid deposit token amount!' });
-      return;
-    }
-
-    setIsDepositingAirdrop(true);
-    try {
-      let txHash = '';
-      const win = typeof window !== 'undefined' ? (window as any) : {};
-      const providerObj = win.okxwallet || win.ethereum;
-
-      if (providerObj && account && !account.startsWith('demo-')) {
-        try {
-          const provider = new ethers.BrowserProvider(providerObj);
-          const signer = await provider.getSigner();
-          const targetContract = activeAirdropContract || getAirdropContractAddress();
-          const depositWei = ethers.parseEther(num.toString());
-          
-          setStatusMsg({ ok: true, text: 'Please confirm deposit transaction in your wallet...' });
-          txHash = await depositAirdropOnChain(signer, depositWei, targetContract);
-          setStatusMsg({ ok: true, text: `Deposit transaction sent! Waiting for on-chain confirmation... Hash: ${txHash}` });
-        } catch (chainErr: any) {
-          console.warn('On-chain admin transfer error or demo mode:', chainErr);
-          if (chainErr?.code === 'ACTION_REJECTED' || chainErr?.code === 4001) {
-            throw new Error('Deposit transaction was cancelled by user.');
-          }
-        }
-      }
-
-      // Register deposit with engine
-      const res = await adminFetch('/api/admin/fund-airdrop', {
-        method: 'POST',
-        body: JSON.stringify({ amount: num, txHash }),
-      });
+      const res = await adminFetch('/api/admin/clear-history', { method: 'POST' });
       const data = await res.json();
-      if (data.success) {
-        setStatusMsg({ ok: true, text: `🎉 Successfully deposited ${num.toLocaleString()} PONSPOT to Dedicated Airdrop Vault!` });
-        fetchAirdropInfo();
+      if (data.success || res.ok) {
+        setPastGames([]);
+        setStatusMsg({
+          ok: true,
+          text: data.message || 'Historical manifest successfully purged from database!',
+        });
         fetchContractInfo();
       } else {
-        throw new Error(data.error || 'Failed to deposit airdrop');
+        throw new Error(data.error || 'Failed to delete history');
       }
     } catch (e: any) {
-      setStatusMsg({ ok: false, text: e?.message || 'Failed to submit airdrop deposit' });
-    } finally {
-      setIsDepositingAirdrop(false);
-    }
-  };
-
-  const handleSaveAirdropReward = async () => {
-    const num = parseFloat(airdropCustomReward);
-    if (isNaN(num) || num <= 0) return;
-    try {
-      const res = await adminFetch('/api/admin/set-airdrop-reward', {
-        method: 'POST',
-        body: JSON.stringify({ reward: num }),
+      setStatusMsg({
+        ok: false,
+        text: e?.message || 'Failed to delete history',
       });
-      const data = await res.json();
-      if (data.success) {
-        setStatusMsg({ ok: true, text: `Airdrop claim amount updated to ${num} PONSPOT per user!` });
-        fetchAirdropInfo();
-      }
-    } catch (e: any) {
-      setStatusMsg({ ok: false, text: 'Failed to configure airdrop reward' });
-    }
-  };
-
-  const handleResetAirdropClaims = async () => {
-    try {
-      const res = await adminFetch('/api/admin/reset-airdrop-claims', { method: 'POST' });
-      const data = await res.json();
-      if (data.success) {
-        setStatusMsg({ ok: true, text: '🎉 All airdrop claim history reset successfully! All wallets can now claim again for testing.' });
-        fetchAirdropInfo();
-      } else {
-        setStatusMsg({ ok: false, text: data.error || 'Failed to reset airdrop history' });
-      }
-    } catch (e: any) {
-      setStatusMsg({ ok: false, text: 'Failed to reset airdrop claims' });
+    } finally {
+      setDeletingHistory(false);
     }
   };
 
@@ -688,52 +459,40 @@ export default function AdminPanelPage() {
       if (data.success) {
         setStatusMsg({
           ok: true,
-          text: '⚡ Betting rounds, current pot, and round history have been completely reset! Starting fresh Round #1.',
+          text: 'All active bets, player balances, and rounds have been cleanly reset back to Epoch #1!',
         });
         fetchContractInfo();
       } else {
-        setStatusMsg({ ok: false, text: data.error || 'Failed to reset betting data' });
+        setStatusMsg({ ok: false, text: data.error || 'Failed to reset betting' });
       }
     } catch (e: any) {
-      setStatusMsg({ ok: false, text: 'Failed to reset betting data' });
+      setStatusMsg({ ok: false, text: 'Failed to communicate with admin server' });
     }
   };
 
-  const [resetModalError, setResetModalError] = useState('');
-
   const handleFactoryReset = async () => {
     setIsFactoryResetting(true);
-    setResetModalError('');
     try {
-      await adminFetch('/api/admin/factory-reset', { method: 'POST' });
-    } catch (e: any) {
-      console.warn('Backend reset completed or offline notice:', e);
-    }
-
-    try {
-      // Clear all cached test contract entries, keys, and stats from browser localStorage
-      const savedToken = sessionStorage.getItem('ponspot_admin_token');
-      localStorage.clear();
-      sessionStorage.clear();
-      if (savedToken) {
-        sessionStorage.setItem('ponspot_admin_token', savedToken);
+      const res = await adminFetch('/api/admin/factory-reset', { method: 'POST' });
+      const data = await res.json();
+      if (data.success) {
+        if (typeof window !== 'undefined') {
+          localStorage.clear();
+          sessionStorage.clear();
+        }
+        setShowFactoryResetModal(false);
+        setStatusMsg({
+          ok: true,
+          text: 'Sanctuary purified! All configurations wiped. Reloading in 2 seconds...',
+        });
+        setTimeout(() => {
+          window.location.reload();
+        }, 2000);
+      } else {
+        setStatusMsg({ ok: false, text: data.error || 'Purification failed' });
       }
-
-      setActiveContract('');
-      setActiveTokenContract('');
-      setActiveAirdropContract('');
-      setManualContractInput('');
-      setManualTokenInput('');
-      setManualAirdropContractInput('');
-      setContractPonsBalance('0');
-      setAirdropPoolBalance(0);
-      setPastGames([]);
-      setShowFactoryResetModal(false);
-
-      // Force immediate reload to apply zero-state
-      window.location.reload();
-    } catch (err: any) {
-      window.location.reload();
+    } catch (e: any) {
+      setStatusMsg({ ok: false, text: 'Failed to execute factory reset' });
     } finally {
       setIsFactoryResetting(false);
     }
@@ -750,27 +509,34 @@ export default function AdminPanelPage() {
   // ═══════════════════════════════════════════════════════════════════
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen cyber-grid-bg text-[#243329] dark:text-[#F5F8F3] flex items-center justify-center p-4">
+      <div className="min-h-screen bg-[#E8DFD1] text-[#171513] font-serif flex items-center justify-center p-4">
         <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: 10 }}
+          initial={{ opacity: 0, scale: 0.95, y: 12 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          className="w-full max-w-md p-6 sm:p-8 rounded-3xl bg-white/80 dark:bg-[#0c1611]/90 backdrop-blur-2xl border border-white/90 dark:border-[#718D76]/35 shadow-2xl space-y-5 text-center"
+          className="editorial-frame w-full max-w-md p-6 sm:p-8 bg-[#F4EFE6] text-[#171513] shadow-[0_20px_50px_rgba(0,0,0,0.35)] space-y-5 text-center relative"
         >
-          <div className="mx-auto w-14 h-14 rounded-2xl bg-[#718D76]/15 dark:bg-emerald-500/20 border border-[#718D76]/35 flex items-center justify-center text-[#718D76] dark:text-emerald-400 shadow-sm">
-            <Lock className="w-7 h-7" />
+          <BookplateCorner />
+
+          <div className="mx-auto w-14 h-14 border border-[#9E8055] bg-[#E8DFD1] p-1.5 flex items-center justify-center shadow-inner">
+            <img src="/image/logo.png" alt="CashFlip Logo" className="w-full h-full object-contain" />
           </div>
 
           <div>
-            <h1 className="text-xl font-black text-[#243329] dark:text-white tracking-wide">PONSPOT ADMIN ACCESS</h1>
-            <p className="text-xs text-[#526256] dark:text-[#8fa596] font-mono mt-1">
-              Enter master administrator password to unlock contract management and token routing controls.
+            <span className="text-[9px] tracking-[0.3em] font-serif uppercase text-[#9E8055] block">
+              Sanctum Observatory
+            </span>
+            <h1 className="text-lg sm:text-xl font-serif tracking-wider font-semibold text-[#171513]">
+              MASTER CODEX AUTHORIZATION
+            </h1>
+            <p className="text-xs text-[#171513]/70 font-serif italic mt-1 leading-relaxed">
+              Inscribe the master cryptographic key to unlock sanctuary governance, currency routing, and escrow controls.
             </p>
           </div>
 
-          <form onSubmit={handleLogin} className="space-y-4 text-left font-mono">
+          <form onSubmit={handleLogin} className="space-y-4 text-left">
             <div className="space-y-1.5">
-              <label className="text-[11px] font-bold text-[#526256] dark:text-slate-300 block">
-                ADMIN PASSWORD:
+              <label className="text-[10px] tracking-[0.2em] font-serif uppercase text-[#171513]/70 block font-medium">
+                ADMINISTRATOR CIPHER:
               </label>
               <div className="relative flex items-center">
                 <input
@@ -780,14 +546,14 @@ export default function AdminPanelPage() {
                     setPasswordInput(e.target.value);
                     if (authError) setAuthError('');
                   }}
-                  placeholder="Enter admin password..."
+                  placeholder="Inscribe cipher..."
                   autoFocus
-                  className="w-full px-4 py-3 bg-white/70 dark:bg-[#14241d]/70 border border-white/90 dark:border-[#718D76]/40 rounded-xl text-sm font-mono text-[#243329] dark:text-white focus:outline-none focus:border-[#718D76] dark:focus:border-emerald-400 transition-colors pr-10"
+                  className="w-full px-3.5 py-2.5 bg-[#E8DFD1] border border-[#171513]/25 text-sm font-mono text-[#171513] focus:outline-none focus:border-[#9E8055] pr-10"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 text-[#526256] dark:text-slate-400 hover:text-[#243329] dark:hover:text-white"
+                  className="absolute right-3 text-[#171513]/50 hover:text-[#171513]"
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -795,42 +561,38 @@ export default function AdminPanelPage() {
             </div>
 
             {authError && (
-              <motion.div
-                initial={{ opacity: 0, y: -4 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="p-2.5 rounded-xl bg-rose-100 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs font-bold flex items-center gap-1.5"
-              >
-                <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+              <div className="p-2.5 bg-red-950/10 border border-red-800/30 text-red-900 text-xs font-serif flex items-center gap-2">
+                <AlertTriangle className="w-3.5 h-3.5 text-red-700 flex-shrink-0" />
                 <span>{authError}</span>
-              </motion.div>
+              </div>
             )}
 
             <button
               type="submit"
               disabled={isLoggingIn}
-              className="w-full btn-primary-sage py-3 font-black rounded-xl text-xs flex items-center justify-center gap-2 shadow-md tracking-wider transition-all disabled:opacity-50"
+              className="w-full py-2.5 bg-[#171513] hover:bg-[#25221e] text-[#F4EFE6] font-serif text-xs tracking-widest uppercase border border-[#9E8055]/50 flex items-center justify-center gap-2 transition-colors shadow-sm disabled:opacity-50"
             >
               {isLoggingIn ? (
                 <>
-                  <RotateCcw className="w-4 h-4 animate-spin" />
-                  <span>AUTHENTICATING...</span>
+                  <RotateCcw className="w-3.5 h-3.5 animate-spin text-[#9E8055]" />
+                  <span>CONSULTING ARCHIVES...</span>
                 </>
               ) : (
                 <>
-                  <Unlock className="w-4 h-4" />
-                  <span>UNLOCK ADMIN PANEL</span>
+                  <Unlock className="w-3.5 h-3.5 text-[#9E8055]" />
+                  <span>UNLOCK MASTER CODEX</span>
                 </>
               )}
             </button>
           </form>
 
-          <div className="pt-2 border-t border-white/50 dark:border-white/10">
+          <div className="pt-2 border-t border-[#171513]/15">
             <Link
               href="/"
-              className="inline-flex items-center gap-1.5 text-xs text-[#526256] dark:text-[#8fa596] hover:text-[#243329] dark:hover:text-white font-mono transition-colors"
+              className="inline-flex items-center gap-1.5 text-xs text-[#171513]/70 hover:text-[#171513] font-serif transition-colors"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
-              <span>Back to Game Website</span>
+              <span>Return to Public Sanctum</span>
             </Link>
           </div>
         </motion.div>
@@ -842,27 +604,32 @@ export default function AdminPanelPage() {
   // 2. AUTHENTICATED ADMIN DASHBOARD
   // ═══════════════════════════════════════════════════════════════════
   return (
-    <div className="min-h-screen overflow-y-auto cyber-grid-bg text-[#243329] dark:text-[#F5F8F3] font-sans p-4 sm:p-6">
+    <div className="min-h-screen w-full bg-[#E8DFD1] text-[#171513] font-serif p-4 sm:p-6 pb-28">
       <div className="max-w-4xl mx-auto space-y-5">
         {/* Top Header Navbar */}
-        <header className="flex items-center justify-between p-4 rounded-3xl bg-white/75 dark:bg-[#0c1611]/90 backdrop-blur-2xl border border-white/90 dark:border-[#718D76]/35 shadow-md flex-wrap gap-3">
+        <header className="editorial-frame flex items-center justify-between p-4 bg-[#F4EFE6] shadow-sm flex-wrap gap-3 relative">
+          <BookplateCorner />
+
           <div className="flex items-center gap-3">
+            <div className="w-9 h-9 border border-[#9E8055] p-1 bg-[#E8DFD1] flex items-center justify-center flex-shrink-0 shadow-inner">
+              <img src="/image/logo.png" alt="CashFlip" className="w-full h-full object-contain" />
+            </div>
             <Link
               href="/"
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-white/60 hover:bg-white/90 dark:bg-[#14241d]/70 dark:hover:bg-[#1c3327] text-[#243329] dark:text-emerald-300 border border-white/80 dark:border-[#718D76]/35 rounded-xl text-xs font-mono font-bold transition-all shadow-sm"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-[#E8DFD1] hover:bg-[#DDD2C1] text-[#171513] border border-[#171513]/20 text-xs font-serif transition-colors"
             >
-              <ArrowLeft className="w-3.5 h-3.5" />
-              <span>Back to Game</span>
+              <ArrowLeft className="w-3.5 h-3.5 text-[#9E8055]" />
+              <span>Public Sanctum</span>
             </Link>
             <div>
-              <h1 className="text-base font-black text-[#243329] dark:text-white tracking-wider flex items-center gap-2">
-                <span>PONSPOT ADMIN PANEL</span>
-                <span className="px-2 py-0.5 bg-[#718D76]/15 dark:bg-emerald-500/20 text-[#718D76] dark:text-emerald-300 text-[10px] font-mono font-black rounded-md border border-[#718D76]/35">
-                  AUTHENTICATED
+              <h1 className="text-base font-serif font-semibold tracking-wider text-[#171513] flex items-center gap-2">
+                <span>MASTER CODEX & OBSERVATORY CONTROLS</span>
+                <span className="px-2 py-0.5 border border-[#9E8055] text-[#9E8055] text-[9px] font-mono tracking-widest uppercase">
+                  CONSECRATED
                 </span>
               </h1>
-              <p className="text-[11px] text-[#526256] dark:text-[#8fa596] font-mono">
-                Manage betting token routing, smart contract vaults, and on-chain game engine
+              <p className="text-[11px] text-[#171513]/65 font-serif">
+                Direct on-chain currency routing, escrow reserves, and epoch calibration
               </p>
             </div>
           </div>
@@ -871,41 +638,41 @@ export default function AdminPanelPage() {
             <button
               onClick={handleForceServerRefresh}
               disabled={refreshingServer}
-              className="tactile-btn px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white dark:bg-emerald-500 dark:hover:bg-emerald-400 dark:text-black font-black rounded-xl text-xs font-mono flex items-center gap-1.5 transition-all shadow-md active:scale-95"
-              title="Broadcast refresh signal to all connected player browsers"
+              className="px-3 py-1.5 bg-[#171513] hover:bg-[#25221e] text-[#F4EFE6] font-serif text-xs tracking-wider uppercase border border-[#9E8055]/50 flex items-center gap-1.5 transition-colors shadow-sm"
+              title="Broadcast refresh signal to all connected observer browsers"
             >
-              <RefreshCw className={`w-3.5 h-3.5 ${refreshingServer ? 'animate-spin' : ''}`} />
-              <span>{refreshingServer ? 'REFRESHING...' : 'REFRESH SERVER (ALL BROWSERS)'}</span>
+              <RefreshCw className={`w-3.5 h-3.5 text-[#9E8055] ${refreshingServer ? 'animate-spin' : ''}`} />
+              <span>{refreshingServer ? 'BROADCASTING...' : 'BROADCAST REFRESH'}</span>
             </button>
 
             <button
               onClick={fetchContractInfo}
               disabled={loading}
-              className="p-2 bg-white/60 hover:bg-white/90 dark:bg-[#14241d]/70 dark:hover:bg-[#1c3327] text-[#243329] dark:text-slate-300 rounded-xl border border-white/80 dark:border-[#718D76]/30 transition-all shadow-sm"
-              title="Refresh local admin data"
+              className="p-1.5 bg-[#E8DFD1] hover:bg-[#DDD2C1] border border-[#171513]/20 text-[#171513] transition-colors"
+              title="Refresh ledger records"
             >
-              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-[#718D76] dark:text-emerald-400' : ''}`} />
+              <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-[#9E8055]' : ''}`} />
             </button>
 
             {isConnected ? (
-              <div className="px-3 py-1.5 bg-white/60 dark:bg-emerald-950/60 border border-white/80 dark:border-emerald-500/30 rounded-xl text-xs font-mono text-[#243329] dark:text-emerald-300">
+              <div className="px-2.5 py-1 bg-[#E8DFD1] border border-[#171513]/20 text-xs font-mono text-[#171513]">
                 {account?.slice(0, 6)}...{account?.slice(-4)}
               </div>
             ) : (
               <button
                 onClick={() => connectWallet('okx')}
-                className="btn-primary-sage px-3.5 py-1.5 font-bold rounded-xl text-xs font-mono shadow-sm"
+                className="px-3 py-1 bg-[#171513] text-[#F4EFE6] text-xs font-serif tracking-wider uppercase border border-[#9E8055]/50"
               >
-                Connect Wallet
+                Connect Ledger
               </button>
             )}
 
             <button
               onClick={handleLogout}
-              className="p-2 bg-rose-100 hover:bg-rose-200 dark:bg-rose-950/60 dark:hover:bg-rose-900/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800 rounded-xl transition-all shadow-sm"
-              title="Sign out of Admin Panel"
+              className="p-1.5 bg-[#E8DFD1] hover:bg-red-100 border border-[#171513]/20 text-red-800 transition-colors"
+              title="Seal Master Codex"
             >
-              <LogOut className="w-4 h-4" />
+              <LogOut className="w-3.5 h-3.5" />
             </button>
           </div>
         </header>
@@ -917,15 +684,19 @@ export default function AdminPanelPage() {
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className={`p-3.5 rounded-2xl border flex items-center gap-2.5 text-xs font-mono shadow-sm ${
+              className={`p-3.5 border flex items-center gap-2.5 text-xs font-serif shadow-sm ${
                 statusMsg.ok
-                  ? 'bg-emerald-100 dark:bg-emerald-950/80 border-emerald-300 dark:border-emerald-500/50 text-emerald-800 dark:text-emerald-300'
-                  : 'bg-rose-100 dark:bg-rose-950/80 border-rose-300 dark:border-rose-500/50 text-rose-800 dark:text-rose-300'
+                  ? 'bg-[#F4EFE6] border-[#9E8055] text-[#171513]'
+                  : 'bg-red-950/10 border-red-800/40 text-red-900'
               }`}
             >
-              {statusMsg.ok ? <CheckCircle2 className="w-4 h-4 flex-shrink-0" /> : <AlertTriangle className="w-4 h-4 flex-shrink-0" />}
+              {statusMsg.ok ? (
+                <CheckCircle2 className="w-4 h-4 text-[#9E8055] flex-shrink-0" />
+              ) : (
+                <AlertTriangle className="w-4 h-4 text-red-700 flex-shrink-0" />
+              )}
               <span className="flex-1 break-all">{statusMsg.text}</span>
-              <button onClick={() => setStatusMsg(null)} className="text-xs font-bold opacity-60 hover:opacity-100">
+              <button onClick={() => setStatusMsg(null)} className="text-xs opacity-60 hover:opacity-100">
                 ✕
               </button>
             </motion.div>
@@ -935,43 +706,45 @@ export default function AdminPanelPage() {
         {/* ═══════════════════════════════════════════════════════════════ */}
         {/* SECTION 1: BETTING TOKEN CONTRACT (CHANGE TOKEN ADDRESS)        */}
         {/* ═══════════════════════════════════════════════════════════════ */}
-        <section className="p-6 rounded-3xl bg-white/80 dark:bg-[#0c1611]/90 backdrop-blur-2xl border border-white/90 dark:border-[#718D76]/35 shadow-md space-y-4">
-          <div className="flex items-center justify-between pb-3 border-b border-white/60 dark:border-white/10">
+        <section className="editorial-frame p-5 sm:p-6 bg-[#F4EFE6] text-[#171513] shadow-sm space-y-4 relative">
+          <BookplateCorner />
+
+          <div className="flex items-center justify-between pb-3 border-b border-[#171513]/15">
             <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-[#718D76]/15 dark:bg-emerald-500/20 border border-[#718D76]/35 flex items-center justify-center text-[#718D76] dark:text-emerald-400 shadow-sm">
-                <Coins className="w-5 h-5" />
+              <div className="w-8 h-8 border border-[#9E8055] bg-[#E8DFD1] flex items-center justify-center text-[#9E8055]">
+                <Coins className="w-4 h-4" />
               </div>
               <div>
-                <h2 className="text-sm font-black text-[#243329] dark:text-white tracking-wide flex items-center gap-2">
-                  <span>BETTING TOKEN CONTRACT (ERC-20)</span>
-                  <span className="px-2 py-0.2 bg-[#718D76]/15 text-[#718D76] dark:text-emerald-300 text-[9px] font-mono font-bold rounded">
-                    CONFIGURABLE
+                <h2 className="text-sm font-serif font-semibold tracking-wider text-[#171513] flex items-center gap-2">
+                  <span>SETTLEMENT CURRENCY CONTRACT (ERC-20 USDG)</span>
+                  <span className="px-1.5 py-0.5 border border-[#9E8055] text-[#9E8055] text-[9px] font-mono uppercase">
+                    Configurable
                   </span>
                 </h2>
-                <p className="text-[10px] text-[#526256] dark:text-[#8fa596] font-mono">
-                  Change the ERC-20 token address used for betting, approval allowances, and winner payouts
+                <p className="text-[10px] text-[#171513]/65 font-serif">
+                  Governs token address utilized for wagers, user allowances, and prize payouts
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-mono">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-serif">
             {/* Active Token Address Info */}
-            <div className="p-4 rounded-2xl bg-white/60 dark:bg-[#14241d]/70 border border-white/80 dark:border-[#718D76]/30 space-y-2">
-              <span className="text-[10px] text-[#526256] dark:text-[#8fa596] block uppercase font-bold">
-                ACTIVE BETTING TOKEN
+            <div className="p-4 bg-[#E8DFD1] border border-[#171513]/15 space-y-2">
+              <span className="text-[10px] text-[#9E8055] uppercase tracking-widest font-semibold block">
+                ACTIVE SETTLEMENT TOKEN
               </span>
               <div className="flex items-center justify-between gap-2">
-                <p className={`text-sm font-bold break-all ${activeTokenContract ? 'text-[#243329] dark:text-emerald-300' : 'text-amber-600 dark:text-amber-400'}`}>
-                  {activeTokenContract || '⚠️ NO TOKEN CONFIGURED'}
+                <p className={`text-xs font-mono font-semibold break-all ${activeTokenContract ? 'text-[#171513]' : 'text-amber-800'}`}>
+                  {activeTokenContract || '⚠️ NO CURRENCY CONTRACT CONFIGURED'}
                 </p>
                 {activeTokenContract && (
                   <button
                     onClick={() => copyToClipboard(activeTokenContract)}
-                    className="p-1.5 hover:bg-white/80 dark:hover:bg-white/10 rounded-lg text-[#526256] dark:text-slate-400 transition-colors"
-                    title="Copy Token Address"
+                    className="p-1 hover:bg-[#DDD2C1] text-[#171513]/70 transition-colors"
+                    title="Copy Currency Address"
                   >
-                    {copiedToken ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                    {copiedToken ? <Check className="w-3 h-3 text-[#9E8055]" /> : <Copy className="w-3 h-3" />}
                   </button>
                 )}
               </div>
@@ -980,51 +753,51 @@ export default function AdminPanelPage() {
                   href={`${ROBINHOOD_CHAIN_CONFIG.blockExplorer}/token/${activeTokenContract}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex items-center gap-1 text-[11px] text-[#718D76] dark:text-emerald-400 hover:underline pt-1 font-bold"
+                  className="inline-flex items-center gap-1 text-[10px] text-[#9E8055] underline hover:text-[#171513] pt-1"
                 >
-                  <span>View Token on Robinhood Blockscout</span>
-                  <ExternalLink className="w-3 h-3" />
+                  <span>Inspect on Robinhood Blockscout</span>
+                  <ExternalLink className="w-2.5 h-2.5" />
                 </a>
               ) : (
-                <span className="text-[10px] text-amber-600 dark:text-amber-400 font-mono">
-                  Paste your production token contract address below
+                <span className="text-[10px] text-amber-800 italic">
+                  Paste USDG production token address below
                 </span>
               )}
             </div>
 
             {/* Network & Routing Note */}
-            <div className="p-4 rounded-2xl bg-white/60 dark:bg-[#14241d]/70 border border-white/80 dark:border-[#718D76]/30 space-y-2">
-              <span className="text-[10px] text-[#526256] dark:text-[#8fa596] block uppercase font-bold">
-                NETWORK & MULTI-TOKEN ARCHITECTURE
+            <div className="p-4 bg-[#E8DFD1] border border-[#171513]/15 space-y-1.5">
+              <span className="text-[10px] text-[#9E8055] uppercase tracking-widest font-semibold block">
+                NETWORK & MULTI-TOKEN SPECIFICATION
               </span>
-              <p className="text-xs text-[#243329] dark:text-white font-bold">
+              <p className="text-xs text-[#171513] font-semibold">
                 Robinhood Chain L2 (Chain ID {ROBINHOOD_CHAIN_CONFIG.chainId})
               </p>
-              <p className="text-[10px] text-[#526256] dark:text-[#8fa596] leading-relaxed">
-                You can specify any compatible ERC-20 token address at any time. The interface and game engine will immediately route deposits and player balances to the specified token contract.
+              <p className="text-[10px] text-[#171513]/70 leading-relaxed">
+                Compatible with standard Robinhood ERC-20 tokens. The interface and game engine immediately adapt deposits and player balances to the specified currency contract.
               </p>
             </div>
           </div>
 
           {/* Change Token Address Form */}
-          <div className="p-4 rounded-2xl bg-white/60 dark:bg-[#14241d]/70 border border-white/80 dark:border-[#718D76]/30 space-y-2">
-            <span className="text-[11px] text-[#243329] dark:text-white font-bold block font-mono">
-              Update Betting Token Contract Address:
-            </span>
+          <div className="p-3.5 bg-[#E8DFD1] border border-[#171513]/15 space-y-2">
+            <label className="text-[10px] tracking-[0.2em] font-serif uppercase text-[#171513]/70 block font-medium">
+              Update Settlement Token Contract Address:
+            </label>
             <div className="flex gap-2 flex-wrap sm:flex-nowrap">
               <input
                 type="text"
                 value={manualTokenInput}
                 onChange={(e) => setManualTokenInput(e.target.value)}
                 placeholder="0x... (New ERC-20 token contract address)"
-                className="flex-1 min-w-[240px] px-3.5 py-2.5 rounded-xl bg-white/85 dark:bg-[#0c1611]/80 border border-white/90 dark:border-[#718D76]/40 text-[#243329] dark:text-white font-mono text-xs focus:outline-none focus:border-[#718D76] dark:focus:border-emerald-400"
+                className="flex-1 min-w-[240px] px-3 py-2 bg-[#F4EFE6] border border-[#171513]/25 text-[#171513] font-mono text-xs focus:outline-none focus:border-[#9E8055]"
               />
               <button
                 onClick={handleSetTokenContract}
-                className="btn-primary-sage px-5 py-2.5 font-black rounded-xl text-xs font-mono shadow-sm flex items-center gap-1.5 flex-shrink-0"
+                className="px-4 py-2 bg-[#171513] hover:bg-[#25221e] text-[#F4EFE6] font-serif text-xs tracking-wider uppercase border border-[#9E8055]/50 flex items-center gap-1.5 flex-shrink-0"
               >
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>UPDATE BETTING TOKEN</span>
+                <Sparkles className="w-3 h-3 text-[#9E8055]" />
+                <span>Update Token</span>
               </button>
             </div>
           </div>
@@ -1033,18 +806,20 @@ export default function AdminPanelPage() {
         {/* ═══════════════════════════════════════════════════════════════ */}
         {/* SECTION 2: SMART CONTRACT ESCROW POOL                           */}
         {/* ═══════════════════════════════════════════════════════════════ */}
-        <section className="p-6 rounded-3xl bg-white/80 dark:bg-[#0c1611]/90 backdrop-blur-2xl border border-white/90 dark:border-[#718D76]/35 shadow-md space-y-4">
-          <div className="flex items-center justify-between pb-3 border-b border-white/60 dark:border-white/10 flex-wrap gap-2">
+        <section className="editorial-frame p-5 sm:p-6 bg-[#F4EFE6] text-[#171513] shadow-sm space-y-4 relative">
+          <BookplateCorner />
+
+          <div className="flex items-center justify-between pb-3 border-b border-[#171513]/15 flex-wrap gap-2">
             <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-[#718D76]/15 dark:bg-emerald-500/20 border border-[#718D76]/35 flex items-center justify-center text-[#718D76] dark:text-emerald-400 shadow-sm">
-                <Layers className="w-5 h-5" />
+              <div className="w-8 h-8 border border-[#9E8055] bg-[#E8DFD1] flex items-center justify-center text-[#9E8055]">
+                <Layers className="w-4 h-4" />
               </div>
               <div>
-                <h2 className="text-sm font-black text-[#243329] dark:text-white tracking-wide">
-                  SMART CONTRACT ESCROW POOL
+                <h2 className="text-sm font-serif font-semibold tracking-wider text-[#171513]">
+                  SANCTUARY ESCROW POOL & ADMIN WITHDRAWAL
                 </h2>
-                <p className="text-[10px] text-[#526256] dark:text-[#8fa596] font-mono">
-                  On-chain escrow contract holding betting pools and disbursing winner payouts
+                <p className="text-[10px] text-[#171513]/65 font-serif">
+                  On-chain escrow holding wagers with 2% sanctuary fees retained for Admin
                 </p>
               </div>
             </div>
@@ -1052,127 +827,127 @@ export default function AdminPanelPage() {
             <div className="flex items-center gap-2 flex-wrap">
               <button
                 onClick={handleResetBetting}
-                className="px-3.5 py-2 bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/35 text-amber-700 dark:text-amber-300 font-bold rounded-xl text-xs font-mono flex items-center gap-1.5 transition-colors shadow-sm"
-                title="Reset all active bets, current jackpot pot, and round history back to Round #1"
+                className="px-3 py-1.5 bg-[#E8DFD1] hover:bg-[#DDD2C1] border border-[#171513]/20 text-xs font-serif text-[#171513] flex items-center gap-1.5 transition-colors"
+                title="Reset active bets and epoch history back to Epoch #1"
               >
-                <RotateCcw className="w-3.5 h-3.5" />
-                <span>Reset Betting & Rounds</span>
+                <RotateCcw className="w-3 h-3 text-[#9E8055]" />
+                <span>Reset Epochs</span>
               </button>
 
               <button
                 onClick={() => setShowDeployModal(true)}
-                className="btn-primary-sage px-4 py-2 font-black rounded-xl text-xs flex items-center gap-2 shadow-md"
+                className="px-3.5 py-1.5 bg-[#171513] hover:bg-[#25221e] text-[#F4EFE6] text-xs font-serif tracking-wider uppercase border border-[#9E8055]/50 flex items-center gap-1.5 shadow-sm"
               >
-                <Rocket className="w-4 h-4" />
-                <span>DEPLOY NEW CONTRACT (1-CLICK)</span>
+                <Compass className="w-3.5 h-3.5 text-[#9E8055]" />
+                <span>Consecrate New Escrow</span>
               </button>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-mono">
-            <div className="p-4 rounded-2xl bg-white/60 dark:bg-[#14241d]/70 border border-white/80 dark:border-[#718D76]/30 space-y-2">
-              <span className="text-[10px] text-[#526256] dark:text-[#8fa596] block uppercase font-bold">
-                ACTIVE JACKPOT CONTRACT ADDRESS
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-serif">
+            <div className="p-4 bg-[#E8DFD1] border border-[#171513]/15 space-y-2">
+              <span className="text-[10px] text-[#9E8055] uppercase tracking-widest font-semibold block">
+                ACTIVE SANCTUARY ESCROW ADDRESS
               </span>
-              <p className={`text-sm font-bold break-all ${activeContract ? 'text-[#243329] dark:text-emerald-300' : 'text-amber-600 dark:text-amber-400'}`}>
-                {activeContract || '⚠️ NO SMART CONTRACT DEPLOYED'}
+              <p className={`text-xs font-mono font-semibold break-all ${activeContract ? 'text-[#171513]' : 'text-amber-800'}`}>
+                {activeContract || '⚠️ NO SMART CONTRACT CONSECRATED'}
               </p>
               {activeContract ? (
                 <a
                   href={`${ROBINHOOD_CHAIN_CONFIG.blockExplorer}/address/${activeContract}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex items-center gap-1 text-[11px] text-[#718D76] dark:text-emerald-400 hover:underline pt-1 font-bold"
+                  className="inline-flex items-center gap-1 text-[10px] text-[#9E8055] underline hover:text-[#171513] pt-1"
                 >
-                  <span>View on Robinhood Blockscout</span>
-                  <ExternalLink className="w-3 h-3" />
+                  <span>Inspect on Robinhood Blockscout</span>
+                  <ExternalLink className="w-2.5 h-2.5" />
                 </a>
               ) : (
-                <span className="text-[10px] text-amber-600 dark:text-amber-400 font-mono">
-                  Deploy contract above or paste existing escrow address below
+                <span className="text-[10px] text-amber-800 italic">
+                  Consecrate sanctuary above or bind existing address below
                 </span>
               )}
             </div>
 
-            <div className="p-4 rounded-2xl bg-white/60 dark:bg-[#14241d]/70 border border-white/80 dark:border-[#718D76]/30 space-y-2">
-              <span className="text-[10px] text-[#526256] dark:text-[#8fa596] block uppercase font-bold">
-                TOKEN BALANCE IN CONTRACT
+            <div className="p-4 bg-[#E8DFD1] border border-[#171513]/15 space-y-1.5">
+              <span className="text-[10px] text-[#9E8055] uppercase tracking-widest font-semibold block">
+                USDG RESERVES IN SANCTUARY
               </span>
               <div className="flex items-center gap-2">
-                <Coins className="w-5 h-5 text-[#718D76] dark:text-emerald-400" />
-                <span className="text-xl font-black text-[#243329] dark:text-white">
-                  {Number(contractPonsBalance).toLocaleString()}
+                <Coins className="w-4 h-4 text-[#9E8055]" />
+                <span className="text-lg font-serif font-bold text-[#171513]">
+                  {Number(contractVaultBalance).toLocaleString()}
                 </span>
-                <span className="text-xs text-[#718D76] dark:text-emerald-400 font-bold">PONSPOT</span>
+                <span className="text-xs font-mono text-[#9E8055]">USDG</span>
               </div>
-              <p className="text-[10px] text-[#526256] dark:text-[#8fa596]">
-                Funds available for immediate automated winner claims
+              <p className="text-[10px] text-[#171513]/65">
+                Funds in contract escrow (includes 2% retained Admin protocol fees)
               </p>
             </div>
           </div>
 
           {/* Change Game Contract Manually */}
-          <div className="p-4 rounded-2xl bg-white/60 dark:bg-[#14241d]/70 border border-white/80 dark:border-[#718D76]/30 space-y-2">
-            <span className="text-[11px] text-[#243329] dark:text-white font-bold block font-mono">
-              Update Jackpot Contract Address Manually:
-            </span>
+          <div className="p-3.5 bg-[#E8DFD1] border border-[#171513]/15 space-y-2">
+            <label className="text-[10px] tracking-[0.2em] font-serif uppercase text-[#171513]/70 block font-medium">
+              Bind Sanctuary Escrow Contract Address Manually:
+            </label>
             <div className="flex gap-2 flex-wrap sm:flex-nowrap">
               <input
                 type="text"
                 value={manualContractInput}
                 onChange={(e) => setManualContractInput(e.target.value)}
-                placeholder="0x... (Jackpot escrow smart contract address)"
-                className="flex-1 min-w-[240px] px-3.5 py-2.5 rounded-xl bg-white/85 dark:bg-[#0c1611]/80 border border-white/90 dark:border-[#718D76]/40 text-[#243329] dark:text-white font-mono text-xs focus:outline-none focus:border-[#718D76] dark:focus:border-emerald-400"
+                placeholder="0x... (Escrow smart contract address)"
+                className="flex-1 min-w-[240px] px-3 py-2 bg-[#F4EFE6] border border-[#171513]/25 text-[#171513] font-mono text-xs focus:outline-none focus:border-[#9E8055]"
               />
               <button
                 onClick={handleSetContract}
-                className="btn-secondary-glass px-5 py-2.5 font-bold rounded-xl text-xs font-mono shadow-sm flex-shrink-0"
+                className="px-4 py-2 bg-[#E8DFD1] hover:bg-[#DDD2C1] border border-[#171513]/25 text-[#171513] font-serif text-xs uppercase tracking-wider flex-shrink-0"
               >
-                Set Contract
+                Bind Address
               </button>
             </div>
           </div>
 
-          {/* Withdraw Saldo from Betting Smart Contract */}
-          <div className="p-4 rounded-2xl bg-white/60 dark:bg-[#14241d]/70 border border-white/80 dark:border-[#718D76]/30 space-y-3">
+          {/* Withdraw Balance from Betting Smart Contract to Admin */}
+          <div className="p-4 bg-[#E8DFD1] border border-[#171513]/15 space-y-2.5">
             <div>
-              <span className="text-[11px] text-[#243329] dark:text-white font-bold block font-mono">
-                Withdraw Funds from Betting Smart Contract to Admin Wallet:
+              <span className="text-xs font-serif font-semibold text-[#171513] block">
+                Withdraw Reserves from Sanctuary to Admin Wallet:
               </span>
-              <p className="text-[10px] text-[#526256] dark:text-[#8fa596] font-mono mt-0.5">
-                Withdraw PONSPOT token balance stored inside the betting escrow smart contract directly to the connected Admin wallet.
+              <p className="text-[10px] text-[#171513]/65 font-serif mt-0.5">
+                Transfer USDG tokens (including accumulated 2% platform tithes) directly to your connected Admin wallet.
               </p>
             </div>
 
             <div className="flex gap-2 flex-wrap sm:flex-nowrap">
-              <div className="relative flex-1 min-w-[200px]">
+              <div className="relative flex-1 min-w-[180px]">
                 <input
                   type="number"
                   value={bettingWithdrawAmount}
                   onChange={(e) => setBettingWithdrawAmount(e.target.value)}
-                  placeholder="Amount of PONSPOT to withdraw"
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-white/85 dark:bg-[#0c1611]/80 border border-white/90 dark:border-[#718D76]/40 text-[#243329] dark:text-white font-mono text-xs focus:outline-none focus:border-[#718D76] dark:focus:border-emerald-400"
+                  placeholder="Amount of USDG"
+                  className="w-full px-3 py-2 bg-[#F4EFE6] border border-[#171513]/25 text-[#171513] font-mono text-xs focus:outline-none focus:border-[#9E8055]"
                 />
-                <span className="absolute right-3 top-2.5 text-xs font-bold text-[#718D76] dark:text-emerald-400 font-mono">
-                  PONSPOT
+                <span className="absolute right-3 top-2 text-[10px] font-mono font-semibold text-[#9E8055]">
+                  USDG
                 </span>
               </div>
 
-              <div className="flex gap-1.5">
-                {['1000', '5000', '10000'].map((preset) => (
+              <div className="flex gap-1">
+                {['10', '50', '100'].map((preset) => (
                   <button
                     key={preset}
                     type="button"
                     onClick={() => setBettingWithdrawAmount(preset)}
-                    className="px-2.5 py-2 rounded-xl bg-white/70 hover:bg-white dark:bg-[#14241d] dark:hover:bg-[#1f382c] border border-black/10 dark:border-[#718D76]/30 text-[10px] font-mono font-bold text-[#718D76] dark:text-emerald-400 transition-colors"
+                    className="px-2 py-2 bg-[#F4EFE6] hover:bg-[#DDD2C1] border border-[#171513]/20 text-[10px] font-mono text-[#171513]"
                   >
                     +{preset}
                   </button>
                 ))}
                 <button
                   type="button"
-                  onClick={() => setBettingWithdrawAmount(String(contractPonsBalance || '0'))}
-                  className="px-2.5 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-[10px] font-mono font-bold text-amber-700 dark:text-amber-300 transition-colors"
+                  onClick={() => setBettingWithdrawAmount(String(contractVaultBalance || '0'))}
+                  className="px-2 py-2 bg-[#171513] text-[#F4EFE6] text-[10px] font-mono font-semibold"
                 >
                   MAX
                 </button>
@@ -1180,239 +955,11 @@ export default function AdminPanelPage() {
 
               <button
                 onClick={handleWithdrawBetting}
-                disabled={isWithdrawingBetting || Number(contractPonsBalance) <= 0}
-                className="btn-primary-sage px-5 py-2.5 font-black rounded-xl text-xs font-mono shadow-md flex items-center justify-center gap-1.5 flex-shrink-0"
+                disabled={isWithdrawingBetting || Number(contractVaultBalance) <= 0}
+                className="px-4 py-2 bg-[#171513] hover:bg-[#25221e] text-[#F4EFE6] font-serif text-xs tracking-wider uppercase border border-[#9E8055]/50 flex items-center justify-center gap-1.5 flex-shrink-0 disabled:opacity-50"
               >
-                <Coins className="w-3.5 h-3.5" />
-                <span>{isWithdrawingBetting ? 'PROCESSING WITHDRAWAL...' : '💸 WITHDRAW BETTING BALANCE'}</span>
-              </button>
-            </div>
-          </div>
-        </section>
-
-        {/* ═══════════════════════════════════════════════════════════════ */}
-        {/* SECTION: AIRDROP VAULT MANAGEMENT (WALLET ADMIN DEPOSIT)       */}
-        {/* ═══════════════════════════════════════════════════════════════ */}
-        <section className="p-6 rounded-3xl bg-white/80 dark:bg-[#0c1611]/90 backdrop-blur-2xl border border-white/90 dark:border-[#718D76]/35 shadow-md space-y-4">
-          <div className="flex items-center justify-between pb-3 border-b border-white/60 dark:border-white/10 flex-wrap gap-2">
-            <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-amber-500/15 dark:bg-amber-500/20 border border-amber-500/35 flex items-center justify-center text-amber-700 dark:text-amber-400 shadow-sm">
-                <Gift className="w-5 h-5 animate-bounce" />
-              </div>
-              <div>
-                <h2 className="text-sm font-black text-[#243329] dark:text-white tracking-wide">
-                  AIRDROP VAULT MANAGEMENT (ADMIN WALLET DEPOSIT)
-                </h2>
-                <p className="text-[10px] text-[#526256] dark:text-[#8fa596] font-mono">
-                  Admin funds the airdrop vault tokens & sets the claim reward per user (1x claim per wallet)
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2 flex-wrap">
-              <button
-                onClick={fetchAirdropInfo}
-                className="btn-secondary-glass px-3.5 py-1.5 rounded-xl text-xs font-mono flex items-center gap-1"
-              >
-                <RefreshCw className="w-3 h-3" />
-                <span>Refresh Vault</span>
-              </button>
-
-              <button
-                onClick={handleResetAirdropClaims}
-                className="px-3.5 py-1.5 bg-rose-100 hover:bg-rose-200 dark:bg-rose-950/60 dark:hover:bg-rose-900/60 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 font-bold rounded-xl text-xs font-mono flex items-center gap-1.5 transition-colors shadow-sm"
-                title="Reset all airdrop claim history so all wallets can claim again for testing"
-              >
-                <RotateCcw className="w-3.5 h-3.5" />
-                <span>Reset Airdrop Claims (Testing)</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Airdrop Stats Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-mono">
-            <div className="p-4 rounded-2xl bg-white/60 dark:bg-[#14241d]/70 border border-white/80 dark:border-[#718D76]/30 space-y-2">
-              <span className="text-[10px] text-[#526256] dark:text-[#8fa596] block uppercase font-bold">
-                ACTIVE AIRDROP VAULT BALANCE
-              </span>
-              <div className="flex items-center gap-2">
-                <Gift className="w-5 h-5 text-amber-500" />
-                <span className="text-xl font-black text-[#243329] dark:text-white font-mono">
-                  {airdropPoolBalance.toLocaleString()}
-                </span>
-                <span className="text-xs text-[#718D76] dark:text-emerald-400 font-bold">PONSPOT</span>
-              </div>
-              <p className="text-[10px] text-[#526256] dark:text-[#8fa596]">
-                Level 5+ players can claim rewards from this pool 1x per wallet with cryptographic signature
-              </p>
-            </div>
-
-            <div className="p-4 rounded-2xl bg-white/60 dark:bg-[#14241d]/70 border border-white/80 dark:border-[#718D76]/30 space-y-2">
-              <span className="text-[10px] text-[#526256] dark:text-[#8fa596] block uppercase font-bold">
-                CLAIM REWARD (PER WALLET)
-              </span>
-              <div className="flex items-center gap-2">
-                <span className="text-xl font-black text-[#718D76] dark:text-emerald-400 font-mono">
-                  +{airdropReward.toLocaleString()}
-                </span>
-                <span className="text-xs text-[#526256] dark:text-slate-300 font-bold">PONSPOT / Wallet (1x Claim)</span>
-              </div>
-              <div className="flex items-center gap-2 pt-1">
-                <input
-                  type="number"
-                  value={airdropCustomReward}
-                  onChange={(e) => setAirdropCustomReward(e.target.value)}
-                  className="w-24 px-2.5 py-1 rounded-lg bg-white/90 dark:bg-black/50 border border-black/10 dark:border-white/10 text-xs font-mono text-[#243329] dark:text-white"
-                  placeholder="100"
-                />
-                <button
-                  onClick={handleSaveAirdropReward}
-                  className="btn-primary-sage px-3 py-1 text-[11px] font-bold rounded-lg"
-                >
-                  Set Reward
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Dedicated Airdrop Smart Contract Box */}
-          <div className="p-4 rounded-2xl bg-white/60 dark:bg-[#14241d]/70 border border-white/80 dark:border-[#718D76]/30 space-y-3">
-            <div className="flex items-center justify-between flex-wrap gap-2">
-              <div>
-                <span className="text-[11px] text-[#243329] dark:text-white font-bold block font-mono">
-                  DEDICATED AIRDROP SMART CONTRACT (ON-CHAIN):
-                </span>
-                <span className="text-xs font-mono text-[#718D76] dark:text-emerald-400 break-all font-bold">
-                  {activeAirdropContract || 'Not deployed yet (Use 1-click deploy button on the right)'}
-                </span>
-              </div>
-              <button
-                onClick={() => setShowDeployAirdropModal(true)}
-                className="btn-primary-sage px-3.5 py-1.5 font-black rounded-xl text-xs font-mono shadow-md flex items-center gap-1.5"
-              >
-                <Rocket className="w-3.5 h-3.5" />
-                <span>DEPLOY AIRDROP CONTRACT (1-CLICK)</span>
-              </button>
-            </div>
-
-            <div className="flex gap-2 flex-wrap sm:flex-nowrap pt-1">
-              <input
-                type="text"
-                value={manualAirdropContractInput}
-                onChange={(e) => setManualAirdropContractInput(e.target.value)}
-                placeholder="0x... (Dedicated airdrop vault contract address)"
-                className="flex-1 min-w-[240px] px-3.5 py-2 rounded-xl bg-white/85 dark:bg-[#0c1611]/80 border border-white/90 dark:border-[#718D76]/40 text-[#243329] dark:text-white font-mono text-xs focus:outline-none focus:border-[#718D76] dark:focus:border-emerald-400"
-              />
-              <button
-                onClick={handleSetAirdropContract}
-                className="btn-secondary-glass px-4 py-2 font-bold rounded-xl text-xs font-mono shadow-sm flex-shrink-0"
-              >
-                Set Airdrop Contract
-              </button>
-            </div>
-          </div>
-
-          {/* Deposit PONSPOT from Admin Wallet with Signature */}
-          <div className="p-4 rounded-2xl bg-white/60 dark:bg-[#14241d]/70 border border-white/80 dark:border-[#718D76]/30 space-y-3">
-            <div>
-              <span className="text-[11px] text-[#243329] dark:text-white font-bold block font-mono">
-                Deposit PONSPOT from Admin Wallet into Airdrop Contract (On-Chain Sign & Fund):
-              </span>
-              <p className="text-[10px] text-[#526256] dark:text-[#8fa596] font-mono mt-0.5">
-                Specify the token amount you want to allocate for user airdrops, then click the button below to confirm the deposit transaction in your wallet.
-              </p>
-            </div>
-
-            <div className="flex gap-2 flex-wrap sm:flex-nowrap">
-              <div className="relative flex-1 min-w-[200px]">
-                <input
-                  type="number"
-                  value={airdropDepositAmount}
-                  onChange={(e) => setAirdropDepositAmount(e.target.value)}
-                  placeholder="Example: 5000"
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-white/85 dark:bg-[#0c1611]/80 border border-white/90 dark:border-[#718D76]/40 text-[#243329] dark:text-white font-mono text-xs focus:outline-none focus:border-[#718D76] dark:focus:border-emerald-400"
-                />
-                <span className="absolute right-3 top-2.5 text-xs font-bold text-[#718D76] dark:text-emerald-400 font-mono">
-                  PONSPOT
-                </span>
-              </div>
-
-              <div className="flex gap-1.5">
-                {['1000', '5000', '10000'].map((preset) => (
-                  <button
-                    key={preset}
-                    type="button"
-                    onClick={() => setAirdropDepositAmount(preset)}
-                    className="px-2.5 py-2 rounded-xl bg-white/70 hover:bg-white dark:bg-[#14241d] dark:hover:bg-[#1f382c] border border-black/10 dark:border-[#718D76]/30 text-[10px] font-mono font-bold text-[#718D76] dark:text-emerald-400 transition-colors"
-                  >
-                    +{preset}
-                  </button>
-                ))}
-              </div>
-
-              <button
-                onClick={handleFundAirdropFromWallet}
-                disabled={isDepositingAirdrop}
-                className="btn-primary-sage px-5 py-2.5 font-black rounded-xl text-xs font-mono shadow-md flex items-center justify-center gap-1.5 flex-shrink-0"
-              >
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>{isDepositingAirdrop ? 'PROCESSING & SIGNING...' : '🚀 DEPOSIT & SIGN AIRDROP'}</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Withdraw PONSPOT from Airdrop Vault to Admin Wallet */}
-          <div className="p-4 rounded-2xl bg-white/60 dark:bg-[#14241d]/70 border border-white/80 dark:border-[#718D76]/30 space-y-3">
-            <div>
-              <span className="text-[11px] text-[#243329] dark:text-white font-bold block font-mono">
-                Emergency Withdraw from Airdrop Contract to Admin Wallet:
-              </span>
-              <p className="text-[10px] text-[#526256] dark:text-[#8fa596] font-mono mt-0.5">
-                Withdraw unused PONSPOT tokens from the airdrop vault back to the owner Admin wallet.
-              </p>
-            </div>
-
-            <div className="flex gap-2 flex-wrap sm:flex-nowrap">
-              <div className="relative flex-1 min-w-[200px]">
-                <input
-                  type="number"
-                  value={airdropWithdrawAmount}
-                  onChange={(e) => setAirdropWithdrawAmount(e.target.value)}
-                  placeholder="Amount of PONSPOT to withdraw"
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-white/85 dark:bg-[#0c1611]/80 border border-white/90 dark:border-[#718D76]/40 text-[#243329] dark:text-white font-mono text-xs focus:outline-none focus:border-[#718D76] dark:focus:border-emerald-400"
-                />
-                <span className="absolute right-3 top-2.5 text-xs font-bold text-[#718D76] dark:text-emerald-400 font-mono">
-                  PONSPOT
-                </span>
-              </div>
-
-              <div className="flex gap-1.5">
-                {['1000', '5000', '10000'].map((preset) => (
-                  <button
-                    key={preset}
-                    type="button"
-                    onClick={() => setAirdropWithdrawAmount(preset)}
-                    className="px-2.5 py-2 rounded-xl bg-white/70 hover:bg-white dark:bg-[#14241d] dark:hover:bg-[#1f382c] border border-black/10 dark:border-[#718D76]/30 text-[10px] font-mono font-bold text-[#718D76] dark:text-emerald-400 transition-colors"
-                  >
-                    +{preset}
-                  </button>
-                ))}
-                <button
-                  type="button"
-                  onClick={() => setAirdropWithdrawAmount(String(airdropPoolBalance || '0'))}
-                  className="px-2.5 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-[10px] font-mono font-bold text-amber-700 dark:text-amber-300 transition-colors"
-                >
-                  MAX
-                </button>
-              </div>
-
-              <button
-                onClick={handleWithdrawAirdrop}
-                disabled={isWithdrawingAirdrop || airdropPoolBalance <= 0}
-                className="px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white dark:bg-amber-500 dark:hover:bg-amber-400 dark:text-black font-black rounded-xl text-xs font-mono shadow-md flex items-center justify-center gap-1.5 flex-shrink-0 transition-colors"
-              >
-                <Coins className="w-3.5 h-3.5" />
-                <span>{isWithdrawingAirdrop ? 'PROCESSING WITHDRAWAL...' : '💸 WITHDRAW AIRDROP VAULT'}</span>
+                <Coins className="w-3.5 h-3.5 text-[#9E8055]" />
+                <span>{isWithdrawingBetting ? 'EXECUTING...' : 'WITHDRAW TO ADMIN'}</span>
               </button>
             </div>
           </div>
@@ -1421,96 +968,100 @@ export default function AdminPanelPage() {
         {/* ═══════════════════════════════════════════════════════════════ */}
         {/* SECTION 3: GAME ENGINE & CLAIM HISTORY                          */}
         {/* ═══════════════════════════════════════════════════════════════ */}
-        <section className="p-6 rounded-3xl bg-white/80 dark:bg-[#0c1611]/90 backdrop-blur-2xl border border-white/90 dark:border-[#718D76]/35 shadow-md space-y-4">
-          <div className="flex items-center justify-between pb-3 border-b border-white/60 dark:border-white/10 flex-wrap gap-2">
+        <section className="editorial-frame p-5 sm:p-6 bg-[#F4EFE6] text-[#171513] shadow-sm space-y-4 relative">
+          <BookplateCorner />
+
+          <div className="flex items-center justify-between pb-3 border-b border-[#171513]/15 flex-wrap gap-2">
             <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-[#718D76]/15 dark:bg-emerald-500/20 border border-[#718D76]/35 flex items-center justify-center text-[#718D76] dark:text-emerald-400 shadow-sm">
-                <Database className="w-5 h-5" />
+              <div className="w-8 h-8 border border-[#9E8055] bg-[#E8DFD1] flex items-center justify-center text-[#9E8055]">
+                <Database className="w-4 h-4" />
               </div>
               <div>
-                <h2 className="text-sm font-black text-[#243329] dark:text-white tracking-wide">
-                  GAME ENGINE & ROUND MANAGEMENT
+                <h2 className="text-sm font-serif font-semibold tracking-wider text-[#171513]">
+                  EPOCH ENGINE & HISTORICAL MANIFEST
                 </h2>
-                <p className="text-[10px] text-[#526256] dark:text-[#8fa596] font-mono">
-                  Live round status and testing claim status resets
+                <p className="text-[10px] text-[#171513]/65 font-serif">
+                  Live state observation and test claim status resets
                 </p>
               </div>
             </div>
 
             <div className="flex items-center gap-2 flex-wrap">
               <button
-                onClick={handleForceServerRefresh}
-                disabled={refreshingServer}
-                className="tactile-btn px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white dark:bg-emerald-500 dark:hover:bg-emerald-400 dark:text-black font-black rounded-xl text-xs font-mono flex items-center gap-1.5 transition-colors shadow-sm"
-                title="Broadcast reload signal to all connected player browsers"
+                onClick={handleResetClaims}
+                className="px-3 py-1.5 bg-[#E8DFD1] hover:bg-[#DDD2C1] border border-[#171513]/20 text-[#171513] text-xs font-serif flex items-center gap-1.5 transition-colors"
+                title="Reset claimed status in test history"
               >
-                <RefreshCw className={`w-3.5 h-3.5 ${refreshingServer ? 'animate-spin' : ''}`} />
-                <span>{refreshingServer ? 'REFRESHING...' : 'Refresh Server & Browsers'}</span>
+                <RotateCcw className="w-3 h-3 text-[#9E8055]" />
+                <span>Reset Claim Statuses</span>
               </button>
 
               <button
-                onClick={handleResetClaims}
-                className="px-3.5 py-2 bg-rose-100 hover:bg-rose-200 dark:bg-rose-950/60 dark:hover:bg-rose-900/60 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 font-bold rounded-xl text-xs font-mono flex items-center gap-1.5 transition-colors shadow-sm"
-                title="Reset claimed status in history so players can test re-claiming"
+                onClick={handleDeleteHistory}
+                disabled={deletingHistory}
+                className="px-3 py-1.5 bg-red-950/15 hover:bg-red-950/25 border border-red-800/40 text-red-900 text-xs font-serif flex items-center gap-1.5 transition-colors disabled:opacity-50"
+                title="Permanently purge all historical manifest records"
               >
-                <RotateCcw className="w-3.5 h-3.5" />
-                <span>Reset Claim Status</span>
+                <Trash2 className="w-3 h-3 text-red-700" />
+                <span>{deletingHistory ? 'Deleting History...' : 'Delete History'}</span>
               </button>
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-3 text-xs font-mono">
-            <div className="p-3 bg-white/60 dark:bg-[#14241d]/70 rounded-xl border border-white/80 dark:border-[#718D76]/30 text-center">
-              <span className="text-[10px] text-[#526256] dark:text-[#8fa596] block font-bold">CURRENT GAME ID</span>
-              <span className="text-sm font-bold text-[#243329] dark:text-white mt-1 block">{gameStats?.gameId || '-'}</span>
+          <div className="grid grid-cols-3 gap-3 text-xs font-serif text-center">
+            <div className="p-3 bg-[#E8DFD1] border border-[#171513]/15">
+              <span className="text-[9px] uppercase tracking-widest text-[#9E8055] block">CURRENT EPOCH ID</span>
+              <span className="text-sm font-mono font-semibold text-[#171513] mt-0.5 block">{gameStats?.gameId || '-'}</span>
             </div>
-            <div className="p-3 bg-white/60 dark:bg-[#14241d]/70 rounded-xl border border-white/80 dark:border-[#718D76]/30 text-center">
-              <span className="text-[10px] text-[#526256] dark:text-[#8fa596] block font-bold">ROUND STATUS</span>
-              <span className="text-sm font-bold text-[#718D76] dark:text-emerald-400 mt-1 block uppercase">
+            <div className="p-3 bg-[#E8DFD1] border border-[#171513]/15">
+              <span className="text-[9px] uppercase tracking-widest text-[#9E8055] block">STATUS</span>
+              <span className="text-sm font-serif font-semibold text-[#171513] mt-0.5 block uppercase">
                 {gameStats?.status || '-'}
               </span>
             </div>
-            <div className="p-3 bg-white/60 dark:bg-[#14241d]/70 rounded-xl border border-white/80 dark:border-[#718D76]/30 text-center">
-              <span className="text-[10px] text-[#526256] dark:text-[#8fa596] block font-bold">TOTAL POOL</span>
-              <span className="text-sm font-bold text-[#243329] dark:text-white mt-1 block">
-                {(gameStats?.totalPool || 0).toLocaleString()} PONSPOT
+            <div className="p-3 bg-[#E8DFD1] border border-[#171513]/15">
+              <span className="text-[9px] uppercase tracking-widest text-[#9E8055] block">TOTAL POOL</span>
+              <span className="text-sm font-mono font-semibold text-[#171513] mt-0.5 block">
+                {(gameStats?.totalPool || 0).toLocaleString()} USDG
               </span>
             </div>
           </div>
 
           {/* Past Games Table */}
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs font-mono">
+            <table className="w-full text-left text-xs font-serif">
               <thead>
-                <tr className="border-b border-white/60 dark:border-white/10 text-[#526256] dark:text-[#8fa596] text-[10px]">
-                  <th className="py-2.5">GAME ID</th>
-                  <th>WINNER</th>
-                  <th>PRIZE</th>
+                <tr className="border-b border-[#171513]/20 text-[#171513]/60 text-[10px] uppercase tracking-wider">
+                  <th className="py-2">EPOCH</th>
+                  <th>VICTOR</th>
+                  <th>DISPENSATION</th>
                   <th>CLAIM STATUS</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/40 dark:divide-white/5">
+              <tbody className="divide-y divide-[#171513]/10 font-mono text-[11px]">
                 {pastGames.length === 0 ? (
                   <tr>
-                    <td colSpan={4} className="py-4 text-center text-[#526256] dark:text-[#8fa596] italic">
-                      No game history available yet
+                    <td colSpan={4} className="py-4 text-center font-serif text-[#171513]/50 italic">
+                      No historical epochs recorded
                     </td>
                   </tr>
                 ) : (
                   pastGames.slice(0, 10).map((g) => (
-                    <tr key={g.gameId} className="hover:bg-white/40 dark:hover:bg-white/5 transition-colors">
-                      <td className="py-2.5 font-bold text-[#718D76] dark:text-emerald-400">#{g.gameId}</td>
-                      <td className="text-[#243329] dark:text-slate-300">{g.winner?.address ? `${g.winner.address.slice(0, 6)}...${g.winner.address.slice(-4)}` : '-'}</td>
-                      <td className="text-[#243329] dark:text-white font-bold">
-                        {(g.winner?.prizePons || 0).toLocaleString()} PONSPOT
+                    <tr key={g.gameId} className="hover:bg-[#E8DFD1]/50 transition-colors">
+                      <td className="py-2 font-semibold text-[#171513]">#{g.gameId}</td>
+                      <td className="text-[#171513]/80">
+                        {g.winner?.address ? `${g.winner.address.slice(0, 6)}...${g.winner.address.slice(-4)}` : '-'}
+                      </td>
+                      <td className="font-semibold text-[#171513]">
+                        {(g.winner?.prize ?? g.winner?.prizePons ?? 0).toLocaleString()} USDG
                       </td>
                       <td>
                         {g.winner?.claimed ? (
-                          <span className="px-2 py-0.5 bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 rounded text-[10px] font-bold border border-emerald-300 dark:border-emerald-500/30">
+                          <span className="px-1.5 py-0.5 border border-[#9E8055] text-[#9E8055] text-[9px]">
                             CLAIMED
                           </span>
                         ) : (
-                          <span className="px-2 py-0.5 bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 rounded text-[10px] font-bold border border-amber-300 dark:border-amber-500/30">
+                          <span className="px-1.5 py-0.5 border border-[#171513]/30 text-[#171513]/60 text-[9px]">
                             UNCLAIMED
                           </span>
                         )}
@@ -1524,59 +1075,59 @@ export default function AdminPanelPage() {
         </section>
 
         {/* ═══════════════════════════════════════════════════════════════ */}
-        {/* SECTION 4: FACTORY RESET & PRODUCTION HOSTING PREPARATION       */}
+        {/* SECTION 4: PURIFICATION (FACTORY RESET)                         */}
         {/* ═══════════════════════════════════════════════════════════════ */}
-        <section className="p-6 rounded-3xl bg-rose-50/60 dark:bg-rose-950/20 backdrop-blur-2xl border-2 border-rose-400/40 dark:border-rose-500/30 shadow-md space-y-4">
-          <div className="flex items-center justify-between pb-3 border-b border-rose-200/60 dark:border-rose-900/40 flex-wrap gap-2">
+        <section className="editorial-frame p-5 sm:p-6 bg-[#F4EFE6] text-[#171513] border-red-800/40 shadow-sm space-y-3 relative">
+          <BookplateCorner />
+
+          <div className="flex items-center justify-between pb-3 border-b border-red-900/20">
             <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-rose-500/20 border border-rose-500/40 flex items-center justify-center text-rose-600 dark:text-rose-400 shadow-sm">
-                <Flame className="w-5 h-5 animate-pulse" />
+              <div className="w-8 h-8 border border-red-800 bg-red-100 flex items-center justify-center text-red-800">
+                <Flame className="w-4 h-4" />
               </div>
               <div>
-                <h2 className="text-sm font-black text-rose-900 dark:text-rose-200 tracking-wide flex items-center gap-2">
-                  <span>FACTORY RESET & HOSTING PREPARATION</span>
-                  <span className="px-2 py-0.2 bg-rose-500/20 text-rose-700 dark:text-rose-300 text-[9px] font-mono font-bold rounded">
-                    DANGER ZONE
+                <h2 className="text-sm font-serif font-semibold tracking-wider text-red-900 flex items-center gap-2">
+                  <span>SANCTUARY PURIFICATION (FACTORY RESET)</span>
+                  <span className="px-1.5 py-0.5 border border-red-800 text-red-800 text-[9px] font-mono uppercase">
+                    Solemn Action
                   </span>
                 </h2>
-                <p className="text-[10px] text-rose-700 dark:text-rose-300/80 font-mono">
-                  Wipe all testing smart contract configurations, saved test tokens, game history, and local cache before production hosting.
+                <p className="text-[10px] text-red-800/70 font-serif">
+                  Purge all test token entries, local storage, past history, and cache prior to production deployment
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="p-4 rounded-2xl bg-white/80 dark:bg-[#0c1611]/80 border border-rose-300/50 dark:border-rose-900/50 space-y-3">
-            <div className="space-y-1 text-xs font-mono text-[#526256] dark:text-slate-300">
-              <p className="font-bold text-rose-800 dark:text-rose-300 flex items-center gap-1.5">
-                <AlertOctagon className="w-4 h-4 text-rose-600" />
-                <span>What happens when you Factory Reset?</span>
-              </p>
-              <ul className="list-disc list-inside space-y-1 text-[11px] pl-1 text-[#243329] dark:text-slate-300 leading-relaxed">
-                <li>Deletes saved test token addresses and resets contracts to clean default.</li>
-                <li>Clears all round histories, test player pots, and test airdrop claim signatures.</li>
-                <li>Purges local browser cache so new visitors connect to fresh production contracts.</li>
-                <li>Restarts game engine at a brand new Round #1.</li>
-              </ul>
-            </div>
+          <div className="p-3.5 bg-red-950/5 border border-red-800/20 space-y-2 text-xs font-serif text-[#171513]/80">
+            <p className="font-semibold text-red-900 flex items-center gap-1.5">
+              <AlertOctagon className="w-3.5 h-3.5 text-red-800" />
+              <span>Consequences of Sanctuary Purification:</span>
+            </p>
+            <ul className="list-disc list-inside space-y-1 text-[11px] pl-1 leading-relaxed">
+              <li>Erases saved test token contracts and resets to fresh clean state.</li>
+              <li>Purges historical epochs, player pots, and test claim signatures.</li>
+              <li>Clears local browser cache for all connecting visitors.</li>
+              <li>Restarts game engine at a pristine Epoch #1.</li>
+            </ul>
 
             <div className="pt-2 flex justify-end">
               <button
                 onClick={() => setShowFactoryResetModal(true)}
-                className="px-5 py-3 bg-rose-600 hover:bg-rose-700 text-white font-black rounded-xl text-xs font-mono shadow-md flex items-center gap-2 transition-all active:scale-95"
+                className="px-4 py-2 bg-red-900 hover:bg-red-800 text-[#F4EFE6] font-serif text-xs tracking-wider uppercase border border-red-700 flex items-center gap-1.5 transition-colors shadow-sm"
               >
-                <Trash2 className="w-4 h-4" />
-                <span>🔥 FACTORY RESET ALL DATA (PREPARE FOR HOSTING)</span>
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>PURIFY SANCTUARY (FACTORY RESET)</span>
               </button>
             </div>
           </div>
         </section>
 
         {/* Footer Info */}
-        <footer className="p-4 rounded-2xl bg-white/60 dark:bg-[#0c1611]/70 border border-white/80 dark:border-white/10 text-[11px] font-mono text-[#526256] dark:text-[#8fa596] flex justify-between items-center flex-wrap gap-2">
-          <span>Active Token: {activeTokenContract || PONSPOT_TOKEN_ADDRESS}</span>
+        <footer className="p-3 bg-[#F4EFE6] border border-[#171513]/15 text-[10px] font-serif text-[#171513]/60 flex justify-between items-center flex-wrap gap-2">
+          <span>Active Token: {activeTokenContract || CASHFLIP_TOKEN_ADDRESS}</span>
           <span>Network: {ROBINHOOD_CHAIN_CONFIG.name} (Chain ID {ROBINHOOD_CHAIN_CONFIG.chainId})</span>
-          <span>Platform Fee: 5%</span>
+          <span>Platform Tithe: 2.0%</span>
         </footer>
       </div>
 
@@ -1588,61 +1139,53 @@ export default function AdminPanelPage() {
           setActiveContract(newAddr);
           setManualContractInput(newAddr);
           setShowDeployModal(false);
-          setStatusMsg({ ok: true, text: `New smart contract successfully deployed at: ${newAddr}` });
+          setStatusMsg({ ok: true, text: `New sanctuary smart contract consecrated at: ${newAddr}` });
           fetchContractInfo();
         }}
-      />
-
-      {/* Deploy Dedicated Airdrop Modal */}
-      <DeployAirdropModal
-        isOpen={showDeployAirdropModal}
-        onClose={() => setShowDeployAirdropModal(false)}
-        onSuccess={handleAirdropDeploySuccess}
       />
 
       {/* Factory Reset Confirmation Modal */}
       <AnimatePresence>
         {showFactoryResetModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0a0908]/75 backdrop-blur-sm">
             <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 15 }}
+              initial={{ opacity: 0, scale: 0.95, y: 12 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 15 }}
-              className="w-full max-w-lg p-6 sm:p-7 rounded-3xl bg-white dark:bg-[#0c1611] border-2 border-rose-500 shadow-2xl space-y-5 text-left font-mono"
+              exit={{ opacity: 0, scale: 0.95, y: 12 }}
+              className="editorial-frame w-full max-w-lg p-6 sm:p-7 bg-[#E8DFD1] text-[#171513] border-red-800 shadow-2xl space-y-4 font-serif relative"
             >
-              <div className="flex items-center gap-3 pb-3 border-b border-rose-200 dark:border-rose-900/50">
-                <div className="w-10 h-10 rounded-2xl bg-rose-500/20 border border-rose-500/40 flex items-center justify-center text-rose-600 dark:text-rose-400 flex-shrink-0">
-                  <Flame className="w-6 h-6 animate-pulse" />
+              <BookplateCorner />
+
+              <div className="flex items-center gap-3 pb-3 border-b border-[#171513]/15">
+                <div className="w-9 h-9 border border-red-800 bg-red-100 flex items-center justify-center text-red-800 flex-shrink-0">
+                  <Flame className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-base font-black text-rose-900 dark:text-rose-200">
-                    CONFIRM FACTORY RESET
+                  <h3 className="text-sm font-serif font-semibold text-red-900 tracking-wider">
+                    CONFIRM SANCTUARY PURIFICATION
                   </h3>
-                  <p className="text-[11px] text-rose-700 dark:text-rose-400">
-                    Prepare project for clean production hosting
+                  <p className="text-[11px] text-red-800/70 font-serif">
+                    Irreversible reset to clean production state
                   </p>
                 </div>
               </div>
 
-              <div className="p-4 rounded-2xl bg-rose-50/70 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 text-xs text-rose-900 dark:text-rose-200 space-y-2 leading-relaxed">
-                <p className="font-bold flex items-center gap-1.5">
-                  <AlertOctagon className="w-4 h-4 text-rose-600 flex-shrink-0" />
-                  <span>WARNING: This action cannot be undone.</span>
+              <div className="p-3.5 bg-[#F4EFE6] border border-red-800/30 text-xs text-[#171513] space-y-1.5 leading-relaxed">
+                <p className="font-semibold text-red-900 flex items-center gap-1.5">
+                  <AlertOctagon className="w-3.5 h-3.5 text-red-800 flex-shrink-0" />
+                  <span>WARNING: This rite cannot be reversed.</span>
                 </p>
                 <p className="text-[11px]">
-                  All testing token addresses (<code className="bg-rose-200/60 dark:bg-rose-900/60 px-1 py-0.5 rounded">token_contract.txt</code>), game contracts, airdrop vaults, past games history, and local browser cache will be completely erased.
-                </p>
-                <p className="text-[11px]">
-                  When hosted, the platform will start with clean contracts and zero test data.
+                  All testing token addresses, smart contract mappings, historical epoch ledgers, and local browser state will be permanently purged.
                 </p>
               </div>
 
-              <div className="flex justify-end gap-3 pt-2">
+              <div className="flex justify-end gap-2.5 pt-2">
                 <button
                   type="button"
                   onClick={() => setShowFactoryResetModal(false)}
                   disabled={isFactoryResetting}
-                  className="px-4 py-2.5 bg-gray-200 dark:bg-[#1a2d23] hover:bg-gray-300 dark:hover:bg-[#253e31] text-[#243329] dark:text-white rounded-xl text-xs font-bold transition-all disabled:opacity-50"
+                  className="px-4 py-2 border border-[#171513]/25 hover:bg-[#171513]/5 text-xs font-serif uppercase tracking-wider text-[#171513]/70 transition-colors"
                 >
                   Cancel
                 </button>
@@ -1650,17 +1193,17 @@ export default function AdminPanelPage() {
                   type="button"
                   onClick={handleFactoryReset}
                   disabled={isFactoryResetting}
-                  className="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 active:scale-95 text-white font-black rounded-xl text-xs shadow-lg flex items-center gap-2 transition-all disabled:opacity-50"
+                  className="px-4 py-2 bg-red-900 hover:bg-red-800 text-[#F4EFE6] font-serif text-xs tracking-wider uppercase border border-red-700 flex items-center gap-2 transition-colors disabled:opacity-50"
                 >
                   {isFactoryResetting ? (
                     <>
-                      <RotateCcw className="w-4 h-4 animate-spin" />
-                      <span>PURGING DATA...</span>
+                      <RotateCcw className="w-3.5 h-3.5 animate-spin" />
+                      <span>PURIFYING...</span>
                     </>
                   ) : (
                     <>
-                      <Trash2 className="w-4 h-4" />
-                      <span>YES, RESET EVERYTHING NOW</span>
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>AFFIRM & PURGE EVERYTHING</span>
                     </>
                   )}
                 </button>

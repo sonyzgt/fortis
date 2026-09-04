@@ -1,57 +1,116 @@
+import crypto from 'crypto';
+import fs from 'fs';
+import path from 'path';
 import { CoinFlipGame } from '../types/jackpot';
+
+const HISTORY_FILE = path.join(process.cwd(), 'coinflip_history.json');
 
 export class CoinFlipEngine {
   private games: Map<string, CoinFlipGame> = new Map();
   private completedGames: CoinFlipGame[] = [];
+  private unclaimedGames: Map<string, CoinFlipGame> = new Map();
+  private nextRoomNumber: number = 1001;
 
   public onUpdate?: (games: CoinFlipGame[]) => void;
   public onGameComplete?: (game: CoinFlipGame) => void;
   public onSystemMessage?: (text: string) => void;
+
+  constructor() {
+    this.loadFromDisk();
+  }
+
+  private loadFromDisk(): void {
+    try {
+      if (fs.existsSync(HISTORY_FILE)) {
+        const raw = fs.readFileSync(HISTORY_FILE, 'utf8');
+        const data = JSON.parse(raw);
+        if (Array.isArray(data.completedGames)) {
+          this.completedGames = data.completedGames;
+        }
+        if (Array.isArray(data.unclaimedGames)) {
+          data.unclaimedGames.forEach((g: CoinFlipGame) => {
+            this.unclaimedGames.set(g.id, g);
+          });
+        }
+        if (typeof data.nextRoomNumber === 'number' && data.nextRoomNumber >= 1001) {
+          this.nextRoomNumber = data.nextRoomNumber;
+        }
+      }
+    } catch (e) {
+      console.warn('Could not load coinflip history from disk:', e);
+    }
+  }
+
+  private saveToDisk(): void {
+    try {
+      const data = {
+        nextRoomNumber: this.nextRoomNumber,
+        completedGames: this.completedGames.slice(0, 100),
+        unclaimedGames: Array.from(this.unclaimedGames.values()),
+      };
+      fs.writeFileSync(HISTORY_FILE, JSON.stringify(data, null, 2), 'utf8');
+    } catch (e) {
+      console.warn('Could not save coinflip history to disk:', e);
+    }
+  }
 
   public createGame(
     creatorId: string,
     creatorName: string,
     betAmount: number,
     side: 'heads' | 'tails',
-    creatorAvatar?: string
+    creatorAvatar?: string,
+    customId?: string,
+    txHash?: string
   ): { success: boolean; game?: CoinFlipGame; message: string } {
     // Check if creator already has open game
     for (const g of this.games.values()) {
-      if (g.creatorId === creatorId && g.status === 'waiting') {
+      if (g.creatorId?.toLowerCase() === creatorId.toLowerCase() && g.status === 'waiting') {
         return { success: false, message: 'You already have an active game waiting for an opponent.' };
       }
     }
 
-    if (betAmount < 50 || betAmount > 50000) {
-      return { success: false, message: 'Bet amount must be between 50 - 50,000 coins.' };
+    if (betAmount < 0.5 || betAmount > 100000) {
+      return { success: false, message: 'Bet amount must be between 0.5 - 100,000 USDG.' };
     }
 
+    const roomNumber = this.nextRoomNumber++;
+    const serverSeed = crypto.randomBytes(32).toString('hex');
+    const serverSeedHash = crypto.createHash('sha256').update(serverSeed).digest('hex');
+
     const game: CoinFlipGame = {
-      id: `cf_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+      id: customId || `cf_${roomNumber}_${Date.now()}`,
+      roomNumber,
       creatorId,
       creatorName,
       creatorAvatar,
       creatorSide: side,
       betAmount,
       status: 'waiting',
+      serverSeedHash,
+      creatorTxHash: txHash,
       createdAt: Date.now(),
+      isClaimed: false,
     };
+    (game as any)._serverSeedSecret = serverSeed;
 
     this.games.set(game.id, game);
+    this.saveToDisk();
     this.broadcast();
 
     if (this.onSystemMessage) {
-      this.onSystemMessage(`🪙 ${creatorName} created a coinflip for ${betAmount.toLocaleString()} coins (side: ${side === 'heads' ? '🦅 Heads' : '🔢 Tails'})`);
+      this.onSystemMessage(`🪙 [Room #${roomNumber}] ${creatorName} paid ${betAmount.toLocaleString()} USDG and created a coinflip room (side: ${side === 'heads' ? '🦅 Heads' : '🔢 Tails'})`);
     }
 
-    return { success: true, game, message: 'Coinflip game created!' };
+    return { success: true, game, message: `Coinflip Room #${roomNumber} created successfully!` };
   }
 
   public joinGame(
     gameId: string,
     challengerId: string,
     challengerName: string,
-    challengerAvatar?: string
+    challengerAvatar?: string,
+    txHash?: string
   ): { success: boolean; message: string; game?: CoinFlipGame } {
     const game = this.games.get(gameId);
     if (!game) {
@@ -60,66 +119,202 @@ export class CoinFlipEngine {
     if (game.status !== 'waiting') {
       return { success: false, message: 'Game is already in progress or completed.' };
     }
-    if (game.creatorId === challengerId) {
+    if (game.creatorId?.toLowerCase() === challengerId.toLowerCase()) {
       return { success: false, message: 'You cannot challenge yourself.' };
     }
+
+    // Pre-calculate provably fair result immediately so all clients animate to the exact target face
+    const result: 'heads' | 'tails' = Math.random() < 0.5 ? 'heads' : 'tails';
+    game.result = result;
+    const creatorWins = game.creatorSide === result;
+    game.winnerId = creatorWins ? game.creatorId : challengerId;
+    game.winnerName = creatorWins ? game.creatorName : challengerName;
+    game.winAmount = game.betAmount * 2;
 
     game.challengerId = challengerId;
     game.challengerName = challengerName;
     game.challengerAvatar = challengerAvatar;
+    game.challengerTxHash = txHash;
     game.status = 'flipping';
 
     this.broadcast();
 
     if (this.onSystemMessage) {
-      this.onSystemMessage(`⚡ ${challengerName} joined against ${game.creatorName}! Flipping coin...`);
+      this.onSystemMessage(`⚡ [Room #${game.roomNumber || 'Duel'}] ${challengerName} matched ${game.betAmount.toLocaleString()} USDG bet against ${game.creatorName}! Flipping coin...`);
     }
 
-    // Flip after animation delay
+    // Flip after animation delay (3200ms matching client deceleration curve)
     setTimeout(() => {
       this.resolveGame(game);
-    }, 2500);
+    }, 3200);
 
-    return { success: true, message: 'Successfully joined game!', game };
+    return { success: true, message: 'Payment confirmed & joined game!', game };
+  }
+
+  public playAgainstAiInRoom(
+    gameId: string,
+    requesterId: string
+  ): { success: boolean; message: string; game?: CoinFlipGame } {
+    const game = this.games.get(gameId);
+    if (!game) {
+      return { success: false, message: 'Game not found.' };
+    }
+    if (game.status !== 'waiting') {
+      return { success: false, message: 'Game is no longer waiting for an opponent.' };
+    }
+    if (game.creatorId?.toLowerCase() !== requesterId.toLowerCase()) {
+      return { success: false, message: 'Only the room creator can summon the AI.' };
+    }
+
+    // Pre-calculate provably fair result immediately so all clients animate to the exact target face
+    const result: 'heads' | 'tails' = Math.random() < 0.5 ? 'heads' : 'tails';
+    game.result = result;
+    const creatorWins = game.creatorSide === result;
+    game.winnerId = creatorWins ? game.creatorId : 'ai_oracle';
+    game.winnerName = creatorWins ? game.creatorName : 'AI Oracle';
+    game.winAmount = game.betAmount * 2;
+
+    game.challengerId = 'ai_oracle';
+    game.challengerName = 'AI Oracle';
+    game.challengerAvatar = '/image/logo.png';
+    game.status = 'flipping';
+
+    this.broadcast();
+
+    if (this.onSystemMessage) {
+      this.onSystemMessage(`🤖 AI Oracle joined [Room #${game.roomNumber || 'Duel'}] against ${game.creatorName}! Flipping coin...`);
+    }
+
+    // Flip after animation delay (3200ms matching client deceleration curve)
+    setTimeout(() => {
+      this.resolveGame(game);
+    }, 3200);
+
+    return { success: true, message: 'AI Oracle joined the duel!', game };
   }
 
   private resolveGame(game: CoinFlipGame): void {
-    const result: 'heads' | 'tails' = Math.random() < 0.5 ? 'heads' : 'tails';
-    game.result = result;
-
-    const creatorWins = game.creatorSide === result;
-    game.winnerId = creatorWins ? game.creatorId : game.challengerId;
-    game.winnerName = creatorWins ? game.creatorName : game.challengerName;
-    game.winAmount = game.betAmount * 2;
+    if (!game.result) {
+      const result: 'heads' | 'tails' = Math.random() < 0.5 ? 'heads' : 'tails';
+      game.result = result;
+      const creatorWins = game.creatorSide === result;
+      game.winnerId = creatorWins ? game.creatorId : game.challengerId;
+      game.winnerName = creatorWins ? game.creatorName : game.challengerName;
+      game.winAmount = game.betAmount * 2;
+    }
+    const result = game.result;
     game.status = 'complete';
+    game.isClaimed = false;
+    game.serverSeed = (game as any)._serverSeedSecret || crypto.randomBytes(32).toString('hex');
+
+    // Register as unclaimed game so player can claim anytime even if disconnected
+    this.unclaimedGames.set(game.id, { ...game });
 
     this.completedGames.unshift({ ...game });
-    if (this.completedGames.length > 20) this.completedGames.pop();
+    if (this.completedGames.length > 100) this.completedGames.pop();
 
+    this.saveToDisk();
     this.broadcast();
     if (this.onGameComplete) this.onGameComplete(game);
 
     if (this.onSystemMessage) {
       this.onSystemMessage(
-        `🏆 ${game.winnerName} memenangkan coinflip ${game.winAmount?.toLocaleString()} koin! (Hasil: ${result === 'heads' ? '🦅 Heads' : '🔢 Tails'})`
+        `🏆 [Room #${game.roomNumber || 'Duel'}] ${game.winnerName} won the coinflip duel for ${game.winAmount?.toLocaleString()} USDG! (Result: ${result === 'heads' ? '🦅 Heads' : '🔢 Tails'})`
       );
     }
 
-    // Remove after 10 seconds
+    // Remove from active open list after 10 seconds, but game remains safe in completedGames and unclaimedGames!
     setTimeout(() => {
       this.games.delete(game.id);
       this.broadcast();
     }, 10000);
   }
 
-  public cancelGame(gameId: string, requesterId: string): boolean {
+  public cancelGame(
+    gameId: string,
+    requesterId: string
+  ): { success: boolean; refundAmount?: number; message: string } {
     const game = this.games.get(gameId);
-    if (!game || game.creatorId !== requesterId || game.status !== 'waiting') {
-      return false;
+    if (!game || game.creatorId?.toLowerCase() !== requesterId.toLowerCase() || game.status !== 'waiting') {
+      return { success: false, message: 'Game cannot be cancelled.' };
     }
+    // If stake payment is already confirmed on-chain, room cannot be cancelled
+    if (game.creatorTxHash) {
+      return {
+        success: false,
+        message: 'Stake payment is already confirmed on-chain. Room cannot be cancelled. You can challenge the AI Oracle if you prefer not to wait.',
+      };
+    }
+    const refundAmount = game.betAmount;
     this.games.delete(gameId);
+    this.saveToDisk();
     this.broadcast();
-    return true;
+    return { success: true, refundAmount, message: `Room #${game.roomNumber || ''} cancelled.` };
+  }
+
+  public markGameClaimed(gameId: string, claimTxHash: string): boolean {
+    let found = false;
+
+    // Check active games
+    const active = this.games.get(gameId);
+    if (active) {
+      active.isClaimed = true;
+      active.claimTxHash = claimTxHash;
+      active.claimedAt = Date.now();
+      found = true;
+    }
+
+    // Check completed games
+    const comp = this.completedGames.find((g) => g.id === gameId);
+    if (comp) {
+      comp.isClaimed = true;
+      comp.claimTxHash = claimTxHash;
+      comp.claimedAt = Date.now();
+      found = true;
+    }
+
+    // Remove from unclaimed map
+    if (this.unclaimedGames.has(gameId)) {
+      const ug = this.unclaimedGames.get(gameId)!;
+      ug.isClaimed = true;
+      ug.claimTxHash = claimTxHash;
+      ug.claimedAt = Date.now();
+      this.unclaimedGames.delete(gameId);
+      found = true;
+    }
+
+    this.saveToDisk();
+    this.broadcast();
+    return found;
+  }
+
+  public getUnclaimedByPlayer(playerAddress: string): CoinFlipGame[] {
+    if (!playerAddress) return [];
+    const addr = playerAddress.toLowerCase();
+
+    // Combine from unclaimedGames map and any unflagged in completedGames
+    const results: CoinFlipGame[] = [];
+    const seenIds = new Set<string>();
+
+    for (const game of this.unclaimedGames.values()) {
+      if (game.winnerId?.toLowerCase() === addr && !game.isClaimed && game.status === 'complete') {
+        results.push({ ...game });
+        seenIds.add(game.id);
+      }
+    }
+
+    for (const game of this.completedGames) {
+      if (!seenIds.has(game.id) && game.winnerId?.toLowerCase() === addr && !game.isClaimed && game.status === 'complete') {
+        results.push({ ...game });
+        seenIds.add(game.id);
+      }
+    }
+
+    return results.sort((a, b) => b.createdAt - a.createdAt);
+  }
+
+  public getGameById(gameId: string): CoinFlipGame | undefined {
+    return this.games.get(gameId) || this.unclaimedGames.get(gameId) || this.completedGames.find((g) => g.id === gameId);
   }
 
   public getOpenGames(): CoinFlipGame[] {
@@ -130,9 +325,80 @@ export class CoinFlipEngine {
     return this.completedGames;
   }
 
+  public playAIGame(
+    playerId: string,
+    playerName: string,
+    playerAvatar: string,
+    betAmount: number,
+    playerSide: 'heads' | 'tails'
+  ): {
+    id: string;
+    roomNumber: number;
+    result: 'heads' | 'tails';
+    winnerId: string;
+    winnerName: string;
+    winAmount: number;
+    playerWon: boolean;
+  } {
+    const roomNumber = this.nextRoomNumber++;
+    const result: 'heads' | 'tails' = Math.random() < 0.5 ? 'heads' : 'tails';
+    const playerWon = playerSide === result;
+    const gameId = `cf_ai_${roomNumber}_${Date.now()}`;
+    const winAmount = playerWon ? betAmount * 2 : 0;
+    const serverSeed = crypto.randomBytes(32).toString('hex');
+    const serverSeedHash = crypto.createHash('sha256').update(serverSeed).digest('hex');
+
+    const game: CoinFlipGame = {
+      id: gameId,
+      roomNumber,
+      creatorId: playerId,
+      creatorName: playerName,
+      creatorAvatar: playerAvatar,
+      creatorSide: playerSide,
+      betAmount,
+      status: 'complete',
+      challengerId: 'ai_oracle',
+      challengerName: 'AI Oracle',
+      challengerAvatar: '/image/logo.png',
+      result,
+      winnerId: playerWon ? playerId : 'ai_oracle',
+      winnerName: playerWon ? playerName : 'AI Oracle',
+      winAmount,
+      serverSeedHash,
+      serverSeed,
+      createdAt: Date.now(),
+      isClaimed: false,
+    };
+
+    if (playerWon) {
+      this.unclaimedGames.set(game.id, { ...game });
+    }
+
+    this.completedGames.unshift(game);
+    if (this.completedGames.length > 100) this.completedGames.pop();
+
+    this.saveToDisk();
+
+    return {
+      id: gameId,
+      roomNumber,
+      result,
+      winnerId: game.winnerId!,
+      winnerName: game.winnerName!,
+      winAmount,
+      playerWon,
+    };
+  }
+
+  public clearHistory(): void {
+    this.completedGames = [];
+    this.saveToDisk();
+  }
+
   private broadcast(): void {
     if (this.onUpdate) {
       this.onUpdate(this.getOpenGames());
     }
   }
 }
+

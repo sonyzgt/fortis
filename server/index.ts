@@ -8,7 +8,7 @@ import cors from 'cors';
 import { ethers } from 'ethers';
 import { JackpotEngine } from './engine/JackpotEngine';
 import { CoinFlipEngine } from './engine/CoinFlipEngine';
-import { PonscoreEngine } from './engine/PonscoreEngine';
+import { CashFlipJackpotEngine } from './engine/CashFlipJackpotEngine';
 import { ChatMessage, LeaderboardEntry, WinnerInfo } from './types/jackpot';
 
 // Load .env and .env.local variables
@@ -63,7 +63,7 @@ const requireAdmin = (req: any, res: any, next: any) => {
 };
 
 // Game Engines
-const ponscore = new PonscoreEngine();
+const cashflipJackpot = new CashFlipJackpotEngine();
 const jackpot = new JackpotEngine();
 const coinflip = new CoinFlipEngine();
 
@@ -71,25 +71,23 @@ const coinflip = new CoinFlipEngine();
 const chatMessages: ChatMessage[] = [];
 const leaderboard: Map<string, LeaderboardEntry> = new Map();
 
-// --- Ponspot Callbacks ---
-ponscore.onUpdate = (round) => {
-  io.emit('ponspot_state', round);
-  io.emit('ponscore_state', round);
+// --- CashFlip Jackpot Callbacks ---
+cashflipJackpot.onUpdate = (round) => {
+  io.emit('cashflip_jackpot_state', round);
 };
 
 // Disable automatic bot spam in live chat (chat is exclusively for players)
-ponscore.onSystemMessage = undefined;
+cashflipJackpot.onSystemMessage = undefined;
 
-ponscore.onWinner = (winner, round) => {
-  io.emit('ponspot_winner', { winner, round });
-  io.emit('ponscore_winner', { winner, round });
-  io.emit('ponspot_history', ponscore.getPastGames());
-  io.emit('ponscore_history', ponscore.getPastGames());
+cashflipJackpot.onWinner = (winner, round) => {
+  io.emit('cashflip_jackpot_winner', { winner, round });
+  io.emit('cashflip_jackpot_history', cashflipJackpot.getPastGames());
 
   // Update leaderboard
+  const winPrize = winner.prize !== undefined ? winner.prize : (winner.prizePons || 0);
   const existing = leaderboard.get(winner.address);
   if (existing) {
-    existing.totalWon += winner.prizePons;
+    existing.totalWon += winPrize;
     existing.winsCount += 1;
     existing.lastWin = Date.now();
   } else {
@@ -98,7 +96,7 @@ ponscore.onWinner = (winner, round) => {
       playerName: winner.name,
       playerAvatar: winner.avatar,
       walletAddress: winner.address,
-      totalWon: winner.prizePons,
+      totalWon: winPrize,
       winsCount: 1,
       lastWin: Date.now(),
     });
@@ -124,6 +122,13 @@ coinflip.onSystemMessage = undefined;
 
 coinflip.onGameComplete = (game) => {
   io.emit('coinflip_complete', game);
+  io.emit('coinflip_completed_games', coinflip.getCompletedGames());
+  if (game.winnerId) {
+    io.emit('unclaimed_coinflip_alert', {
+      winnerId: game.winnerId,
+      game,
+    });
+  }
 };
 
 function getLeaderboard(): LeaderboardEntry[] {
@@ -133,28 +138,31 @@ function getLeaderboard(): LeaderboardEntry[] {
 }
 
 // --- REST API Endpoints ---
-app.get('/api/health', (_, res) => res.json({ status: 'ok', ts: Date.now(), system: 'Ponscore PONS Engine' }));
+app.get('/api/health', (_, res) => res.json({ status: 'ok', ts: Date.now(), system: 'CashFlip Engine' }));
 
-// Ponscore Game APIs
-app.get('/api/game/current', (_, res) => res.json(ponscore.getState()));
-app.get('/api/games/history', (_, res) => res.json(ponscore.getPastGames()));
+// CashFlip Game APIs
+app.get('/api/game/current', (_, res) => res.json(cashflipJackpot.getState()));
+app.get('/api/game/state', (_, res) => res.json(cashflipJackpot.getState()));
+app.get('/api/game/history', (_, res) => res.json(cashflipJackpot.getPastGames()));
+app.get('/api/games/history', (_, res) => res.json(cashflipJackpot.getPastGames()));
+app.get('/api/coinflip/open', (_, res) => res.json(coinflip.getOpenGames()));
 app.get('/api/game/:gameId', (req, res) => {
-  const g = ponscore.getGameById(req.params.gameId);
+  const g = cashflipJackpot.getGameById(req.params.gameId);
   if (!g) return res.status(404).json({ error: 'Game not found' });
   res.json(g);
 });
 app.get('/api/game/unclaimed/:address', (req, res) => {
-  res.json(ponscore.getUnclaimedByPlayer(req.params.address));
+  res.json(cashflipJackpot.getUnclaimedByPlayer(req.params.address));
 });
 app.post('/api/game/reset-claims', (_, res) => {
-  ponscore.resetClaims();
+  cashflipJackpot.resetClaims();
   res.json({ success: true, message: 'All claims reset to unclaimed' });
 });
 // Reset claims on start so players who only had off-chain message signatures can claim on-chain
-ponscore.resetClaims();
+cashflipJackpot.resetClaims();
 
 app.get('/api/game/verify/:gameId', (req, res) => {
-  const report = ponscore.verifyGameById(req.params.gameId);
+  const report = cashflipJackpot.verifyGameById(req.params.gameId);
   if (!report) {
     return res.status(404).json({ error: 'Game not found or still active' });
   }
@@ -164,7 +172,10 @@ app.get('/api/game/verify/:gameId', (req, res) => {
 // --- Admin Authentication Endpoints ---
 app.post('/api/admin/login', (req, res) => {
   const { password } = req.body;
-  const expected = process.env.ADMIN_PASSWORD || 'Sonyfree24@';
+  const expected = process.env.ADMIN_PASSWORD;
+  if (!expected) {
+    return res.status(500).json({ error: 'Admin password is not configured on the server. Set ADMIN_PASSWORD in .env.local' });
+  }
   if (!password || password !== expected) {
     return res.status(401).json({ error: 'Incorrect administrator password. Access denied.' });
   }
@@ -197,7 +208,7 @@ app.post('/api/admin/set-contract', (req, res) => {
   }
   const file = path.join(process.cwd(), 'deployed_contract.txt');
   fs.writeFileSync(file, contractAddress.trim());
-  io.emit('ponscore_contract_updated', { contractAddress: contractAddress.trim() });
+  io.emit('cashflip_contract_updated', { contractAddress: contractAddress.trim() });
   res.json({ success: true, contractAddress: contractAddress.trim() });
 });
 
@@ -217,7 +228,7 @@ app.post('/api/admin/set-token-contract', requireAdmin, (req, res) => {
   }
   const file = path.join(process.cwd(), 'token_contract.txt');
   fs.writeFileSync(file, tokenAddress.trim());
-  io.emit('ponscore_token_updated', { tokenAddress: tokenAddress.trim() });
+  io.emit('cashflip_token_updated', { tokenAddress: tokenAddress.trim() });
   res.json({ success: true, tokenAddress: tokenAddress.trim() });
 });
 
@@ -238,8 +249,8 @@ app.post('/api/admin/force-refresh', requireAdmin, (req, res) => {
   });
 
   // Re-broadcast fresh game states
-  io.emit('ponscore_state', ponscore.getState());
-  io.emit('ponscore_history', ponscore.getPastGames());
+  io.emit('cashflip_jackpot_state', cashflipJackpot.getState());
+  io.emit('cashflip_jackpot_history', cashflipJackpot.getPastGames());
 
   res.json({
     success: true,
@@ -247,114 +258,24 @@ app.post('/api/admin/force-refresh', requireAdmin, (req, res) => {
   });
 });
 
-const RPC_URL = process.env.RPC_URL || 'https://rpc.mainnet.chain.robinhood.com';
-const AIRDROP_FILE = path.join(process.cwd(), 'airdrop_contract.json');
-
-try {
-  if (fs.existsSync(AIRDROP_FILE)) {
-    const saved = JSON.parse(fs.readFileSync(AIRDROP_FILE, 'utf8'));
-    if (saved.airdropContractAddress) {
-      ponscore.setAirdropContract(saved.airdropContractAddress);
-    }
-  }
-} catch (e) {
-  console.warn('Could not load saved airdrop contract', e);
-}
-
-async function syncOnChainAirdropBalance() {
-  const state = ponscore.getAirdropState();
-  const tokenFile = path.join(process.cwd(), 'token_contract.txt');
-  const tokenAddr = fs.existsSync(tokenFile)
-    ? fs.readFileSync(tokenFile, 'utf8').trim()
-    : (process.env.PONS_TOKEN_ADDRESS || '').trim();
-
-  if (
-    tokenAddr &&
-    tokenAddr.startsWith('0x') &&
-    tokenAddr.length === 42 &&
-    state.airdropContractAddress &&
-    state.airdropContractAddress.startsWith('0x')
-  ) {
-    try {
-      const provider = new ethers.JsonRpcProvider(RPC_URL);
-      const tokenContract = new ethers.Contract(
-        tokenAddr,
-        ['function balanceOf(address) view returns (uint256)'],
-        provider
-      );
-      const balWei = await tokenContract.balanceOf(state.airdropContractAddress);
-      const onChainBalance = Number(ethers.formatEther(balWei));
-      ponscore.airdropPoolBalance = onChainBalance;
-      return onChainBalance;
-    } catch (e) {
-      console.warn('Failed to query on-chain balance for airdrop contract:', e);
-    }
-  }
-  return ponscore.airdropPoolBalance;
-}
-
-app.get('/api/airdrop', async (_, res) => {
-  await syncOnChainAirdropBalance();
-  res.json(ponscore.getAirdropState());
-});
-
-app.post('/api/admin/fund-airdrop', requireAdmin, async (req, res) => {
-  const { amount, txHash } = req.body;
-  const num = Number(amount);
-  if (isNaN(num) || num <= 0) {
-    return res.status(400).json({ error: 'Invalid token deposit amount' });
-  }
-  ponscore.fundAirdropPool(num, txHash);
-  await syncOnChainAirdropBalance();
-  io.emit('airdrop_state', ponscore.getAirdropState());
-  res.json({ success: true, poolBalance: ponscore.airdropPoolBalance, message: `Successfully deposited ${num.toLocaleString()} PONS to Airdrop Vault!` });
-});
-
-app.post('/api/admin/set-airdrop-reward', requireAdmin, (req, res) => {
-  const { reward } = req.body;
-  const num = Number(reward);
-  if (isNaN(num) || num <= 0) {
-    return res.status(400).json({ error: 'Invalid reward amount' });
-  }
-
-  ponscore.setAirdropReward(num);
-  io.emit('airdrop_state', ponscore.getAirdropState());
-  res.json({ success: true, rewardPerClaim: num });
-});
-
-app.post('/api/admin/set-airdrop-contract', requireAdmin, async (req, res) => {
-  const { airdropContractAddress } = req.body;
-  if (!airdropContractAddress || !airdropContractAddress.startsWith('0x')) {
-    return res.status(400).json({ error: 'Invalid airdrop contract address' });
-  }
-  ponscore.setAirdropContract(airdropContractAddress);
-  try {
-    fs.writeFileSync(AIRDROP_FILE, JSON.stringify({ airdropContractAddress }), 'utf8');
-  } catch (e) {
-    console.warn('Could not save airdrop contract', e);
-  }
-  await syncOnChainAirdropBalance();
-  io.emit('airdrop_state', ponscore.getAirdropState());
-  res.json({ success: true, airdropContractAddress, poolBalance: ponscore.airdropPoolBalance });
-});
-
-app.post('/api/admin/reset-airdrop-claims', requireAdmin, (req, res) => {
-  ponscore.resetAirdropClaims();
-  io.emit('airdrop_state', ponscore.getAirdropState());
-  io.emit('airdrop_claims_reset');
+app.post('/api/admin/clear-history', requireAdmin, (req, res) => {
+  cashflipJackpot.clearHistory();
+  coinflip.clearHistory();
+  io.emit('cashflip_jackpot_history', []);
+  io.emit('coinflip_completed_games', []);
   res.json({
     success: true,
-    message: 'All airdrop claim history has been reset! All wallets can now claim again.',
+    message: 'Historical epochs & coinflip duel manifests have been successfully purged from database!',
   });
 });
+
 app.post('/api/admin/reset-betting', requireAdmin, (req, res) => {
-  ponscore.factoryReset();
+  cashflipJackpot.factoryReset();
   chatMessages.length = 0;
   leaderboard.clear();
-  io.emit('ponspot_state', ponscore.getState());
-  io.emit('ponscore_state', ponscore.getState());
-  io.emit('ponspot_history', []);
-  io.emit('ponscore_history', []);
+  io.emit('cashflip_jackpot_state', cashflipJackpot.getState());
+  io.emit('cashflip_jackpot_history', []);
+  io.emit('cashflip_jackpot_history', []);
   io.emit('chat_history', []);
   io.emit('force_client_reload', {
     timestamp: Date.now(),
@@ -388,23 +309,21 @@ app.post('/api/admin/factory-reset', requireAdmin, (req, res) => {
     }
 
     // 2. Perform factory reset on engine
-    ponscore.factoryReset();
+    cashflipJackpot.factoryReset();
 
     // 3. Clear Chat & Leaderboard
     chatMessages.length = 0;
     leaderboard.clear();
 
     // 4. Broadcast full fresh state to all connected clients
-    io.emit('ponspot_state', ponscore.getState());
-    io.emit('ponscore_state', ponscore.getState());
-    io.emit('ponspot_history', []);
-    io.emit('ponscore_history', []);
-    io.emit('airdrop_state', ponscore.getAirdropState());
+    io.emit('cashflip_jackpot_state', cashflipJackpot.getState());
+    io.emit('cashflip_jackpot_history', []);
+    io.emit('cashflip_jackpot_history', []);
     io.emit('leaderboard_update', []);
     io.emit('chat_history', []);
-    io.emit('ponspot_contract_updated', { contractAddress: '' });
-    io.emit('ponscore_contract_updated', { contractAddress: '' });
-    io.emit('ponscore_token_updated', { tokenAddress: '' });
+    io.emit('cashflip_contract_updated', { contractAddress: '' });
+    io.emit('cashflip_contract_updated', { contractAddress: '' });
+    io.emit('cashflip_token_updated', { tokenAddress: '' });
 
     // 5. Broadcast force reload with factory reset flag
     io.emit('force_client_reload', {
@@ -424,81 +343,163 @@ app.post('/api/admin/factory-reset', requireAdmin, (req, res) => {
 
 app.get('/api/jackpot', (_, res) => res.json(jackpot.getState()));
 app.get('/api/coinflip', (_, res) => res.json(coinflip.getOpenGames()));
+app.get('/api/coinflip/completed', (_, res) => res.json(coinflip.getCompletedGames()));
+app.get('/api/coinflip/unclaimed/:address', (req, res) => {
+  res.json(coinflip.getUnclaimedByPlayer(req.params.address));
+});
+app.get('/api/coinflip/game/:gameId', (req, res) => {
+  const game = coinflip.getGameById(req.params.gameId);
+  if (!game) return res.status(404).json({ error: 'Game not found' });
+  res.json(game);
+});
 app.get('/api/leaderboard', (_, res) => res.json(getLeaderboard()));
 app.get('/api/chat', (_, res) => res.json(chatMessages.slice(-50)));
+
+/**
+/**
+ * POST /api/coinflip/sign-claim & POST /api/claim/sign
+ * Game server validates the winner address for Coinflip or Jackpot, then signs the claim with ECDSA.
+ * The signature is used by the smart contract to authorize payout to ONLY the winner.
+ */
+const handleSignClaim = async (req: express.Request, res: express.Response) => {
+  try {
+    const { gameId, winner, prizeAmount } = req.body;
+
+    if (!gameId || !winner || !prizeAmount) {
+      return res.status(400).json({ error: 'Missing required fields: gameId, winner, prizeAmount' });
+    }
+
+    const normWinner = winner.toLowerCase();
+
+    // 1. Try finding in Coinflip engine
+    let matchedType: 'coinflip' | 'jackpot' | null = null;
+    const cfGame = coinflip.getGameById(gameId);
+    let jpGame: any = null;
+
+    if (cfGame) {
+      matchedType = 'coinflip';
+      if (cfGame.isClaimed) {
+        return res.status(400).json({ error: `Room #${cfGame.roomNumber || ''} winnings have already been claimed.` });
+      }
+      if (cfGame.winnerId?.toLowerCase() !== normWinner) {
+        return res.status(403).json({ error: 'Address is not the verified winner of this duel' });
+      }
+    } else {
+      // 2. Try finding in Jackpot engine
+      jpGame = cashflipJackpot.getGameById(gameId);
+      if (jpGame && jpGame.winner) {
+        matchedType = 'jackpot';
+        if (jpGame.winner.claimed) {
+          return res.status(400).json({ error: `Epoch #${jpGame.gameId} winnings have already been claimed.` });
+        }
+        if (jpGame.winner.address?.toLowerCase() !== normWinner) {
+          return res.status(403).json({ error: 'Address is not the verified winner of this epoch' });
+        }
+      }
+    }
+
+    if (!matchedType) {
+      return res.status(404).json({ error: 'Game not found or not yet completed' });
+    }
+
+    // Validate prize amount
+    const requestedPrizeWei = BigInt(prizeAmount);
+
+    if (matchedType === 'coinflip' && cfGame) {
+      const maxAllowed = BigInt(Math.round(cfGame.betAmount * 2 * 1_000_000 * 1.02)); // +2% tolerance
+      if (requestedPrizeWei > maxAllowed) {
+        return res.status(400).json({ error: 'Requested prize amount exceeds allowed maximum' });
+      }
+    } else if (matchedType === 'jackpot' && jpGame) {
+      const expectedPool = jpGame.winner?.totalPoolPons || jpGame.totalPool || 0;
+      const maxAllowed = BigInt(Math.round(expectedPool * 1_000_000 * 1.05)); // +5% tolerance
+      if (requestedPrizeWei > maxAllowed && maxAllowed > 0n) {
+        return res.status(400).json({ error: 'Requested prize amount exceeds jackpot pool' });
+      }
+    }
+
+    // Load the game server signer wallet
+    const signerPrivateKey = process.env.GAME_SERVER_SIGNER_PRIVATE_KEY || '';
+    if (!signerPrivateKey || signerPrivateKey.length < 60) {
+      return res.status(500).json({ error: 'Game server signer not configured' });
+    }
+
+    // Sign: keccak256(abi.encodePacked(gameId, winner, prizeAmount))
+    // This is the exact same hash the Solidity contract will verify on-chain
+    const { ethers } = await import('ethers');
+    const signerWallet = new ethers.Wallet(signerPrivateKey);
+    const messageHash = ethers.keccak256(
+      ethers.solidityPacked(
+        ['string', 'address', 'uint256'],
+        [gameId, winner, requestedPrizeWei]
+      )
+    );
+    // ethers.signMessage prepends "\x19Ethereum Signed Message:\n32" and signs — matching the contract
+    const signature = await signerWallet.signMessage(ethers.getBytes(messageHash));
+
+    console.log(
+      `[SIGN-CLAIM] Type: ${matchedType.toUpperCase()} | Game: ${gameId} | Winner: ${winner} | Prize: ${ethers.formatUnits(requestedPrizeWei, 6)} USDG | Sig: ${signature.slice(0, 20)}...`
+    );
+
+    return res.json({
+      signature,
+      gameId,
+      roomNumber: cfGame?.roomNumber || undefined,
+      winner,
+      prizeAmount: prizeAmount.toString(),
+    });
+  } catch (err: any) {
+    console.error('[SIGN-CLAIM] Error:', err?.message);
+    return res.status(500).json({ error: err?.message || 'Failed to sign claim' });
+  }
+};
+
+app.post('/api/coinflip/sign-claim', handleSignClaim);
+app.post('/api/claim/sign', handleSignClaim);
+
 
 // --- Socket.io ---
 io.on('connection', (socket) => {
   // Send initial states
-  socket.emit('ponspot_state', ponscore.getState());
-  socket.emit('ponscore_state', ponscore.getState());
-  socket.emit('ponspot_history', ponscore.getPastGames());
-  socket.emit('ponscore_history', ponscore.getPastGames());
-  socket.emit('airdrop_state', ponscore.getAirdropState());
+  socket.emit('cashflip_jackpot_state', cashflipJackpot.getState());
+  socket.emit('cashflip_jackpot_history', cashflipJackpot.getPastGames());
   socket.emit('jackpot_state', jackpot.getState());
   socket.emit('coinflip_games', coinflip.getOpenGames());
+  socket.emit('coinflip_completed_games', coinflip.getCompletedGames());
   socket.emit('leaderboard_update', getLeaderboard());
   socket.emit('chat_history', chatMessages.slice(-50));
 
-  // --- Ponspot / Ponscore Events ---
-  const handleBet = ({ playerAddress, playerName, amountPons, playerAvatar, txHash }: any) => {
-    const result = ponscore.placeBet(playerAddress, playerName, amountPons, playerAvatar, txHash);
-    socket.emit('ponspot_bet_result', result);
-    socket.emit('ponscore_bet_result', result);
+  // --- CashFlip Jackpot Events ---
+  const handleBet = ({ playerAddress, playerName, amount, amountPons, playerAvatar, txHash }: any) => {
+    const betAmount = amount !== undefined ? amount : (amountPons || 0);
+    const result = cashflipJackpot.placeBet(playerAddress, playerName, betAmount, playerAvatar, txHash);
+    socket.emit('cashflip_jackpot_bet_result', result);
   };
-  socket.on('ponspot_bet', handleBet);
-  socket.on('ponscore_bet', handleBet);
+  socket.on('cashflip_jackpot_bet', handleBet);
 
   const handleClaim = ({ gameId, claimTxHash, address }: any) => {
-    const ok = ponscore.markWinningsClaimed(gameId, claimTxHash);
-    socket.emit('ponspot_claim_result', { success: ok, gameId, claimTxHash });
-    socket.emit('ponscore_claim_result', { success: ok, gameId, claimTxHash });
+    const ok = cashflipJackpot.markWinningsClaimed(gameId, claimTxHash);
+    socket.emit('cashflip_jackpot_claim_result', { success: ok, gameId, claimTxHash });
     if (address) {
-      const unclaimed = ponscore.getUnclaimedByPlayer(address);
-      socket.emit('ponspot_unclaimed_list', unclaimed);
-      socket.emit('ponscore_unclaimed_list', unclaimed);
+      const unclaimed = cashflipJackpot.getUnclaimedByPlayer(address);
+      socket.emit('cashflip_jackpot_unclaimed', unclaimed);
     }
-    io.emit('ponspot_history', ponscore.getPastGames());
-    io.emit('ponscore_history', ponscore.getPastGames());
+    io.emit('cashflip_jackpot_history', cashflipJackpot.getPastGames());
   };
-  socket.on('ponspot_claim', handleClaim);
-  socket.on('ponscore_claim', handleClaim);
+  socket.on('cashflip_jackpot_claim', handleClaim);
 
   const handleGetUnclaimed = ({ address }: any) => {
     if (!address) return;
-    const list = ponscore.getUnclaimedByPlayer(address);
-    socket.emit('ponspot_unclaimed_list', list);
-    socket.emit('ponscore_unclaimed_list', list);
+    const list = cashflipJackpot.getUnclaimedByPlayer(address);
+    socket.emit('cashflip_jackpot_unclaimed', list);
   };
-  socket.on('ponspot_get_unclaimed', handleGetUnclaimed);
-  socket.on('ponscore_get_unclaimed', handleGetUnclaimed);
+  socket.on('cashflip_jackpot_get_unclaimed', handleGetUnclaimed);
 
   const handleVerify = ({ gameId }: any) => {
-    const report = ponscore.verifyGameById(gameId);
-    socket.emit('ponspot_verify_result', { gameId, report });
-    socket.emit('ponscore_verify_result', { gameId, report });
+    const report = cashflipJackpot.verifyGameById(gameId);
+    socket.emit('cashflip_jackpot_verify_result', { gameId, report });
   };
-  socket.on('ponspot_request_verify', handleVerify);
-  socket.on('ponscore_request_verify', handleVerify);
-
-  socket.on('claim_airdrop_signed', ({ playerAddress, playerName, signature }) => {
-    const res = ponscore.claimAirdrop(playerAddress, playerName, signature);
-    socket.emit('claim_airdrop_result', res);
-    if (res.success) {
-      io.emit('airdrop_state', ponscore.getAirdropState());
-      const claimMsg = {
-        id: `airdrop-${Date.now()}`,
-        senderId: 'SYSTEM',
-        senderName: '🎁 AIRDROP VAULT',
-        senderAvatar: '/image/logo.png',
-        text: `🎉 ${playerName || `${playerAddress.slice(0, 6)}...`} signed & claimed ${res.amount} PONSPOT from the Community Airdrop Vault!`,
-        timestamp: Date.now(),
-        isSystem: false,
-      };
-      chatMessages.push(claimMsg);
-      io.emit('new_chat', claimMsg);
-    }
-  });
+  socket.on('cashflip_jackpot_verify', handleVerify);
 
   // --- Legacy Jackpot Events ---
   socket.on('buy_tickets', ({ playerId, playerName, playerAvatar, walletAddress, quantity, txHash }) => {
@@ -507,18 +508,49 @@ io.on('connection', (socket) => {
   });
 
   // --- CoinFlip Events ---
-  socket.on('create_coinflip', ({ creatorId, creatorName, creatorAvatar, betAmount, side }) => {
-    const result = coinflip.createGame(creatorId, creatorName, betAmount, side, creatorAvatar);
+  socket.on('create_coinflip', ({ creatorId, creatorName, creatorAvatar, betAmount, side, customId, txHash }) => {
+    const result = coinflip.createGame(creatorId, creatorName, betAmount, side, creatorAvatar, customId, txHash);
     socket.emit('create_coinflip_result', result);
   });
 
-  socket.on('join_coinflip', ({ gameId, challengerId, challengerName, challengerAvatar }) => {
-    const result = coinflip.joinGame(gameId, challengerId, challengerName, challengerAvatar);
+  socket.on('join_coinflip', ({ gameId, challengerId, challengerName, challengerAvatar, txHash }) => {
+    const result = coinflip.joinGame(gameId, challengerId, challengerName, challengerAvatar, txHash);
     socket.emit('join_coinflip_result', result);
   });
 
   socket.on('cancel_coinflip', ({ gameId, requesterId }) => {
-    coinflip.cancelGame(gameId, requesterId);
+    const result = coinflip.cancelGame(gameId, requesterId);
+    socket.emit('cancel_coinflip_result', result);
+  });
+
+  socket.on('play_coinflip_ai', ({ playerId, playerName, playerAvatar, betAmount, side }, callback) => {
+    const res = coinflip.playAIGame(playerId, playerName, playerAvatar, betAmount, side);
+    if (typeof callback === 'function') callback(res);
+    socket.emit('coinflip_ai_result', res);
+    if (res.playerWon && playerId) {
+      socket.emit('unclaimed_coinflips', coinflip.getUnclaimedByPlayer(playerId));
+    }
+  });
+
+  socket.on('get_unclaimed_coinflips', ({ address }: { address: string }) => {
+    if (!address) return;
+    const list = coinflip.getUnclaimedByPlayer(address);
+    socket.emit('unclaimed_coinflips', list);
+  });
+
+  socket.on('mark_coinflip_claimed', ({ gameId, claimTxHash, address }: any) => {
+    const ok = coinflip.markGameClaimed(gameId, claimTxHash);
+    io.emit('coinflip_claim_confirmed', { success: ok, gameId, claimTxHash, address });
+    if (address) {
+      const list = coinflip.getUnclaimedByPlayer(address);
+      socket.emit('unclaimed_coinflips', list);
+    }
+  });
+
+  socket.on('play_coinflip_room_ai', ({ gameId, requesterId }: { gameId: string; requesterId: string }, callback) => {
+    const result = coinflip.playAgainstAiInRoom(gameId, requesterId);
+    if (typeof callback === 'function') callback(result);
+    socket.emit('play_coinflip_room_ai_result', result);
   });
 
   // --- Chat ---
@@ -539,6 +571,6 @@ io.on('connection', (socket) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`💎 Ponscore On-Chain PONS Gaming Server running on http://localhost:${PORT}`);
+  console.log(`💎 CashFlip On-Chain USDG Gaming Server running on http://localhost:${PORT}`);
 });
  

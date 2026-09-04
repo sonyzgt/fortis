@@ -9,50 +9,52 @@ interface IERC20 {
 
 /**
  * @title PonspotJackpot
- * @notice Complete on-chain non-custodial bidding game escrow contract for PONSPOT token
- * @dev Player funds are held strictly in escrow within this smart contract.
- *      Winnings are claimed autonomously by the winner providing the revealed provably-fair serverSeed.
- *      Admin can withdraw any ERC20 token from this contract (emergency rescue).
+ * @notice Secure on-chain non-custodial escrow contract for USDG / ERC20 token.
+ * @dev ECDSA signature from the trusted game server signer is required for all claims.
+ *      Bot MEV drainers are blocked. Only the winner address with a valid server signature can claim.
+ *      Platform fee is 2%, retained in the contract for Admin to withdraw.
  */
 contract PonspotJackpot {
     IERC20 public immutable ponspotToken;
     address public admin;
-    address public constant BURN_WALLET = 0x000000000000000000000000000000000000dEaD;
-    uint256 public constant BURN_FEE_BPS = 500; // 5% Deflationary Burn
+    address public signerAddress;
+    uint256 public constant ADMIN_FEE_BPS = 200;
+    uint256 public totalAdminFeesCollected;
 
-    // Mapping gameId => claimed
     mapping(string => bool) public claimedGames;
 
     event BetPlaced(string indexed gameId, address indexed player, uint256 amount);
     event WinningsClaimed(string indexed gameId, address indexed winner, uint256 prize, uint256 timestamp);
-    event TokensBurned(string indexed gameId, uint256 burnedAmount, uint256 timestamp);
+    event AdminFeeCollected(string indexed gameId, uint256 feeAmount, uint256 timestamp);
     event AdminWithdraw(address indexed token, address indexed to, uint256 amount);
     event AdminTransferred(address indexed previousAdmin, address indexed newAdmin);
+    event SignerUpdated(address indexed previousSigner, address indexed newSigner);
 
     modifier onlyAdmin() {
         require(msg.sender == admin, "Ponspot: caller is not admin");
         _;
     }
 
-    constructor(address _ponspotToken) {
+    constructor(address _ponspotToken, address _signerAddress) {
         require(_ponspotToken != address(0), "Zero token address");
+        require(_signerAddress != address(0), "Zero signer address");
         ponspotToken = IERC20(_ponspotToken);
         admin = msg.sender;
+        signerAddress = _signerAddress;
     }
 
-    /**
-     * @notice Transfer admin rights to a new address
-     */
     function transferAdmin(address newAdmin) external onlyAdmin {
         require(newAdmin != address(0), "Zero address");
         emit AdminTransferred(admin, newAdmin);
         admin = newAdmin;
     }
 
-    /**
-     * @notice Emergency: Admin can withdraw ANY ERC20 token from this contract
-     * @dev Use this to recover tokens that were sent to the contract by mistake
-     */
+    function updateSigner(address newSigner) external onlyAdmin {
+        require(newSigner != address(0), "Zero signer address");
+        emit SignerUpdated(signerAddress, newSigner);
+        signerAddress = newSigner;
+    }
+
     function adminWithdraw(address tokenAddr, uint256 amount) external onlyAdmin {
         require(tokenAddr != address(0), "Zero token address");
         uint256 bal = IERC20(tokenAddr).balanceOf(address(this));
@@ -63,9 +65,6 @@ contract PonspotJackpot {
         emit AdminWithdraw(tokenAddr, admin, withdrawAmt);
     }
 
-    /**
-     * @notice Admin withdraw of native ponspotToken pool funds
-     */
     function adminWithdrawPool(uint256 amount) external onlyAdmin {
         uint256 bal = ponspotToken.balanceOf(address(this));
         uint256 withdrawAmt = amount > bal ? bal : amount;
@@ -75,9 +74,6 @@ contract PonspotJackpot {
         emit AdminWithdraw(address(ponspotToken), admin, withdrawAmt);
     }
 
-    /**
-     * @notice Player places bet with PONSPOT directly into contract escrow pool
-     */
     function bet(string calldata gameId, uint256 amount) external {
         require(amount > 0, "Ponspot: bet amount must be > 0");
         bool ok = ponspotToken.transferFrom(msg.sender, address(this), amount);
@@ -85,54 +81,45 @@ contract PonspotJackpot {
         emit BetPlaced(gameId, msg.sender, amount);
     }
 
-    /**
-     * @notice Direct Winner Claim from smart contract pool
-     * @dev Winner receives 95% of prizeAmount, 5% is burned to dead wallet
-     */
-    function claimWinnings(
+    function _verifySignature(
         string calldata gameId,
-        uint256 prizeAmount
-    ) public {
-        require(!claimedGames[gameId], "Ponspot: winnings already claimed");
-        claimedGames[gameId] = true;
-
-        uint256 contractBal = ponspotToken.balanceOf(address(this));
-        uint256 totalPayout = prizeAmount;
-        if (totalPayout > contractBal) {
-            totalPayout = contractBal;
-        }
-        require(totalPayout > 0, "Ponspot: pool has zero funds");
-
-        // 5% Deflationary Burn, 95% to winner — split from totalPayout
-        uint256 burnAmount = (totalPayout * 500) / 10000;   // 5%
-        uint256 winnerAmount = totalPayout - burnAmount;     // 95%
-
-        // Transfer 95% to winner
-        bool sent = ponspotToken.transfer(msg.sender, winnerAmount);
-        require(sent, "Ponspot: prize transfer failed");
-
-        // Burn 5% to dead wallet
-        if (burnAmount > 0) {
-            ponspotToken.transfer(BURN_WALLET, burnAmount);
-            emit TokensBurned(gameId, burnAmount, block.timestamp);
-        }
-
-        emit WinningsClaimed(gameId, msg.sender, winnerAmount, block.timestamp);
+        address winner,
+        uint256 prizeAmount,
+        bytes calldata signature
+    ) internal view returns (bool) {
+        bytes32 messageHash = keccak256(abi.encodePacked(gameId, winner, prizeAmount));
+        bytes32 ethSignedHash = keccak256(
+            abi.encodePacked("\x19Ethereum Signed Message:\n32", messageHash)
+        );
+        address recovered = _recoverSigner(ethSignedHash, signature);
+        return recovered == signerAddress;
     }
 
-    /**
-     * @notice Winner Claim with Provably Fair Seed Proof
-     * @dev Winner receives 95% of prizeAmount, 5% is burned
-     */
+    function _recoverSigner(bytes32 hash, bytes memory sig) internal pure returns (address) {
+        require(sig.length == 65, "Invalid signature length");
+        bytes32 r;
+        bytes32 s;
+        uint8 v;
+        assembly {
+            r := mload(add(sig, 32))
+            s := mload(add(sig, 64))
+            v := byte(0, mload(add(sig, 96)))
+        }
+        if (v < 27) v += 27;
+        require(v == 27 || v == 28, "Invalid signature v value");
+        return ecrecover(hash, v, r, s);
+    }
+
     function claimWinnings(
         string calldata gameId,
         uint256 prizeAmount,
-        bytes32 serverSeed,
-        bytes32 serverSeedHash
+        bytes calldata serverSignature
     ) external {
         require(!claimedGames[gameId], "Ponspot: winnings already claimed");
-        require(serverSeedHash != bytes32(0), "Ponspot: invalid seed hash");
-        require(sha256(abi.encodePacked(serverSeed)) == serverSeedHash, "Ponspot: invalid provably fair seed");
+        require(
+            _verifySignature(gameId, msg.sender, prizeAmount, serverSignature),
+            "Ponspot: invalid server authorization signature"
+        );
 
         claimedGames[gameId] = true;
 
@@ -143,67 +130,24 @@ contract PonspotJackpot {
         }
         require(totalPayout > 0, "Ponspot: pool has zero funds");
 
-        // 5% Deflationary Burn, 95% to winner
-        uint256 burnAmount = (totalPayout * 500) / 10000;
-        uint256 winnerAmount = totalPayout - burnAmount;
+        uint256 feeAmount = (totalPayout * ADMIN_FEE_BPS) / 10000;
+        uint256 winnerAmount = totalPayout - feeAmount;
 
         bool sent = ponspotToken.transfer(msg.sender, winnerAmount);
         require(sent, "Ponspot: prize transfer failed");
 
-        if (burnAmount > 0) {
-            ponspotToken.transfer(BURN_WALLET, burnAmount);
-            emit TokensBurned(gameId, burnAmount, block.timestamp);
+        if (feeAmount > 0) {
+            totalAdminFeesCollected += feeAmount;
+            emit AdminFeeCollected(gameId, feeAmount, block.timestamp);
         }
 
         emit WinningsClaimed(gameId, msg.sender, winnerAmount, block.timestamp);
     }
 
-    /**
-     * @notice Overload for simple claim using serverSeed string
-     */
-    function claimWinningsWithSeedString(
-        string calldata gameId,
-        uint256 prizeAmount,
-        string calldata serverSeedStr,
-        bytes32 serverSeedHash
-    ) external {
-        require(!claimedGames[gameId], "Ponspot: winnings already claimed");
-        require(sha256(bytes(serverSeedStr)) == serverSeedHash, "Ponspot: invalid seed string");
-
-        claimedGames[gameId] = true;
-
-        uint256 contractBal = ponspotToken.balanceOf(address(this));
-        uint256 totalPayout = prizeAmount;
-        if (totalPayout > contractBal) {
-            totalPayout = contractBal;
-        }
-        require(totalPayout > 0, "Ponspot: pool has zero funds");
-
-        // 5% Deflationary Burn, 95% to winner
-        uint256 burnAmount = (totalPayout * 500) / 10000;
-        uint256 winnerAmount = totalPayout - burnAmount;
-
-        bool sent = ponspotToken.transfer(msg.sender, winnerAmount);
-        require(sent, "Ponspot: prize transfer failed");
-
-        if (burnAmount > 0) {
-            ponspotToken.transfer(BURN_WALLET, burnAmount);
-            emit TokensBurned(gameId, burnAmount, block.timestamp);
-        }
-
-        emit WinningsClaimed(gameId, msg.sender, winnerAmount, block.timestamp);
-    }
-
-    /**
-     * @notice View contract token balance (internal ponspotToken)
-     */
     function getPoolBalance() external view returns (uint256) {
         return ponspotToken.balanceOf(address(this));
     }
 
-    /**
-     * @notice View balance of ANY token in this contract (for diagnostics)
-     */
     function getTokenBalance(address tokenAddr) external view returns (uint256) {
         return IERC20(tokenAddr).balanceOf(address(this));
     }

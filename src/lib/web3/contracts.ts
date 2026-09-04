@@ -1,34 +1,48 @@
 import { ethers } from 'ethers';
-import PonspotTokenABI from './abi/PonspotTokenABI.json';
-import PonspotJackpotABI from './abi/PonspotJackpotABI.json';
-import PonspotAirdropABI from './abi/PonspotAirdropABI.json';
+import CashFlipTokenABI from './abi/CashFlipTokenABI.json';
+import CashFlipJackpotABI from './abi/CashFlipJackpotABI.json';
 
-export const DEFAULT_TOKEN_ADDRESS = '0x5cc01710b1c710d94703fb0e81f3c21ccb047e22';
+export const DEFAULT_TOKEN_ADDRESS = '0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168';
+export const TOKEN_SYMBOL = 'USDG';
+export const TOKEN_DECIMALS = 6;
 
-// --- Environment Configuration ---
-export function getPonspotTokenAddress(): string {
+export function parseTokenAmount(amount: number | string): bigint {
+  const num = typeof amount === 'number' ? amount : parseFloat(amount);
+  if (isNaN(num) || num <= 0) return 0n;
+  const fixedStr = Number(num).toFixed(TOKEN_DECIMALS);
+  return ethers.parseUnits(fixedStr, TOKEN_DECIMALS);
+}
+
+export function formatTokenAmount(raw: bigint | string): number {
+  try {
+    return Number(ethers.formatUnits(raw, TOKEN_DECIMALS));
+  } catch (e) {
+    return 0;
+  }
+}
+
+// --- CashFlip Environment Configuration ---
+export function getCashFlipTokenAddress(): string {
   if (typeof window !== 'undefined') {
-    const saved = localStorage.getItem('ponspot_token_contract') || localStorage.getItem('ponscore_token_contract');
+    const saved = localStorage.getItem('cashflip_token_contract');
     if (saved && saved.startsWith('0x') && saved.length === 42) {
       return saved;
     }
   }
-  const envAddr = (process.env.NEXT_PUBLIC_PONSPOT_TOKEN_ADDRESS || process.env.NEXT_PUBLIC_PONS_TOKEN_ADDRESS || '').trim();
+  const envAddr = (process.env.NEXT_PUBLIC_CASHFLIP_TOKEN_ADDRESS || '').trim();
   if (envAddr && envAddr.startsWith('0x') && envAddr.length === 42) {
     return envAddr;
   }
   return DEFAULT_TOKEN_ADDRESS;
 }
 
-export const getPonsTokenAddress = getPonspotTokenAddress;
 
-export const PONSPOT_TOKEN_ADDRESS =
-  (process.env.NEXT_PUBLIC_PONSPOT_TOKEN_ADDRESS || process.env.NEXT_PUBLIC_PONS_TOKEN_ADDRESS || DEFAULT_TOKEN_ADDRESS).trim();
-export const PONS_TOKEN_ADDRESS = PONSPOT_TOKEN_ADDRESS;
+export const CASHFLIP_TOKEN_ADDRESS =
+  (process.env.NEXT_PUBLIC_CASHFLIP_TOKEN_ADDRESS || DEFAULT_TOKEN_ADDRESS).trim();
 
 export function getGameContractAddress(): string {
   if (typeof window !== 'undefined') {
-    const saved = localStorage.getItem('ponspot_deployed_game_contract') || localStorage.getItem('ponscore_deployed_game_contract');
+    const saved = localStorage.getItem('cashflip_deployed_game_contract');
     if (
       saved &&
       saved.startsWith('0x') &&
@@ -70,38 +84,37 @@ export function getReadOnlyProvider(): ethers.JsonRpcProvider {
 }
 
 /**
- * Get PONSPOT Token Contract instance
+ * Get CashFlip (USDG) Token Contract instance
  */
-export function getPonspotContract(runner?: ethers.ContractRunner): ethers.Contract {
-  const tokenAddress = getPonspotTokenAddress();
+export function getCashFlipContract(runner?: ethers.ContractRunner): ethers.Contract {
+  const tokenAddress = getCashFlipTokenAddress();
   return new ethers.Contract(
     tokenAddress || DEFAULT_TOKEN_ADDRESS,
-    PonspotTokenABI,
+    CashFlipTokenABI,
     runner || getReadOnlyProvider()
   );
 }
 
-export const getPonsContract = getPonspotContract;
 
 /**
- * Get Ponspot Jackpot Contract instance
+ * Get CashFlip Jackpot Contract instance
  */
 export function getGameContract(runner?: ethers.ContractRunner, customAddress?: string): ethers.Contract {
   const gameAddress = customAddress || getGameContractAddress();
   return new ethers.Contract(
     gameAddress,
-    PonspotJackpotABI,
+    CashFlipJackpotABI,
     runner || getReadOnlyProvider()
   );
 }
 
 /**
- * Fetch PONSPOT token balance of an address
+ * Fetch CashFlip (USDG) token balance of an address
  */
-export async function getPonspotBalance(accountAddress: string): Promise<bigint> {
+export async function getCashFlipBalance(accountAddress: string): Promise<bigint> {
   try {
     if (!accountAddress || !accountAddress.startsWith('0x')) return 0n;
-    const contract = getPonspotContract();
+    const contract = getCashFlipContract();
     return await contract.balanceOf(accountAddress);
   } catch (e) {
     console.warn('Could not read balanceOf from token contract on Robinhood Chain:', e);
@@ -109,12 +122,11 @@ export async function getPonspotBalance(accountAddress: string): Promise<bigint>
   }
 }
 
-export const getPonsBalance = getPonspotBalance;
 
 /**
- * Fetch PONSPOT token allowance
+ * Fetch CashFlip (USDG) token allowance
  */
-export async function getPonspotAllowance(
+export async function getCashFlipAllowance(
   ownerAddress: string,
   spenderAddress?: string
 ): Promise<bigint> {
@@ -124,44 +136,42 @@ export async function getPonspotAllowance(
     if (!targetSpender || !targetSpender.startsWith('0x') || targetSpender.length !== 42) {
       return 0n;
     }
-    const contract = getPonspotContract();
+    const contract = getCashFlipContract();
     return await contract.allowance(ownerAddress, targetSpender);
   } catch (e) {
     return 0n;
   }
 }
 
-export const getPonsAllowance = getPonspotAllowance;
 
 /**
- * Approve PONSPOT token spending by game contract
+ * Approve CashFlip (USDG) token spending by game contract
  */
-export async function approvePonspot(
+export async function approveCashFlip(
   signer: ethers.Signer,
   amount?: bigint,
   spenderAddress?: string
 ): Promise<string> {
   const targetSpender = spenderAddress || getGameContractAddress();
   if (!targetSpender || !targetSpender.startsWith('0x') || targetSpender.length !== 42) {
-    throw new Error('Game Smart Contract address is not configured or invalid. Please ensure the game contract is deployed.');
+    throw new Error('Game Contract address is not set or invalid.');
   }
-  const tokenAddress = getPonspotTokenAddress();
+  const tokenAddress = getCashFlipTokenAddress();
   if (!tokenAddress || !tokenAddress.startsWith('0x') || tokenAddress.length !== 42) {
     throw new Error('Invalid Token Contract address.');
   }
 
-  const contract = getPonspotContract(signer);
+  const contract = getCashFlipContract(signer);
   const approveAmount = amount && amount > 0n ? amount : ethers.MaxUint256;
   const tx = await contract.approve(targetSpender, approveAmount);
   const receipt = await tx.wait();
   return receipt.hash || tx.hash;
 }
 
-export const approvePons = approvePonspot;
 
 /**
  * Place on-chain bet directly to game smart contract or vault
- * Executes the actual on-chain PONS token transfer on Robinhood Chain
+ * Executes the actual on-chain USDG token transfer on Robinhood Chain
  */
 export async function placeBetOnChain(
   signer: ethers.Signer,
@@ -190,72 +200,63 @@ export async function placeBetOnChain(
   }
 
   // Direct ERC-20 token transfer on Robinhood Chain!
-  // This GUARANTEES the PONS (marcopolo) tokens are ACTUALLY transferred on-chain!
-  const ponsContract = getPonsContract(signer);
-  const tx = await ponsContract.transfer(contractAddress, amount);
+  const tokenContract = getCashFlipContract(signer);
+  const tx = await tokenContract.transfer(contractAddress, amount);
   const receipt = await tx.wait();
   return receipt.hash || tx.hash;
 }
 
 /**
- * Claim winnings directly from game smart contract with provably fair proof
+ * Claim winnings from smart contract.
+ * Fetches an ECDSA server authorization signature first, then calls claimWinnings(gameId, prizeAmount, signature).
+ * The new contract verifies the signature on-chain — bots cannot steal funds.
  */
 export async function claimWinningsOnChain(
   signer: ethers.Signer,
   gameId: string,
-  prizeAmountPons?: number,
-  serverSeedHex?: string,
-  serverSeedHashHex?: string
+  prizeAmount?: number,
+  _serverSeedHex?: string,    // kept for API compat, unused in new contract
+  _serverSeedHashHex?: string  // kept for API compat, unused in new contract
 ): Promise<string> {
   const contract = getGameContract(signer);
-  const prizeWei = ethers.parseEther((prizeAmountPons || 1000).toString());
+  const prizeWei = parseTokenAmount(prizeAmount || 0);
+  const winnerAddress = await signer.getAddress();
 
-  // 1. Primary call: claimWinnings(string,uint256)
-  // This sends an actual on-chain transaction that executes ponsToken.transfer(winner, prize)!
+  // 1. Fetch ECDSA server signature from game server
+  //    Server signs: keccak256(abi.encodePacked(gameId, winner, prizeAmount))
+  const socketUrl = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000').trim();
+  let serverSignature: string;
   try {
-    const fn = contract.getFunction('claimWinnings(string,uint256)');
-    const tx = await fn(gameId, prizeWei);
-    const receipt = await tx.wait();
-    return receipt.hash || tx.hash;
-  } catch (err0: any) {
-    console.warn('claimWinnings(string,uint256) failed:', err0);
-    if (err0?.code === 4001 || err0?.message?.includes('user rejected') || err0?.message?.includes('User denied')) {
-      throw new Error('Claim transaction was cancelled in wallet.');
+    const resp = await fetch(`${socketUrl}/api/coinflip/sign-claim`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ gameId, winner: winnerAddress, prizeAmount: prizeWei.toString() }),
+    });
+    if (!resp.ok) {
+      const errBody = await resp.json().catch(() => ({}));
+      throw new Error(errBody?.error || `Server signature request failed: ${resp.status}`);
     }
+    const data = await resp.json();
+    if (!data.signature) throw new Error('Server did not return signature');
+    serverSignature = data.signature;
+  } catch (fetchErr: any) {
+    throw new Error(`Failed to obtain server claim signature: ${fetchErr?.message}`);
   }
 
-  // 2. Try claimWinnings with proof (4 arguments)
+  // 2. Call claimWinnings(gameId, prizeAmount, serverSignature) on-chain
   try {
-    let seedBytes32 = ethers.ZeroHash;
-    if (serverSeedHex && serverSeedHex.length >= 64) {
-      seedBytes32 = serverSeedHex.startsWith('0x') ? serverSeedHex : '0x' + serverSeedHex;
-    }
-    let seedHashBytes32 = ethers.ZeroHash;
-    if (serverSeedHashHex && serverSeedHashHex.length >= 64) {
-      seedHashBytes32 = serverSeedHashHex.startsWith('0x') ? serverSeedHashHex : '0x' + serverSeedHashHex;
-    }
-    const fnProof = contract.getFunction('claimWinnings(string,uint256,bytes32,bytes32)');
-    const tx = await fnProof(gameId, prizeWei, seedBytes32, seedHashBytes32);
+    const fn = contract.getFunction('claimWinnings(string,uint256,bytes)');
+    const tx = await fn(gameId, prizeWei, serverSignature);
     const receipt = await tx.wait();
     return receipt.hash || tx.hash;
-  } catch (err1: any) {
-    console.warn('claimWinnings with proof failed:', err1);
-    if (err1?.code === 4001 || err1?.message?.includes('user rejected') || err1?.message?.includes('User denied')) {
+  } catch (err: any) {
+    if (err?.code === 4001 || err?.message?.includes('user rejected') || err?.message?.includes('User denied')) {
       throw new Error('Claim transaction was cancelled in wallet.');
     }
-  }
-
-  // 3. Try legacy claimWinnings(string)
-  try {
-    const fnLegacy = contract.getFunction('claimWinnings(string)');
-    const tx = await fnLegacy(gameId);
-    const receipt = await tx.wait();
-    return receipt.hash || tx.hash;
-  } catch (err2: any) {
-    console.error('All claim attempts failed on-chain:', err2);
-    throw new Error(err2?.reason || err2?.message || 'Failed to execute claim payout on blockchain.');
+    throw new Error(err?.reason || err?.message || 'Failed to execute claim on blockchain.');
   }
 }
+
 
 /**
  * Client-side Provably Fair Verification
@@ -327,67 +328,6 @@ export async function verifyGameClientSide(
   };
 }
 
-export function getAirdropContractAddress(): string {
-  if (typeof window !== 'undefined') {
-    const saved = localStorage.getItem('ponspot_airdrop_contract') || localStorage.getItem('ponscore_airdrop_contract');
-    if (saved && saved.startsWith('0x') && saved.length === 42) {
-      return saved;
-    }
-  }
-  return process.env.NEXT_PUBLIC_AIRDROP_CONTRACT_ADDRESS || '0x0000000000000000000000000000000000000000';
-}
-
-export function getAirdropContract(
-  signerOrProvider?: ethers.Signer | ethers.Provider,
-  customAddress?: string
-): ethers.Contract {
-  const address = customAddress || getAirdropContractAddress();
-  const provider = signerOrProvider || getReadOnlyProvider();
-  return new ethers.Contract(address, PonspotAirdropABI, provider);
-}
-
-export async function claimAirdropOnChain(
-  signer: ethers.Signer,
-  customAirdropAddress?: string
-): Promise<string> {
-  const contract = getAirdropContract(signer, customAirdropAddress);
-  const tx = await contract.claim();
-  const receipt = await tx.wait();
-  return receipt.hash || tx.hash;
-}
-
-export async function depositAirdropOnChain(
-  signer: ethers.Signer,
-  amountWei: bigint,
-  customAirdropAddress?: string
-): Promise<string> {
-  const airdropAddr = customAirdropAddress || getAirdropContractAddress();
-  const tokenContract = getPonsContract(signer);
-  const approveTx = await tokenContract.approve(airdropAddr, amountWei);
-  await approveTx.wait();
-
-  const airdropContract = getAirdropContract(signer, airdropAddr);
-  const tx = await airdropContract.deposit(amountWei);
-  const receipt = await tx.wait();
-  return receipt.hash || tx.hash;
-}
-
-export async function fetchOnChainAirdropBalance(customAirdropAddress?: string): Promise<number> {
-  try {
-    const airdropAddr = customAirdropAddress || getAirdropContractAddress();
-    if (!airdropAddr || !airdropAddr.startsWith('0x') || airdropAddr === '0x0000000000000000000000000000000000000000') {
-      return 0;
-    }
-    const provider = getReadOnlyProvider();
-    const token = getPonsContract(provider);
-    const balanceWei = await token.balanceOf(airdropAddr);
-    return Number(ethers.formatEther(balanceWei));
-  } catch (e) {
-    console.warn('Failed to fetch on-chain airdrop balance:', e);
-    return 0;
-  }
-}
-
 export async function withdrawBettingContractOnChain(
   signer: ethers.Signer,
   amountWei: bigint,
@@ -442,22 +382,6 @@ export async function rescueTokenFromContract(
   }
   const contract = getGameContract(signer, gameAddr);
   const tx = await contract.adminWithdraw(tokenAddress, amountWei);
-  const receipt = await tx.wait();
-  return receipt?.hash || tx.hash;
-}
-
-export async function withdrawAirdropContractOnChain(
-  signer: ethers.Signer,
-  amountWei: bigint,
-  customAirdropAddress?: string
-): Promise<string> {
-  const airdropAddr = customAirdropAddress || getAirdropContractAddress();
-  if (!airdropAddr || !airdropAddr.startsWith('0x') || airdropAddr.length !== 42) {
-    throw new Error('Airdrop Smart Contract address is not configured or invalid. Please deploy or set the contract first.');
-  }
-
-  const contract = getAirdropContract(signer, airdropAddr);
-  const tx = await contract.emergencyWithdraw(amountWei);
   const receipt = await tx.wait();
   return receipt?.hash || tx.hash;
 }

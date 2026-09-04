@@ -1,54 +1,35 @@
 import { ethers } from 'ethers';
-import PonspotJackpotABI from './abi/PonspotJackpotABI.json';
-import { PONSCORE_JACKPOT_BYTECODE } from './bytecode';
-import PonspotAirdropABI from './abi/PonspotAirdropABI.json';
-import { PONSCORE_AIRDROP_BYTECODE } from './airdropBytecode';
+import CashFlipJackpotABI from './abi/CashFlipJackpotABI.json';
+import { CASHFLIP_JACKPOT_BYTECODE } from './bytecode';
+
+// The trusted game server signer address (set in NEXT_PUBLIC_SIGNER_ADDRESS env)
+export const GAME_SERVER_SIGNER_ADDRESS =
+  (process.env.NEXT_PUBLIC_SIGNER_ADDRESS || '').trim();
 
 /**
- * Deploy PonspotJackpot smart contract directly using connected wallet (OKX / MetaMask)
- * This deploys the real autonomous on-chain escrow and winner payout contract on Robinhood Chain!
+ * Deploy CashFlip Jackpot smart contract directly using connected wallet (OKX / MetaMask)
+ * New contract requires two constructor args: token address + game server signer address.
  */
-export async function deployPonspotJackpotContract(
+export async function deployCashFlipJackpotContract(
   signer: ethers.Signer,
-  ponsTokenAddress: string
+  cashflipTokenAddress: string,
+  signerAddress?: string
 ): Promise<string> {
+  const signerAddr = signerAddress || GAME_SERVER_SIGNER_ADDRESS;
+  if (!signerAddr || !signerAddr.startsWith('0x') || signerAddr.length !== 42) {
+    throw new Error('Game server signer address not configured. Please set NEXT_PUBLIC_SIGNER_ADDRESS in .env.local');
+  }
+
   const factory = new ethers.ContractFactory(
-    PonspotJackpotABI,
-    PONSCORE_JACKPOT_BYTECODE,
+    CashFlipJackpotABI,
+    CASHFLIP_JACKPOT_BYTECODE,
     signer
   );
 
-  // Deploy with constructor arguments: (_ponsToken)
-  const contract = await factory.deploy(ponsTokenAddress);
+  // Deploy with constructor arguments: (_token, _signerAddress)
+  const contract = await factory.deploy(cashflipTokenAddress, signerAddr);
   const deployed = await contract.waitForDeployment();
   const contractAddress = await deployed.getAddress();
 
   return contractAddress;
 }
-
-export const deployPonscoreJackpotContract = deployPonspotJackpotContract;
-
-/**
- * Deploy PonspotAirdrop dedicated smart contract using connected wallet (OKX / MetaMask)
- * This deploys the dedicated on-chain 1-time claim airdrop vault on Robinhood Chain!
- */
-export async function deployPonspotAirdropContract(
-  signer: ethers.Signer,
-  ponsTokenAddress: string,
-  initialRewardPons: number = 100
-): Promise<string> {
-  const factory = new ethers.ContractFactory(
-    PonspotAirdropABI,
-    PONSCORE_AIRDROP_BYTECODE,
-    signer
-  );
-
-  const initialRewardWei = ethers.parseEther(initialRewardPons.toString());
-  const contract = await factory.deploy(ponsTokenAddress, initialRewardWei);
-  const deployed = await contract.waitForDeployment();
-  const contractAddress = await deployed.getAddress();
-
-  return contractAddress;
-}
-
-export const deployPonscoreAirdropContract = deployPonspotAirdropContract;

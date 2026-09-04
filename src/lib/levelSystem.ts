@@ -5,12 +5,13 @@ export interface UserLevelInfo {
   prevLevelXp: number;
   progressPercent: number;
   gamesPlayed: number;
-  totalVolumePons: number;
+  totalVolumeUsdg: number;
+  totalVolumePons?: number;
   isChatUnlocked: boolean; // Level >= 5
   isAirdropUnlocked: boolean; // Level >= 5
 }
 
-// XP thresholds for Level 1 to 10 (Scaled for 100,000 PONSPOT minimum bets)
+// XP thresholds for Level 1 to 10
 export const LEVEL_THRESHOLDS = [
   0,      // Level 1: Initial
   200,    // Level 2: ~1 game with 100k bet
@@ -24,10 +25,10 @@ export const LEVEL_THRESHOLDS = [
   25000,  // Level 10: ~120+ games (Mythic Legend)
 ];
 
-export function getUserLevelInfo(gamesPlayed: number, totalVolumePons: number): UserLevelInfo {
-  // Formula: 1 Game = 100 XP, 100,000 PONSPOT volume = 100 XP (1 XP per 1,000 PONSPOT)
+export function getUserLevelInfo(gamesPlayed: number, totalVolumeUsdg: number): UserLevelInfo {
+  // Formula: 1 Game = 100 XP, 100 USDG volume = 100 XP
   const xpFromGames = Math.max(0, gamesPlayed) * 100;
-  const xpFromVolume = Math.floor(Math.max(0, totalVolumePons) / 1000);
+  const xpFromVolume = Math.floor(Math.max(0, totalVolumeUsdg) / 1000);
   const totalXp = xpFromGames + xpFromVolume;
 
   let level = 1;
@@ -51,52 +52,62 @@ export function getUserLevelInfo(gamesPlayed: number, totalVolumePons: number): 
     prevLevelXp,
     progressPercent,
     gamesPlayed,
-    totalVolumePons,
-    isChatUnlocked: level >= 5,
-    isAirdropUnlocked: level >= 5,
+    totalVolumeUsdg,
+    totalVolumePons: totalVolumeUsdg,
+    isChatUnlocked: true,
+    isAirdropUnlocked: true,
   };
 }
 
 export function getUserStats(accountAddress?: string | null): {
   gamesPlayed: number;
+  totalVolumeUsdg: number;
   totalVolumePons: number;
   hasClaimedAirdrop: boolean;
+  totalAirdropClaimed: number;
   lastAirdropClaim: number;
 } {
   if (typeof window === 'undefined' || !accountAddress) {
-    return { gamesPlayed: 0, totalVolumePons: 0, hasClaimedAirdrop: false, lastAirdropClaim: 0 };
+    return { gamesPlayed: 0, totalVolumeUsdg: 0, totalVolumePons: 0, hasClaimedAirdrop: false, totalAirdropClaimed: 0, lastAirdropClaim: 0 };
   }
   try {
-    const key = `ponspot_user_stats_${accountAddress.toLowerCase()}`;
+    const key = `cashflip_user_stats_${accountAddress.toLowerCase()}`;
     const saved = localStorage.getItem(key);
     if (saved) {
       const parsed = JSON.parse(saved);
+      const vol = parsed.totalVolumeUsdg ?? parsed.totalVolumePons ?? 0;
       return {
-        ...parsed,
+        gamesPlayed: parsed.gamesPlayed || 0,
+        totalVolumeUsdg: vol,
+        totalVolumePons: vol,
+        totalAirdropClaimed: parsed.totalAirdropClaimed || (parsed.hasClaimedAirdrop ? 100 : 0),
         hasClaimedAirdrop: !!parsed.hasClaimedAirdrop || (parsed.lastAirdropClaim > 0),
+        lastAirdropClaim: parsed.lastAirdropClaim || 0,
       };
     }
   } catch (e) {
     console.error('Failed to load user stats:', e);
   }
-  return { gamesPlayed: 0, totalVolumePons: 0, hasClaimedAirdrop: false, lastAirdropClaim: 0 };
+  return { gamesPlayed: 0, totalVolumeUsdg: 0, totalVolumePons: 0, hasClaimedAirdrop: false, totalAirdropClaimed: 0, lastAirdropClaim: 0 };
 }
 
 export function recordUserBet(
   accountAddress: string,
-  amountPons: number
-): { gamesPlayed: number; totalVolumePons: number; hasClaimedAirdrop: boolean; lastAirdropClaim: number } {
+  amount: number
+): ReturnType<typeof getUserStats> {
   if (typeof window === 'undefined' || !accountAddress) {
-    return { gamesPlayed: 0, totalVolumePons: 0, hasClaimedAirdrop: false, lastAirdropClaim: 0 };
+    return getUserStats(accountAddress);
   }
   const current = getUserStats(accountAddress);
+  const newVol = current.totalVolumeUsdg + amount;
   const updated = {
     ...current,
     gamesPlayed: current.gamesPlayed + 1,
-    totalVolumePons: current.totalVolumePons + amountPons,
+    totalVolumeUsdg: newVol,
+    totalVolumePons: newVol,
   };
   try {
-    const key = `ponspot_user_stats_${accountAddress.toLowerCase()}`;
+    const key = `cashflip_user_stats_${accountAddress.toLowerCase()}`;
     localStorage.setItem(key, JSON.stringify(updated));
   } catch (e) {
     console.error('Failed to save user stats:', e);
@@ -104,16 +115,18 @@ export function recordUserBet(
   return updated;
 }
 
-export function recordAirdropClaim(accountAddress: string): void {
+export function recordAirdropClaim(accountAddress: string, amountClaimed: number = 0): void {
   if (typeof window === 'undefined' || !accountAddress) return;
   const current = getUserStats(accountAddress);
+  const newTotal = (current.totalAirdropClaimed || 0) + (amountClaimed || 0);
   const updated = {
     ...current,
+    totalAirdropClaimed: newTotal,
     hasClaimedAirdrop: true,
     lastAirdropClaim: Date.now(),
   };
   try {
-    const key = `ponspot_user_stats_${accountAddress.toLowerCase()}`;
+    const key = `cashflip_user_stats_${accountAddress.toLowerCase()}`;
     localStorage.setItem(key, JSON.stringify(updated));
   } catch (e) {
     console.error('Failed to save airdrop claim:', e);

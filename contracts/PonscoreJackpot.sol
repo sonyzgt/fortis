@@ -62,13 +62,6 @@ contract PonscoreJackpot {
         bool sent = ponsToken.transfer(msg.sender, payout);
         require(sent, "Ponscore: prize transfer failed");
 
-        // 5% Deflationary Burn to 0x0000...dEaD
-        uint256 burnAmount = (payout * 500) / 9500;
-        if (burnAmount > 0 && ponsToken.balanceOf(address(this)) >= burnAmount) {
-            ponsToken.transfer(BURN_WALLET, burnAmount);
-            emit TokensBurned(gameId, burnAmount, block.timestamp);
-        }
-
         emit WinningsClaimed(gameId, msg.sender, payout, block.timestamp);
     }
 

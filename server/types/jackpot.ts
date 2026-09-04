@@ -60,6 +60,7 @@ export interface PastRound {
 
 export interface CoinFlipGame {
   id: string;
+  roomNumber?: number;
   creatorId: string;
   creatorName: string;
   creatorAvatar?: string;
@@ -73,7 +74,14 @@ export interface CoinFlipGame {
   winnerId?: string;
   winnerName?: string;
   winAmount?: number;
+  serverSeedHash?: string;
+  serverSeed?: string;
+  creatorTxHash?: string;
+  challengerTxHash?: string;
   createdAt: number;
+  isClaimed?: boolean;
+  claimTxHash?: string;
+  claimedAt?: number;
 }
 
 export interface ChatMessage {

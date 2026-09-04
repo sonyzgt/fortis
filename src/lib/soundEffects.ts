@@ -243,6 +243,151 @@ class SoundEffects {
       osc.stop(ctx.currentTime + i * 0.1 + 0.3);
     });
   }
+
+  // Authentic high-pitch metallic coin toss sound (flick into the air)
+  public playCoinToss(): void {
+    if (!this.enabled) return;
+    const ctx = this.getContext();
+    if (!ctx) return;
+
+    const t = ctx.currentTime;
+
+    // Metallic thumb strike (pop)
+    const popOsc = ctx.createOscillator();
+    const popGain = ctx.createGain();
+    popOsc.type = 'triangle';
+    popOsc.frequency.setValueAtTime(320, t);
+    popOsc.frequency.exponentialRampToValueAtTime(80, t + 0.05);
+    popGain.gain.setValueAtTime(0.35, t);
+    popGain.gain.exponentialRampToValueAtTime(0.01, t + 0.05);
+    popOsc.connect(popGain);
+    popGain.connect(ctx.destination);
+    popOsc.start(t);
+    popOsc.stop(t + 0.05);
+
+    // High metallic coin chime / ringing overtone with flutter
+    const freqs = [2489, 3136, 3951, 4978];
+    freqs.forEach((f, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(f, t);
+
+      // Tremolo flutter as the coin spins in the air
+      const lfo = ctx.createOscillator();
+      const lfoGain = ctx.createGain();
+      lfo.frequency.setValueAtTime(14 + i * 2, t);
+      lfoGain.gain.setValueAtTime(0.12, t);
+      lfo.connect(lfoGain.gain);
+
+      const amp = 0.22 / (i + 1);
+      gain.gain.setValueAtTime(amp, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 1.6);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(t);
+      osc.stop(t + 1.6);
+      lfo.start(t);
+      lfo.stop(t + 1.6);
+    });
+  }
+
+  // Metallic coin landing sound (hits table and settles)
+  public playCoinLand(): void {
+    if (!this.enabled) return;
+    const ctx = this.getContext();
+    if (!ctx) return;
+
+    const t = ctx.currentTime;
+    [1864, 2349, 3729].forEach((freq, idx) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, t);
+      gain.gain.setValueAtTime(0.28 / (idx + 1), t);
+      gain.gain.exponentialRampToValueAtTime(0.005, t + 0.35);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(t);
+      osc.stop(t + 0.35);
+    });
+
+    [1960, 2793].forEach((freq) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, t + 0.08);
+      gain.gain.setValueAtTime(0.18, t + 0.08);
+      gain.gain.exponentialRampToValueAtTime(0.005, t + 0.25);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(t + 0.08);
+      osc.stop(t + 0.25);
+    });
+  }
+
+  // Celestial Victory fanfare for Coinflip winner
+  public playCoinVictory(): void {
+    if (!this.enabled) return;
+    const ctx = this.getContext();
+    if (!ctx) return;
+
+    const t = ctx.currentTime;
+    const chord = [392.0, 523.25, 659.25, 783.99, 1046.5, 1318.51];
+    chord.forEach((freq, idx) => {
+      const start = t + idx * 0.08;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, start);
+
+      gain.gain.setValueAtTime(0.25, start);
+      gain.gain.exponentialRampToValueAtTime(0.005, start + 0.7);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(start);
+      osc.stop(start + 0.7);
+    });
+  }
+
+  // Claim payout coin shower sound
+  public playCoinClaim(): void {
+    if (!this.enabled) return;
+    const ctx = this.getContext();
+    if (!ctx) return;
+
+    const t = ctx.currentTime;
+    const clinks = [0, 0.07, 0.14, 0.22];
+    clinks.forEach((delay, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(2200 + i * 300, t + delay);
+      gain.gain.setValueAtTime(0.2, t + delay);
+      gain.gain.exponentialRampToValueAtTime(0.005, t + delay + 0.15);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(t + delay);
+      osc.stop(t + delay + 0.15);
+    });
+
+    const bellOsc = ctx.createOscillator();
+    const bellGain = ctx.createGain();
+    bellOsc.type = 'sine';
+    bellOsc.frequency.setValueAtTime(1760, t + 0.22);
+    bellGain.gain.setValueAtTime(0.3, t + 0.22);
+    bellGain.gain.exponentialRampToValueAtTime(0.001, t + 1.2);
+    bellOsc.connect(bellGain);
+    bellGain.connect(ctx.destination);
+    bellOsc.start(t + 0.22);
+    bellOsc.stop(t + 1.2);
+  }
 }
 
 export const sounds = new SoundEffects();
