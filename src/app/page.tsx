@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { ethers } from 'ethers';
@@ -1119,12 +1119,12 @@ export default function CashFlipPage() {
                   </div>
 
                   <a
-                    href="https://x.com/cashflipdotfun"
+                    href="https://x.com/cashflipdotorg"
                     target="_blank"
                     rel="noreferrer"
                     className="flex items-center gap-2 px-3 py-1 bg-[#F4EFE6] dark:bg-[#1C1A17] border border-[#171513]/20 dark:border-[#E8DFD1]/20 hover:border-[#9E8055] dark:hover:border-[#DFC493] text-[#171513] dark:text-[#E8DFD1] text-[10px] tracking-wider uppercase transition-colors"
                   >
-                    <span>Dispatch: @cashflipdotfun</span>
+                    <span>Dispatch: @cashflipdotorg</span>
                     <ExternalLink className="w-2.5 h-2.5 text-[#9E8055] dark:text-[#DFC493]" />
                   </a>
                 </div>
