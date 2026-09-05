@@ -218,7 +218,7 @@ app.get('/api/contract-address', (_, res) => {
     const addr = fs.readFileSync(file, 'utf8').trim();
     if (addr.startsWith('0x') && addr.length === 42) return res.json({ contractAddress: addr });
   }
-  res.json({ contractAddress: (process.env.NEXT_PUBLIC_GAME_CONTRACT_ADDRESS || '').trim() });
+  res.json({ contractAddress: (process.env.NEXT_PUBLIC_GAME_CONTRACT_ADDRESS || '0xa626b74Ac9CDbD22Bb6fA5e0F1e7FCce859a4834').trim() });
 });
 
 app.post('/api/admin/set-token-contract', requireAdmin, (req, res) => {
@@ -247,6 +247,62 @@ app.get('/api/token-contract-address', (_, res) => {
       '0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168'
     ).trim(),
   });
+});
+
+app.get('/api/admin/contract-balance', async (_, res) => {
+  try {
+    let gameAddr = '';
+    const file = path.join(process.cwd(), 'deployed_contract.txt');
+    if (fs.existsSync(file)) {
+      gameAddr = fs.readFileSync(file, 'utf8').trim();
+    }
+    if (!gameAddr || !gameAddr.startsWith('0x') || gameAddr.length !== 42) {
+      gameAddr = (process.env.NEXT_PUBLIC_GAME_CONTRACT_ADDRESS || '0xa626b74Ac9CDbD22Bb6fA5e0F1e7FCce859a4834').trim();
+    }
+
+    let tokenAddr = '';
+    const tokenFile = path.join(process.cwd(), 'token_contract.txt');
+    if (fs.existsSync(tokenFile)) {
+      tokenAddr = fs.readFileSync(tokenFile, 'utf8').trim();
+    }
+    if (!tokenAddr || !tokenAddr.startsWith('0x') || tokenAddr.length !== 42) {
+      tokenAddr = (
+        process.env.NEXT_PUBLIC_CASHFLIP_TOKEN_ADDRESS ||
+        process.env.NEXT_PUBLIC_PONSPOT_TOKEN_ADDRESS ||
+        '0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168'
+      ).trim();
+    }
+
+    const rpcUrl = process.env.NEXT_PUBLIC_RPC_URL || process.env.RPC_URL || 'https://rpc.mainnet.chain.robinhood.com';
+    const rpcProvider = new ethers.JsonRpcProvider(rpcUrl);
+    const tokenContract = new ethers.Contract(
+      tokenAddr,
+      ['function balanceOf(address) view returns (uint256)', 'function decimals() view returns (uint8)'],
+      rpcProvider
+    );
+
+    const rawBal = await tokenContract.balanceOf(gameAddr);
+    const decimals = 6;
+    const formatted = ethers.formatUnits(rawBal, decimals);
+
+    let contractAdmin = '';
+    try {
+      const gameContract = new ethers.Contract(gameAddr, ['function admin() view returns (address)'], rpcProvider);
+      contractAdmin = await gameContract.admin();
+    } catch {}
+
+    res.json({
+      success: true,
+      contractAddress: gameAddr,
+      tokenAddress: tokenAddr,
+      balance: formatted,
+      rawBalance: rawBal.toString(),
+      admin: contractAdmin,
+    });
+  } catch (e: any) {
+    console.error('Error in /api/admin/contract-balance:', e);
+    res.status(500).json({ error: e.message || 'Failed to fetch contract balance', balance: '0' });
+  }
 });
 
 app.post('/api/admin/force-refresh', requireAdmin, (req, res) => {

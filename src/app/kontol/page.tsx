@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
@@ -29,6 +29,7 @@ import {
   Scroll,
   Compass,
   Feather,
+  ShieldCheck,
 } from 'lucide-react';
 import { useCashFlipWeb3 } from '@/context/CashFlipWeb3Context';
 import { DeployModal } from '@/components/cashflip/DeployModal';
@@ -38,6 +39,10 @@ import {
   getCashFlipTokenAddress,
   withdrawBettingContractOnChain,
   parseTokenAmount,
+  formatTokenAmount,
+  getCashFlipBalance,
+  getReadOnlyProvider,
+  getGameContract,
   CASHFLIP_TOKEN_ADDRESS,
 } from '@/lib/web3/contracts';
 import { getApiBaseUrl } from '@/lib/apiConfig';
@@ -61,6 +66,7 @@ export default function AdminPanelPage() {
   const [activeTokenContract, setActiveTokenContract] = useState<string>('');
   const [manualTokenInput, setManualTokenInput] = useState('');
   const [contractVaultBalance, setContractVaultBalance] = useState<string>('0');
+  const [contractAdmin, setContractAdmin] = useState<string>('0x9d08BeD3A2077357B95895894A730f4631b04de6');
   const [showDeployModal, setShowDeployModal] = useState(false);
   const [bettingWithdrawAmount, setBettingWithdrawAmount] = useState<string>('');
   const [isWithdrawingBetting, setIsWithdrawingBetting] = useState<boolean>(false);
@@ -175,10 +181,13 @@ export default function AdminPanelPage() {
     const apiBase = getApiBase();
     const ts = Date.now();
 
+    let targetContract = activeContract || getGameContractAddress();
+
     try {
       const res = await fetch(`${apiBase}/api/contract-address?_t=${ts}`);
       const data = await res.json();
       if (data.contractAddress) {
+        targetContract = data.contractAddress;
         setActiveContract(data.contractAddress);
         setManualContractInput(data.contractAddress);
       }
@@ -197,14 +206,43 @@ export default function AdminPanelPage() {
       console.warn('Could not load token address', e);
     }
 
+    // 1. Fetch balance and admin from backend server
     try {
       const balRes = await fetch(`${apiBase}/api/admin/contract-balance?_t=${ts}`);
       const balData = await balRes.json();
-      if (balData.balance !== undefined) {
+      if (balData.balance !== undefined && Number(balData.balance) >= 0) {
         setContractVaultBalance(balData.balance);
       }
+      if (balData.admin && balData.admin.startsWith('0x')) {
+        setContractAdmin(balData.admin);
+      }
     } catch (e) {
-      console.warn('Could not load contract balance', e);
+      console.warn('Could not load contract balance from server API', e);
+    }
+
+    // 2. Direct on-chain verification fallback (guarantees accurate live balance)
+    const effectiveContract = (targetContract || getGameContractAddress() || '').trim();
+    if (effectiveContract && effectiveContract.startsWith('0x') && effectiveContract.length === 42) {
+      try {
+        const onchainRaw = await getCashFlipBalance(effectiveContract);
+        const formatted = formatTokenAmount(onchainRaw);
+        if (formatted > 0) {
+          setContractVaultBalance(formatted.toString());
+        }
+      } catch (e) {
+        console.warn('Could not fetch direct on-chain balance:', e);
+      }
+
+      try {
+        const roProvider = getReadOnlyProvider();
+        const game = getGameContract(roProvider, effectiveContract);
+        const adminAddr = await game.admin();
+        if (adminAddr && adminAddr.startsWith('0x')) {
+          setContractAdmin(adminAddr);
+        }
+      } catch (e) {
+        console.warn('Could not fetch on-chain admin:', e);
+      }
     }
 
     try {
@@ -298,7 +336,7 @@ export default function AdminPanelPage() {
     }
 
     const availableBal = Number(contractVaultBalance);
-    if (num > availableBal) {
+    if (availableBal > 0 && num > availableBal) {
       setStatusMsg({ ok: false, text: `Insufficient sanctuary balance (Available: ${availableBal.toLocaleString()} USDG)` });
       return;
     }
@@ -353,6 +391,17 @@ export default function AdminPanelPage() {
       const provider = new ethers.BrowserProvider(providerObj);
       await provider.send('eth_requestAccounts', []);
       const signer = await provider.getSigner();
+      const signerAddr = await signer.getAddress();
+
+      if (contractAdmin && signerAddr.toLowerCase() !== contractAdmin.toLowerCase()) {
+        setStatusMsg({
+          ok: false,
+          text: `Your connected wallet (${signerAddr.slice(0, 6)}...${signerAddr.slice(-4)}) is not the Contract Deployer/Admin (${contractAdmin.slice(0, 6)}...${contractAdmin.slice(-4)}). Please switch to ${contractAdmin.slice(0, 6)}...${contractAdmin.slice(-4)} in your wallet extension to withdraw!`,
+        });
+        setIsWithdrawingBetting(false);
+        return;
+      }
+
       const withdrawWei = parseTokenAmount(num);
 
       setStatusMsg({ ok: true, text: 'Please affirm the sanctuary withdrawal in your wallet...' });
@@ -886,6 +935,34 @@ export default function AdminPanelPage() {
             </div>
           </div>
 
+          {/* Sanctuary Admin & Connected Wallet Indicator */}
+          {contractAdmin && (
+            <div className="p-3 bg-[#E8DFD1] border border-[#171513]/15 flex items-center justify-between flex-wrap gap-2 text-xs">
+              <div className="flex items-center gap-1.5">
+                <ShieldCheck className="w-4 h-4 text-[#9E8055]" />
+                <span className="font-serif font-semibold text-[#171513]">Sanctuary Deployer (Admin):</span>
+              </div>
+              <div className="flex items-center gap-2 font-mono text-[11px] flex-wrap">
+                <span className="bg-[#F4EFE6] px-2 py-0.5 border border-[#171513]/20 select-all font-semibold">
+                  {contractAdmin}
+                </span>
+                {account && (
+                  <span
+                    className={`px-2 py-0.5 text-[10px] font-semibold border ${
+                      account.toLowerCase() === contractAdmin.toLowerCase()
+                        ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
+                        : 'bg-amber-100 text-amber-800 border-amber-300'
+                    }`}
+                  >
+                    {account.toLowerCase() === contractAdmin.toLowerCase()
+                      ? '✓ Connected Wallet is Admin'
+                      : '⚠️ Switch wallet in extension to withdraw'}
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Change Game Contract Manually */}
           <div className="p-3.5 bg-[#E8DFD1] border border-[#171513]/15 space-y-2">
             <label className="text-[10px] tracking-[0.2em] font-serif uppercase text-[#171513]/70 block font-medium">
@@ -923,6 +1000,7 @@ export default function AdminPanelPage() {
               <div className="relative flex-1 min-w-[180px]">
                 <input
                   type="number"
+                  step="any"
                   value={bettingWithdrawAmount}
                   onChange={(e) => setBettingWithdrawAmount(e.target.value)}
                   placeholder="Amount of USDG"
@@ -955,7 +1033,7 @@ export default function AdminPanelPage() {
 
               <button
                 onClick={handleWithdrawBetting}
-                disabled={isWithdrawingBetting || Number(contractVaultBalance) <= 0}
+                disabled={isWithdrawingBetting || !bettingWithdrawAmount || parseFloat(bettingWithdrawAmount) <= 0}
                 className="px-4 py-2 bg-[#171513] hover:bg-[#25221e] text-[#F4EFE6] font-serif text-xs tracking-wider uppercase border border-[#9E8055]/50 flex items-center justify-center gap-1.5 flex-shrink-0 disabled:opacity-50"
               >
                 <Coins className="w-3.5 h-3.5 text-[#9E8055]" />

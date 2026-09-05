@@ -51,6 +51,8 @@ export const CASHFLIP_TOKEN_ADDRESS =
     DEFAULT_TOKEN_ADDRESS
   ).trim();
 
+export const DEFAULT_GAME_CONTRACT_ADDRESS = '0xa626b74Ac9CDbD22Bb6fA5e0F1e7FCce859a4834';
+
 export function getGameContractAddress(): string {
   if (typeof window !== 'undefined') {
     const saved = localStorage.getItem('cashflip_deployed_game_contract');
@@ -72,11 +74,11 @@ export function getGameContractAddress(): string {
   ) {
     return envAddr;
   }
-  return '';
+  return DEFAULT_GAME_CONTRACT_ADDRESS;
 }
 
 export const GAME_CONTRACT_ADDRESS =
-  (process.env.NEXT_PUBLIC_GAME_CONTRACT_ADDRESS || '').trim();
+  (process.env.NEXT_PUBLIC_GAME_CONTRACT_ADDRESS || DEFAULT_GAME_CONTRACT_ADDRESS).trim();
 
 export const ROBINHOOD_CHAIN_CONFIG = {
   chainId: Number(process.env.NEXT_PUBLIC_CHAIN_ID || 4663),
@@ -349,27 +351,53 @@ export async function withdrawBettingContractOnChain(
     throw new Error('Game Smart Contract address is not configured or invalid. Please deploy or set the contract first.');
   }
 
+  const signerAddr = await signer.getAddress();
   const contract = getGameContract(signer, gameAddr);
-  
-  // Try adminWithdrawPool first (new contract has this — admin-only, no pool balance restriction)
+
+  // Check if signer is the contract admin
+  try {
+    const contractAdmin = await contract.admin();
+    if (contractAdmin && signerAddr.toLowerCase() !== contractAdmin.toLowerCase()) {
+      throw new Error(
+        `Your connected wallet (${signerAddr.slice(0, 6)}...${signerAddr.slice(-4)}) is not the Contract Admin (${contractAdmin.slice(0, 6)}...${contractAdmin.slice(-4)}). Please switch to the contract deployer wallet in your browser extension to execute withdrawal.`
+      );
+    }
+  } catch (err: any) {
+    if (err.message?.includes('not the Contract Admin')) {
+      throw err;
+    }
+  }
+
   let tx;
   try {
-    if (typeof contract['adminWithdrawPool'] === 'function') {
-      tx = await contract.adminWithdrawPool(amountWei);
-    } else {
-      throw new Error('NO_ADMIN_WITHDRAW');
+    // 1. Try adminWithdrawPool first (direct pool reserve withdrawal)
+    tx = await contract.adminWithdrawPool(amountWei);
+  } catch (poolErr: any) {
+    console.warn('adminWithdrawPool failed, trying adminWithdraw with explicit token address:', poolErr);
+    
+    // Check if user rejected in wallet
+    if (poolErr?.code === 'ACTION_REJECTED' || poolErr?.code === 4001) {
+      throw poolErr;
     }
-  } catch (e: any) {
-    // Fallback: old contract without adminWithdrawPool, use claimWinnings
-    if (e?.message === 'NO_ADMIN_WITHDRAW' || e?.code === 'CALL_EXCEPTION') {
-      const withdrawGameId = `admin-withdraw-${Date.now()}`;
-      if (typeof contract['claimWinnings(string,uint256)'] === 'function') {
-        tx = await contract['claimWinnings(string,uint256)'](withdrawGameId, amountWei);
-      } else {
-        tx = await contract.claimWinnings(withdrawGameId, amountWei);
+
+    // 2. Try adminWithdraw with explicit token address
+    try {
+      const tokenAddr = getCashFlipTokenAddress();
+      tx = await contract.adminWithdraw(tokenAddr, amountWei);
+    } catch (tokenErr: any) {
+      if (tokenErr?.code === 'ACTION_REJECTED' || tokenErr?.code === 4001) {
+        throw tokenErr;
       }
-    } else {
-      throw e;
+      const rawMsg =
+        tokenErr?.reason ||
+        tokenErr?.info?.error?.message ||
+        tokenErr?.data?.message ||
+        poolErr?.reason ||
+        poolErr?.info?.error?.message ||
+        poolErr?.data?.message ||
+        poolErr?.message ||
+        'Sanctuary withdrawal failed on-chain';
+      throw new Error(rawMsg);
     }
   }
 
