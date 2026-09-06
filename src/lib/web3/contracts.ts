@@ -1,6 +1,7 @@
 import { ethers } from 'ethers';
 import CashFlipTokenABI from './abi/CashFlipTokenABI.json';
 import CashFlipJackpotABI from './abi/CashFlipJackpotABI.json';
+import { getApiBaseUrl } from '@/lib/apiConfig';
 
 export const DEFAULT_TOKEN_ADDRESS = '0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168';
 export const TOKEN_SYMBOL = 'USDG';
@@ -243,10 +244,11 @@ export async function claimWinningsOnChain(
 
   // 1. Fetch ECDSA server signature from game server
   //    Server signs: keccak256(abi.encodePacked(gameId, winner, prizeAmount))
-  const socketUrl = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000').trim();
+  const apiBase = getApiBaseUrl();
   let serverSignature: string;
+  let claimAmountWei = prizeWei;
   try {
-    const resp = await fetch(`${socketUrl}/api/coinflip/sign-claim`, {
+    const resp = await fetch(`${apiBase}/api/claim/sign`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ gameId, winner: winnerAddress, prizeAmount: prizeWei.toString() }),
@@ -258,14 +260,17 @@ export async function claimWinningsOnChain(
     const data = await resp.json();
     if (!data.signature) throw new Error('Server did not return signature');
     serverSignature = data.signature;
+    if (data.prizeAmount) {
+      claimAmountWei = BigInt(data.prizeAmount);
+    }
   } catch (fetchErr: any) {
     throw new Error(`Failed to obtain server claim signature: ${fetchErr?.message}`);
   }
 
-  // 2. Call claimWinnings(gameId, prizeAmount, serverSignature) on-chain
+  // 2. Call claimWinnings(gameId, claimAmountWei, serverSignature) on-chain
   try {
     const fn = contract.getFunction('claimWinnings(string,uint256,bytes)');
-    const tx = await fn(gameId, prizeWei, serverSignature);
+    const tx = await fn(gameId, claimAmountWei, serverSignature);
     const receipt = await tx.wait();
     return receipt.hash || tx.hash;
   } catch (err: any) {

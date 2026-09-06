@@ -629,10 +629,10 @@ const handleSignClaim = async (req: express.Request, res: express.Response) => {
         return res.status(400).json({ error: 'Requested prize amount exceeds calculated duel winnings' });
       }
     } else if (matchedType === 'jackpot' && jpGame) {
-      const prizeUSDG = jpGame.winner?.prizePons || 0;
-      actualPrizeWei = BigInt(Math.round(prizeUSDG * 1_000_000));
+      const grossPool = jpGame.winner?.totalPoolPons || jpGame.winner?.totalPool || jpGame.totalPool || 0;
+      actualPrizeWei = BigInt(Math.round(grossPool * 1_000_000));
       if (requestedPrizeWei > actualPrizeWei && actualPrizeWei > 0n) {
-        return res.status(400).json({ error: 'Requested prize amount exceeds jackpot epoch prize' });
+        return res.status(400).json({ error: 'Requested prize amount exceeds jackpot epoch pool' });
       }
     } else if (matchedType === 'mines' && minesGame) {
       if (!minesGame.txHash) {
