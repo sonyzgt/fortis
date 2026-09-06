@@ -1,6 +1,7 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import {
@@ -82,6 +83,11 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
   const [flipRotation, setFlipRotation] = useState<number>(0);
   const [isFlippingAnim, setIsFlippingAnim] = useState<boolean>(false);
   const [flipResultGame, setFlipResultGame] = useState<CoinFlipGame | null>(null);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const activeFlipIdRef = useRef<string | null>(null);
 
   const handleCloseSpectateModal = useCallback(() => {
@@ -546,24 +552,23 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
   }, [games, filterAmount, sortBy]);
 
   return (
-    <div className="space-y-5 select-none font-serif">
+    <div className="space-y-5 select-none font-mono">
       {/* ═══════════════════════════════════════════════════════════
-          1. TOP CONTROL BAR (MATCHING USER SCREENSHOT ARCHITECTURE)
+          1. TOP CONTROL BAR (CYBER OBSIDIAN & NEON CYAN)
           ═══════════════════════════════════════════════════════════ */}
-      <div className="editorial-frame p-4 sm:p-5 bg-[#F4EFE6] dark:bg-[#1C1A17] border border-[#171513]/25 dark:border-[#9E8055]/30 relative shadow-sm">
-        <BookplateCorner />
+      <div className="p-4 sm:p-5 border border-[#CDB486]/25 bg-[#080C14] rounded-xl relative shadow-[0_0_25px_rgba(205, 180, 134,0.05)] backdrop-blur-md">
         <div className="flex flex-col lg:flex-row items-center justify-between gap-4">
           {/* Left Title */}
           <div className="flex items-center gap-3 w-full lg:w-auto">
-            <div className="w-10 h-10 border border-[#9E8055] bg-[#E8DFD1] dark:bg-[#201E1B] p-1 flex items-center justify-center flex-shrink-0 shadow-inner">
-              <Coins className="w-6 h-6 text-[#9E8055]" />
+            <div className="w-10 h-10 rounded-lg border border-[#CDB486]/40 bg-[#05070B] p-1 flex items-center justify-center flex-shrink-0 shadow-[0_0_10px_rgba(205, 180, 134,0.2)]">
+              <Coins className="w-6 h-6 text-[#CDB486]" />
             </div>
             <div>
-              <h2 className="text-base sm:text-lg font-display font-bold tracking-wider text-[#171513] dark:text-[#E8DFD1] uppercase">
-                COINFLIP
+              <h2 className="text-base sm:text-lg font-architectural font-bold tracking-wider text-[#E2E8F0] uppercase">
+                COINFLIP DUELS
               </h2>
-              <p className="text-[11px] font-serif text-[#171513]/60 dark:text-[#E8DFD1]/60">
-                The classic 50/50 celestial duel settled in USDG.
+              <p className="text-[11px] font-sans text-[#94A3B8]">
+                High-stakes 50/50 cryptographic duels settled in USDG.
               </p>
             </div>
           </div>
@@ -571,9 +576,9 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
           {/* Right Inputs: Bet Amount + Additive Chips + Side Toggle + Buttons */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-start lg:justify-end gap-2 sm:gap-3 w-full lg:w-auto">
             {/* Bet Input & Additive Buttons */}
-            <div className="flex items-center justify-between sm:justify-start gap-1 bg-[#E8DFD1] dark:bg-[#141311] border border-[#171513]/25 dark:border-[#E8DFD1]/20 p-1 w-full sm:w-auto">
+            <div className="flex items-center justify-between sm:justify-start gap-1.5 bg-[#05070B] border border-[#CDB486]/20 rounded-lg p-1.5 w-full sm:w-auto shadow-inner">
               <div className="flex items-center min-w-0">
-                <span className="text-xs font-mono font-bold text-[#9E8055] px-1.5 sm:px-2 flex-shrink-0">USDG</span>
+                <span className="text-xs font-mono font-bold text-[#CDB486] px-2 flex-shrink-0">USDG</span>
                 <input
                   type="number"
                   min="0.5"
@@ -581,12 +586,12 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
                   max="50000"
                   value={betAmount || ''}
                   onChange={(e) => setBetAmount(Math.max(0.5, Number(e.target.value)))}
-                  className="w-16 sm:w-20 bg-transparent font-mono text-xs font-bold text-[#171513] dark:text-[#E8DFD1] focus:outline-none px-1"
+                  className="w-16 sm:w-20 bg-transparent font-mono text-xs font-bold text-[#E2E8F0] focus:outline-none px-1"
                   placeholder="0.5"
                 />
               </div>
               {/* Quick Add Chips */}
-              <div className="flex items-center gap-1 pl-1 border-l border-[#171513]/15 dark:border-[#E8DFD1]/15 overflow-x-auto">
+              <div className="flex items-center gap-1 pl-1.5 border-l border-[#CDB486]/20 overflow-x-auto">
                 {[0.5, 1, 5, 10, 50].map((delta) => (
                   <button
                     key={delta}
@@ -595,7 +600,7 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
                       setBetAmount((prev) => Number((prev + delta).toFixed(1)));
                       playTick();
                     }}
-                    className="px-1.5 py-0.5 text-[10px] font-mono bg-[#F4EFE6] dark:bg-[#201E1B] hover:bg-[#171513] hover:text-[#F4EFE6] dark:hover:bg-[#BCA172] dark:hover:text-[#121110] border border-[#171513]/20 dark:border-[#E8DFD1]/20 transition-colors flex-shrink-0"
+                    className="px-2 py-1 text-[10px] font-mono font-bold rounded bg-[#0D1322] text-[#E2E8F0] hover:bg-[#CDB486] hover:text-[#05070B] transition-all flex-shrink-0 shadow-sm"
                   >
                     +{delta}
                   </button>
@@ -605,7 +610,7 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
 
             {/* Coin Side Selector (Head / Tail) & Create Button grouped on mobile */}
             <div className="flex items-center justify-between sm:justify-start gap-2 w-full sm:w-auto">
-              <div className="flex items-center gap-1.5 p-1 bg-[#E8DFD1] dark:bg-[#141311] border border-[#171513]/25 dark:border-[#E8DFD1]/20">
+              <div className="flex items-center gap-1.5 p-1 bg-[#05070B] rounded-lg border border-[#CDB486]/20">
                 {/* Head Button */}
                 <button
                   type="button"
@@ -613,12 +618,12 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
                     setSelectedSide('heads');
                     playTick();
                   }}
-                  className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full border-2 transition-all p-0.5 flex items-center justify-center ${
+                  className={`w-8 h-8 rounded-full border-2 transition-all p-0.5 flex items-center justify-center ${
                     selectedSide === 'heads'
-                      ? 'border-[#9E8055] shadow-[0_0_10px_rgba(158,128,85,0.6)] scale-105 bg-[#F4EFE6] dark:bg-[#2A2620]'
-                      : 'border-transparent opacity-50 hover:opacity-100'
+                      ? 'border-[#CDB486] shadow-[0_0_15px_rgba(205, 180, 134,0.7)] scale-105 bg-[#CDB486]/20'
+                      : 'border-transparent opacity-40 hover:opacity-100'
                   }`}
-                  title="Select Head (Luna Cat)"
+                  title="Select Head"
                 >
                   <img src="/head.png" alt="Head" className="w-full h-full object-contain pointer-events-none" />
                 </button>
@@ -630,12 +635,12 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
                     setSelectedSide('tails');
                     playTick();
                   }}
-                  className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full border-2 transition-all p-0.5 flex items-center justify-center ${
+                  className={`w-8 h-8 rounded-full border-2 transition-all p-0.5 flex items-center justify-center ${
                     selectedSide === 'tails'
-                      ? 'border-[#9E8055] shadow-[0_0_10px_rgba(158,128,85,0.6)] scale-105 bg-[#F4EFE6] dark:bg-[#2A2620]'
-                      : 'border-transparent opacity-50 hover:opacity-100'
+                      ? 'border-[#E8DFCF] shadow-[0_0_15px_rgba(232,223,207,0.7)] scale-105 bg-[#E8DFCF]/20'
+                      : 'border-transparent opacity-40 hover:opacity-100'
                   }`}
-                  title="Select Tail (Crescent Tail)"
+                  title="Select Tail"
                 >
                   <img src="/tail.png" alt="Tail" className="w-full h-full object-contain pointer-events-none" />
                 </button>
@@ -646,16 +651,16 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
                 type="button"
                 disabled={isSubmitting || isPayingCreate || usdgBalance < betAmount}
                 onClick={handleInitiateCreate}
-                className="flex-1 sm:flex-initial px-4 py-2 bg-[#171513] hover:bg-[#25221e] dark:bg-[#BCA172] dark:hover:bg-[#DFC493] text-[#F4EFE6] dark:text-[#121110] font-serif text-xs font-bold tracking-widest uppercase border border-[#9E8055]/50 flex items-center justify-center gap-1.5 transition-all shadow-sm disabled:opacity-50"
+                className="flex-1 sm:flex-initial px-5 py-2.5 rounded-lg bg-[#CDB486] hover:bg-[#D8C6A5] text-[#05070B] font-mono text-xs font-bold tracking-wider uppercase flex items-center justify-center gap-1.5 transition-all cursor-pointer disabled:opacity-50 shadow-[0_0_18px_rgba(205, 180, 134,0.35)]"
               >
                 {isPayingCreate ? (
                   <>
-                    <Clock className="w-3.5 h-3.5 animate-spin text-[#9E8055] dark:text-[#121110]" />
+                    <Clock className="w-3.5 h-3.5 animate-spin text-[#05070B]" />
                     <span>Paying...</span>
                   </>
                 ) : (
                   <>
-                    <Plus className="w-3.5 h-3.5 text-[#9E8055] dark:text-[#121110]" />
+                    <Plus className="w-3.5 h-3.5 text-[#05070B]" />
                     <span>Create</span>
                   </>
                 )}
@@ -666,31 +671,31 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
       </div>
 
       {/* ═══════════════════════════════════════════════════════════
-          2. FILTER & SORT HEADER (MATCHING SCREENSHOT)
+          2. FILTER & SORT HEADER (CYBER BLUE & BLACK)
           ═══════════════════════════════════════════════════════════ */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs border-b border-[#171513]/15 dark:border-[#E8DFD1]/15 pb-2">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs border-b border-[#CDB486]/15 pb-3">
         <div className="flex items-center gap-2.5 flex-wrap">
-          <span className="font-display font-bold uppercase tracking-wider text-[#171513] dark:text-[#E8DFD1]">
-            ALL GAMES
+          <span className="font-architectural font-bold uppercase tracking-wider text-[#E2E8F0]">
+            ALL DUELS
           </span>
-          <span className="px-2 py-0.5 bg-[#E8DFD1] dark:bg-[#141311] border border-[#171513]/20 dark:border-[#E8DFD1]/20 font-mono text-[10px] text-[#9E8055] font-bold">
+          <span className="px-2 py-0.5 bg-[#080C14] border border-[#CDB486]/30 rounded font-mono text-[11px] text-[#CDB486] font-bold">
             {games.length}
           </span>
-          <span className="text-[#9E8055]">•</span>
-          <div className="flex items-center gap-1 px-2.5 py-0.5 bg-[#E8DFD1] dark:bg-[#141311] border border-[#171513]/15 dark:border-[#E8DFD1]/15 text-[10px] font-mono text-[#171513]/70 dark:text-[#E8DFD1]/70">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-            <span>Payouts are settled in USDG</span>
+          <span className="text-[#CDB486]">•</span>
+          <div className="flex items-center gap-1.5 px-2.5 py-1 bg-[#0D1322] border border-[#CDB486]/20 rounded text-[11px] font-mono text-[#94A3B8]">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#CDB486] animate-pulse" />
+            <span>Settled in USDG</span>
           </div>
         </div>
 
         {/* Sort & Amount Filter Selectors */}
-        <div className="flex items-center justify-between sm:justify-end gap-2 sm:gap-3 text-[11px] font-mono text-[#171513]/70 dark:text-[#E8DFD1]/70 w-full sm:w-auto">
-          <div className="flex items-center gap-1">
-            <span className="font-serif">Sort:</span>
+        <div className="flex items-center justify-between sm:justify-end gap-2 sm:gap-3 text-[11px] font-mono text-[#94A3B8] w-full sm:w-auto">
+          <div className="flex items-center gap-1.5">
+            <span>Sort:</span>
             <select
               value={sortBy}
               onChange={(e: any) => setSortBy(e.target.value)}
-              className="bg-[#E8DFD1] dark:bg-[#141311] border border-[#171513]/20 dark:border-[#E8DFD1]/20 px-1.5 sm:px-2 py-0.5 font-mono text-xs text-[#171513] dark:text-[#E8DFD1] focus:outline-none"
+              className="bg-[#080C14] border border-[#CDB486]/20 rounded px-2 py-1 font-mono text-xs text-[#E2E8F0] focus:outline-none focus:border-[#CDB486]"
             >
               <option value="newest">Newest</option>
               <option value="high">High to Low</option>
@@ -698,12 +703,12 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
             </select>
           </div>
 
-          <div className="flex items-center gap-1">
-            <span className="font-serif">Amount:</span>
+          <div className="flex items-center gap-1.5">
+            <span>Amount:</span>
             <select
               value={filterAmount}
               onChange={(e: any) => setFilterAmount(e.target.value)}
-              className="bg-[#E8DFD1] dark:bg-[#141311] border border-[#171513]/20 dark:border-[#E8DFD1]/20 px-1.5 sm:px-2 py-0.5 font-mono text-xs text-[#171513] dark:text-[#E8DFD1] focus:outline-none"
+              className="bg-[#080C14] border border-[#CDB486]/20 rounded px-2 py-1 font-mono text-xs text-[#E2E8F0] focus:outline-none focus:border-[#CDB486]"
             >
               <option value="all">All</option>
               <option value="small">≤ 10 USDG</option>
@@ -715,35 +720,35 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
           <button
             type="button"
             onClick={fetchOpenGames}
-            className="p-1 border border-[#171513]/20 dark:border-[#E8DFD1]/20 hover:border-[#9E8055] transition-colors flex-shrink-0"
+            className="p-1.5 rounded border border-[#CDB486]/20 hover:border-[#CDB486] bg-[#080C14] text-[#CDB486] transition-all flex-shrink-0"
             title="Refresh Chamber"
           >
-            <RefreshCw className="w-3.5 h-3.5 text-[#9E8055]" />
+            <RefreshCw className="w-3.5 h-3.5 text-[#CDB486]" />
           </button>
         </div>
       </div>
 
       {/* ═══════════════════════════════════════════════════════════
-          2.5. UNCLAIMED REWARDS RECOVERY BANNER (IF DISCONNECTED/CLOSED)
+          2.5. UNCLAIMED REWARDS RECOVERY BANNER
           ═══════════════════════════════════════════════════════════ */}
       {unclaimedWins.length > 0 && (
-        <div className="border border-[#9E8055]/50 bg-[#F4EFE6] dark:bg-[#1A1815] text-[#171513] dark:text-[#E8DFD1] p-4 sm:p-5 shadow-lg animate-in fade-in slide-in-from-top-3 duration-300">
+        <div className="rounded-xl border border-[#CDB486]/40 bg-[#080C14] text-[#E2E8F0] p-5 shadow-[0_0_25px_rgba(205, 180, 134,0.12)]">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
             <div className="flex items-start gap-3">
-              <div className="w-11 h-11 bg-[#9E8055]/15 border border-[#9E8055]/40 flex items-center justify-center text-[#9E8055] flex-shrink-0 shadow-sm">
-                <Trophy className="w-6 h-6 text-[#9E8055] animate-bounce" />
+              <div className="w-11 h-11 rounded-lg bg-[#CDB486]/15 border border-[#CDB486]/40 flex items-center justify-center text-[#CDB486] flex-shrink-0 shadow-[0_0_12px_rgba(205, 180, 134,0.25)]">
+                <Trophy className="w-6 h-6 text-[#CDB486] animate-bounce" />
               </div>
               <div>
                 <div className="flex items-center gap-2 flex-wrap">
-                  <h3 className="font-bold text-base sm:text-lg text-[#171513] dark:text-[#E8DFD1] tracking-wide font-display uppercase">
+                  <h3 className="font-bold text-base sm:text-lg text-[#E2E8F0] tracking-wide font-architectural uppercase">
                     Unclaimed Victory Allotments
                   </h3>
-                  <span className="px-2 py-0.5 text-[11px] font-mono font-bold bg-[#9E8055]/15 text-[#9E8055] border border-[#9E8055]/30">
+                  <span className="px-2 py-0.5 text-[11px] font-mono font-bold bg-[#CDB486]/15 text-[#CDB486] border border-[#CDB486]/30 rounded">
                     {unclaimedWins.length} Chambers Awaiting Settlement
                   </span>
                 </div>
-                <p className="text-xs text-[#171513]/70 dark:text-[#E8DFD1]/70 mt-0.5 font-serif">
-                  Disconnected before claiming? Your USDG balance is 100% secured on-chain. Settle directly to your OKX Wallet:
+                <p className="text-xs text-[#94A3B8] mt-0.5 font-sans">
+                  Disconnected before claiming? Your USDG balance is 100% secured on-chain. Settle directly to your connected wallet:
                 </p>
               </div>
             </div>
@@ -757,35 +762,35 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
               return (
                 <div
                   key={uw.id}
-                  className="p-3.5 border border-[#171513]/20 dark:border-[#E8DFD1]/20 bg-[#EAE3D5] dark:bg-[#13110F] flex flex-col justify-between gap-2.5 shadow-sm hover:border-[#9E8055] transition-all"
+                  className="p-3.5 rounded-lg border border-[#CDB486]/20 bg-[#0D1322] flex flex-col justify-between gap-2.5 shadow-lg hover:border-[#CDB486]/50 transition-all"
                 >
                   <div className="flex items-center justify-between">
-                    <span className="font-mono text-xs font-bold text-[#9E8055] bg-[#9E8055]/15 px-2.5 py-0.5 border border-[#9E8055]/30">
+                    <span className="font-mono text-xs font-bold text-[#CDB486] bg-[#CDB486]/10 px-2.5 py-0.5 rounded border border-[#CDB486]/30">
                       ROOM #CF-{uw.roomNumber || uw.id.replace('cf_', '').slice(0, 6)}
                     </span>
-                    <span className="text-[10px] font-mono px-2 py-0.5 bg-amber-500/15 text-amber-600 dark:text-amber-300 border border-amber-500/30 font-bold animate-pulse">
-                      🟡 Unclaimed
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#CDB486]/15 text-[#CDB486] border border-[#CDB486]/30 font-bold animate-pulse">
+                      ● Unclaimed
                     </span>
                   </div>
 
                   <div className="flex items-baseline justify-between py-1">
-                    <span className="text-xs text-[#171513]/70 dark:text-[#E8DFD1]/70 font-serif">Prize Pot:</span>
+                    <span className="text-xs text-[#94A3B8] font-sans">Prize Pot:</span>
                     <div className="text-right">
-                      <span className="text-base font-mono font-extrabold text-emerald-600 dark:text-emerald-400">
+                      <span className="text-base font-mono font-extrabold text-[#CDB486]">
                         +{(uw.winAmount || uw.betAmount * 2).toLocaleString()} USDG
                       </span>
-                      <span className="block text-[10px] font-mono text-[#171513]/50 dark:text-[#E8DFD1]/50">
+                      <span className="block text-[10px] font-mono text-[#64748B]">
                         (Net: {netWin} USDG after 2% fee)
                       </span>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 pt-2 border-t border-[#171513]/10 dark:border-[#E8DFD1]/10">
+                  <div className="flex items-center gap-2 pt-2 border-t border-[#CDB486]/15">
                     <button
                       type="button"
                       disabled={isClaimingPvp}
                       onClick={() => handleClaimPvp(uw)}
-                      className="flex-1 py-2 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white font-serif font-bold text-xs uppercase tracking-wider shadow-md flex items-center justify-center gap-1.5 border border-emerald-400/50 transition-all disabled:opacity-50"
+                      className="flex-1 py-2 rounded-lg bg-[#CDB486] hover:bg-[#D8C6A5] text-[#05070B] font-mono font-bold text-xs uppercase tracking-wider shadow-[0_0_15px_rgba(205, 180, 134,0.3)] flex items-center justify-center gap-1.5 transition-all disabled:opacity-50 cursor-pointer"
                     >
                       {isThisClaiming ? (
                         <>
@@ -794,15 +799,15 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
                         </>
                       ) : (
                         <>
-                          <Sparkles className="w-3.5 h-3.5 text-yellow-300" />
-                          <span>Claim Prize (OKX)</span>
+                          <Sparkles className="w-3.5 h-3.5 text-[#05070B]" />
+                          <span>Claim Prize</span>
                         </>
                       )}
                     </button>
                     <button
                       type="button"
                       onClick={() => handleOpenSpectateModal(uw)}
-                      className="p-2 border border-[#171513]/20 dark:border-[#E8DFD1]/20 hover:border-[#9E8055] text-[#171513]/70 dark:text-[#E8DFD1]/70 transition-colors"
+                      className="p-2 rounded-lg border border-[#CDB486]/20 hover:border-[#CDB486] text-[#94A3B8] hover:text-[#CDB486] transition-colors bg-[#080C14]"
                       title="View Duel Chamber"
                     >
                       <Eye className="w-4 h-4" />
@@ -816,17 +821,17 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
       )}
 
       {/* ═══════════════════════════════════════════════════════════
-          3. HORIZONTAL DUEL CARDS LIST (EXACT LAYOUT AS SCREENSHOT)
+          3. HORIZONTAL DUEL CARDS LIST (CYBER BLUE & BLACK)
           ═══════════════════════════════════════════════════════════ */}
-      <div className="space-y-2.5">
+      <div className="space-y-3">
         {displayGames.length === 0 ? (
-          <div className="editorial-card p-12 text-center bg-[#F4EFE6] dark:bg-[#1C1A17] border border-[#171513]/20 dark:border-[#E8DFD1]/15 space-y-3">
-            <Coins className="w-10 h-10 text-[#9E8055]/50 mx-auto" />
-            <p className="text-sm font-serif text-[#171513]/80 dark:text-[#E8DFD1]/80 font-semibold">
+          <div className="p-12 rounded-xl text-center border border-[#CDB486]/15 bg-[#080C14] space-y-3 shadow-[0_0_20px_rgba(205, 180, 134,0.03)]">
+            <Coins className="w-10 h-10 text-[#CDB486]/50 mx-auto" />
+            <p className="text-sm font-architectural text-[#E2E8F0] font-bold">
               No active coinflip duels in the chamber.
             </p>
-            <p className="text-xs font-serif text-[#171513]/60 dark:text-[#E8DFD1]/60 max-w-sm mx-auto">
-              Create a challenge using the controls above or challenge the AI Oracle directly via the <strong className="text-[#9E8055]">VS AI</strong> button!
+            <p className="text-xs font-sans text-[#94A3B8] max-w-sm mx-auto">
+              Create a challenge using the controls above or challenge the AI Oracle directly via the <strong className="text-[#CDB486]">VS AI</strong> button!
             </p>
           </div>
         ) : (
@@ -840,7 +845,7 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
             return (
               <div
                 key={g.id}
-                className="editorial-card p-3 sm:p-4 bg-[#F4EFE6] dark:bg-[#1C1A17] border border-[#171513]/20 dark:border-[#E8DFD1]/15 hover:border-[#9E8055] transition-all flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 relative shadow-sm"
+                className="p-3.5 sm:p-4 rounded-xl border border-[#CDB486]/15 hover:border-[#CDB486]/40 bg-[#080C14] transition-all flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 relative shadow-md hover:shadow-[0_0_15px_rgba(205, 180, 134,0.08)]"
               >
                 {/* Players Section (Face-to-Face on Mobile, Inline on Desktop) */}
                 <div className="flex items-center justify-between sm:justify-start gap-2 sm:gap-4 flex-1 min-w-0">
@@ -850,56 +855,53 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
                       <img
                         src={g.creatorAvatar || '/image/logo.png'}
                         alt=""
-                        className="w-10 h-10 sm:w-11 sm:h-11 border border-[#9E8055] object-cover bg-[#E8DFD1] dark:bg-[#201E1B]"
+                        className="w-10 h-10 sm:w-11 sm:h-11 rounded-lg border border-[#CDB486]/40 object-cover bg-[#05070B]"
                       />
                       {/* Coin Badge Overlay on Avatar */}
-                      <div className="absolute -top-1.5 -right-1.5 w-4.5 h-4.5 sm:w-5 sm:h-5 rounded-full border border-[#9E8055] bg-[#F4EFE6] dark:bg-[#141311] shadow p-0.5">
+                      <div className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full border border-[#CDB486] bg-[#080C14] shadow p-0.5">
                         <img src={creatorSideImg} alt="" className="w-full h-full object-contain" />
                       </div>
                     </div>
 
                     <div className="min-w-0">
-                      <div className="flex items-center gap-1 mb-0.5">
-                        <span className="px-1.5 py-0.2 text-[9px] font-mono bg-yellow-500/10 border border-yellow-500/30 text-yellow-600 dark:text-yellow-400 font-bold rounded">
+                      <div className="flex items-center gap-1.5 mb-0.5">
+                        <span className="px-1.5 py-0.2 text-[9px] font-mono bg-[#CDB486]/10 border border-[#CDB486]/30 text-[#CDB486] font-bold rounded">
                           #CF-{g.roomNumber || g.id.replace('cf_', '').slice(0, 6)}
                         </span>
                         {g.isClaimed && (
-                          <span className="px-1 py-0.2 text-[8px] font-mono bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 rounded">
+                          <span className="px-1.5 py-0.2 text-[8px] font-mono bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded">
                             Claimed
                           </span>
                         )}
                       </div>
                       <div className="flex items-center gap-1.5">
-                        <span className="px-1 py-0.2 text-[8px] sm:text-[9px] font-mono bg-[#9E8055]/20 border border-[#9E8055] text-[#9E8055] font-bold">
-                          60
+                        <span className="px-1 py-0.2 text-[8px] sm:text-[9px] font-mono bg-[#CDB486]/20 border border-[#CDB486]/40 text-[#CDB486] font-bold rounded">
+                          OPERATOR
                         </span>
-                        <p className="text-xs sm:text-sm font-serif font-bold text-[#171513] dark:text-[#E8DFD1] truncate max-w-[85px] sm:max-w-none">
+                        <p className="text-xs sm:text-sm font-mono font-bold text-[#E2E8F0] truncate max-w-[85px] sm:max-w-none">
                           {g.creatorName} {isMine && '(You)'}
                         </p>
                       </div>
-                      <span className="text-[9px] sm:text-[10px] font-mono text-[#171513]/50 dark:text-[#E8DFD1]/50 block truncate">
+                      <span className="text-[10px] font-mono text-[#94A3B8] block truncate">
                         {g.creatorSide === 'heads' ? 'Head' : 'Tail'}
                       </span>
                     </div>
                   </div>
 
                   {/* Center: Swords Duel Icon */}
-                  <div className="flex items-center justify-center text-[#9E8055] px-1 flex-shrink-0 opacity-75">
-                    <Swords className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  <div className="flex items-center justify-center text-[#CDB486] px-1 flex-shrink-0 opacity-80">
+                    <Swords className="w-4 h-4" />
                   </div>
 
                   {/* Opponent Slot */}
                   <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1 sm:flex-initial justify-end sm:justify-start">
                     <div className="min-w-0 text-right sm:text-left order-1 sm:order-2">
                       <div className="flex items-center justify-end sm:justify-start gap-1.5">
-                        <span className="px-1 py-0.2 text-[8px] sm:text-[9px] font-mono bg-[#171513]/10 dark:bg-[#E8DFD1]/10 text-[#171513]/60 dark:text-[#E8DFD1]/60">
-                          1
-                        </span>
-                        <p className="text-xs sm:text-sm font-serif text-[#171513]/70 dark:text-[#E8DFD1]/70 truncate max-w-[85px] sm:max-w-none">
+                        <p className="text-xs sm:text-sm font-mono text-[#94A3B8] truncate max-w-[85px] sm:max-w-none">
                           {g.challengerName || 'Waiting...'}
                         </p>
                       </div>
-                      <span className="text-[9px] sm:text-[10px] font-mono text-[#9E8055] block truncate">
+                      <span className="text-[10px] font-mono text-[#CDB486] block truncate">
                         {g.creatorSide === 'heads' ? 'Tail' : 'Head'}
                       </span>
                     </div>
@@ -909,15 +911,15 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
                         <img
                           src={g.challengerAvatar}
                           alt=""
-                          className="w-10 h-10 sm:w-11 sm:h-11 border border-[#9E8055] object-cover bg-[#E8DFD1] dark:bg-[#201E1B]"
+                          className="w-10 h-10 sm:w-11 sm:h-11 rounded-lg border border-[#CDB486]/40 object-cover bg-[#05070B]"
                         />
                       ) : (
-                        <div className="w-10 h-10 sm:w-11 sm:h-11 border border-dashed border-[#171513]/30 dark:border-[#E8DFD1]/30 bg-[#E8DFD1]/50 dark:bg-[#141311]/50 flex items-center justify-center text-xs font-serif font-bold text-[#171513]/50 dark:text-[#E8DFD1]/50">
+                        <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-lg border border-dashed border-[#CDB486]/25 bg-[#05070B] flex items-center justify-center text-xs font-mono font-bold text-[#64748B]">
                           ?
                         </div>
                       )}
                       {/* Opponent Coin Badge */}
-                      <div className="absolute -top-1.5 -right-1.5 w-4.5 h-4.5 sm:w-5 sm:h-5 rounded-full border border-[#9E8055] bg-[#F4EFE6] dark:bg-[#141311] shadow p-0.5">
+                      <div className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full border border-[#CDB486] bg-[#080C14] shadow p-0.5">
                         <img src={opponentSideImg} alt="" className="w-full h-full object-contain" />
                       </div>
                     </div>
@@ -925,17 +927,16 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
                 </div>
 
                 {/* Right: Bet Amount Pill + Action Button + Spectate Eye */}
-                <div className="flex items-center justify-between sm:justify-end gap-2 sm:gap-2.5 w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-t-0 border-[#171513]/10 dark:border-[#E8DFD1]/10">
+                <div className="flex items-center justify-between sm:justify-end gap-2 sm:gap-2.5 w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-t-0 border-[#CDB486]/10">
                   {/* Stake Pill */}
-                  <div className="px-2.5 sm:px-3 py-1.5 bg-[#E8DFD1] dark:bg-[#141311] border border-[#171513]/20 dark:border-[#E8DFD1]/20 font-mono text-xs font-bold text-[#171513] dark:text-[#E8DFD1] flex items-center gap-1 flex-shrink-0">
-                    <span className="text-[#9E8055]">✦</span>
+                  <div className="px-3 py-1.5 rounded-lg bg-[#05070B] border border-[#CDB486]/30 font-mono text-xs font-bold text-[#CDB486] flex items-center gap-1.5 flex-shrink-0">
                     <span>{g.betAmount.toLocaleString()} USDG</span>
                   </div>
 
                   <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
                     {/* Join, Claim or Cancel Button */}
                     {isFlipping ? (
-                      <span className="px-3 sm:px-4 py-1.5 bg-[#9E8055]/20 border border-[#9E8055] text-[#9E8055] text-xs font-mono flex items-center gap-1.5 animate-pulse">
+                      <span className="px-3 sm:px-4 py-1.5 rounded-lg bg-[#CDB486]/10 border border-[#CDB486]/40 text-[#CDB486] text-xs font-mono flex items-center gap-1.5 animate-pulse">
                         <Clock className="w-3.5 h-3.5 animate-spin" /> Flipping...
                       </span>
                     ) : isComplete ? (
@@ -944,7 +945,7 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
                           type="button"
                           disabled={isClaimingPvp}
                           onClick={() => handleClaimPvp(g)}
-                          className="px-3 sm:px-3.5 py-1.5 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white text-xs font-serif font-bold uppercase tracking-wider border border-emerald-400 shadow-md shadow-emerald-950/40 flex items-center gap-1.5 animate-pulse"
+                          className="px-3 sm:px-3.5 py-1.5 rounded-lg bg-[#CDB486] hover:bg-[#D8C6A5] text-[#05070B] text-xs font-mono font-bold uppercase tracking-wider shadow-[0_0_15px_rgba(205, 180, 134,0.3)] flex items-center gap-1.5 animate-pulse cursor-pointer"
                         >
                           {isClaimingPvp && claimingGameId === g.id ? (
                             <>
@@ -953,13 +954,13 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
                             </>
                           ) : (
                             <>
-                              <Sparkles className="w-3.5 h-3.5 text-yellow-300" />
+                              <Sparkles className="w-3.5 h-3.5 text-[#05070B]" />
                               <span>Claim Prize</span>
                             </>
                           )}
                         </button>
                       ) : (
-                        <span className="px-2.5 sm:px-3 py-1.5 bg-emerald-900/15 border border-emerald-600/40 text-emerald-600 dark:text-emerald-400 text-xs font-serif font-bold">
+                        <span className="px-2.5 sm:px-3 py-1.5 rounded-lg bg-[#0D1322] border border-[#CDB486]/25 text-[#CDB486] text-xs font-mono font-bold">
                           Victor: {g.winnerName} {g.isClaimed ? '(Claimed)' : ''}
                         </span>
                       )
@@ -967,9 +968,9 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
                       <button
                         type="button"
                         onClick={() => handleOpenSpectateModal(g)}
-                        className="px-3 sm:px-3.5 py-1.5 bg-[#171513] hover:bg-[#25221e] dark:bg-[#BCA172] dark:hover:bg-[#DFC493] text-[#F4EFE6] dark:text-[#121110] text-xs font-serif font-bold tracking-wider uppercase border border-[#9E8055] flex items-center gap-1.5 transition-all shadow-sm"
+                        className="px-3 sm:px-3.5 py-1.5 rounded-lg bg-[#0D1322] hover:bg-[#CDB486] hover:text-[#05070B] text-[#CDB486] text-xs font-mono font-bold tracking-wider uppercase border border-[#CDB486]/40 flex items-center gap-1.5 transition-all shadow-sm cursor-pointer"
                       >
-                        <Bot className="w-3.5 h-3.5 text-[#DFC493] dark:text-[#121110]" />
+                        <Bot className="w-3.5 h-3.5" />
                         <span>My Room / VS AI</span>
                       </button>
                     ) : (
@@ -977,7 +978,7 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
                         type="button"
                         disabled={isSubmitting}
                         onClick={() => handleOpenJoinModal(g)}
-                        className="px-4 sm:px-5 py-1.5 bg-[#171513] hover:bg-[#25221e] dark:bg-[#BCA172] dark:hover:bg-[#DFC493] text-[#F4EFE6] dark:text-[#121110] text-xs font-serif font-bold tracking-widest uppercase border border-[#9E8055]/50 transition-all shadow-sm"
+                        className="px-4 sm:px-5 py-1.5 rounded-lg bg-[#CDB486] hover:bg-[#D8C6A5] text-[#05070B] text-xs font-mono font-bold tracking-widest uppercase transition-all shadow-[0_0_15px_rgba(205, 180, 134,0.3)] cursor-pointer"
                       >
                         Join Duel
                       </button>
@@ -987,7 +988,7 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
                     <button
                       type="button"
                       onClick={() => handleOpenSpectateModal(g)}
-                      className="p-1.5 sm:p-2 border border-[#171513]/20 dark:border-[#E8DFD1]/20 hover:border-[#9E8055] text-[#171513]/60 dark:text-[#E8DFD1]/60 transition-colors"
+                      className="p-1.5 sm:p-2 rounded-lg border border-[#CDB486]/20 hover:border-[#CDB486] bg-[#05070B] text-[#94A3B8] hover:text-[#CDB486] transition-colors"
                       title="Spectate Duel"
                     >
                       <Eye className="w-3.5 h-3.5" />
@@ -1003,154 +1004,159 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
       {/* ═══════════════════════════════════════════════════════════
           3.5 POP-UP MODAL: PLAYER 1 CONFIRM PAYMENT & CREATE ROOM
           ═══════════════════════════════════════════════════════════ */}
-      <AnimatePresence>
-        {showCreateConfirmModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-[#0a0908]/80 dark:bg-[#070605]/85 backdrop-blur-md">
-            <motion.div
-              initial={{ scale: 0.94, opacity: 0, y: 15 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.94, opacity: 0, y: 15 }}
-              className="relative w-full max-w-md max-h-[92vh] overflow-y-auto bg-[#F4EFE6] dark:bg-[#161412] text-[#171513] dark:text-[#E8DFD1] shadow-2xl border border-[#171513]/25 dark:border-[#BCA172]/40 font-serif"
-            >
-              {/* Header */}
-              <div className="flex items-center justify-between px-4 sm:px-5 py-3 sm:py-4 border-b border-[#171513]/15 dark:border-[#E8DFD1]/15 bg-[#EAE3D5] dark:bg-[#1F1C18]">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 border border-[#9E8055] bg-[#9E8055]/15 flex items-center justify-center text-[#9E8055]">
-                    <Coins className="w-4 h-4 text-[#9E8055]" />
+      {mounted && typeof document !== 'undefined' && createPortal(
+        <AnimatePresence>
+          {showCreateConfirmModal && (
+            <div className="fixed inset-0 z-[99999] flex items-center justify-center p-3 sm:p-4 bg-[#030508]/85 backdrop-blur-xl">
+              <motion.div
+                initial={{ scale: 0.95, opacity: 0, y: 15 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.95, opacity: 0, y: 15 }}
+                transition={{ type: 'spring', damping: 26, stiffness: 320 }}
+                className="relative w-full max-w-md max-h-[92vh] overflow-y-auto glass-capsule rounded-3xl p-6 text-[#F5F7FA] shadow-[0_25px_60px_rgba(0,0,0,0.8),0_0_35px_rgba(205, 180, 134,0.15)] border border-white/10 font-sans space-y-5"
+              >
+                {/* Header */}
+                <div className="flex items-center justify-between pb-4 border-b border-white/[0.06]">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-2xl bg-[#CDB486]/10 border border-[#CDB486]/25 flex items-center justify-center text-[#CDB486] shadow-inner">
+                      <Coins className="w-5 h-5 text-[#CDB486]" />
+                    </div>
+                    <div>
+                      <h3 className="font-heading font-bold text-base tracking-wide uppercase text-[#F5F7FA]">
+                        CONFIRM DUEL STAKE
+                      </h3>
+                      <span className="text-[10px] font-mono tracking-wider uppercase text-[#CDB486]">Robinhood Smart Contract</span>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-display font-bold text-sm sm:text-base tracking-widest uppercase text-[#171513] dark:text-[#E8DFD1]">
-                      CONFIRM DUEL STAKE
-                    </h3>
-                    <span className="text-[10px] font-mono tracking-widest uppercase text-[#9E8055]">Robinhood Smart Contract Vault</span>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  disabled={isPayingCreate}
-                  onClick={() => setShowCreateConfirmModal(false)}
-                  className="w-7 h-7 border border-[#171513]/15 dark:border-[#E8DFD1]/15 hover:border-[#9E8055] flex items-center justify-center text-[#171513]/60 dark:text-[#E8DFD1]/60 hover:text-[#9E8055] transition-colors"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-
-              {/* Content */}
-              <div className="p-4 sm:p-6 space-y-3.5 sm:space-y-4">
-                <p className="text-xs text-[#171513]/80 dark:text-[#E8DFD1]/80 font-serif leading-relaxed">
-                  You are creating a new Coinflip duel room. Confirm your stake deposit of <strong className="text-[#9E8055] font-mono font-bold">{betAmount} USDG</strong> to open the chamber to the public:
-                </p>
-
-                {/* Details Card */}
-                <div className="p-3 sm:p-4 border border-[#171513]/15 dark:border-[#E8DFD1]/15 bg-white/40 dark:bg-[#13110F] space-y-2 text-xs font-mono">
-                  <div className="flex justify-between items-center">
-                    <span className="text-[#171513]/60 dark:text-[#E8DFD1]/60">Stake Amount:</span>
-                    <span className="font-bold text-[#9E8055] text-sm">≡ {betAmount} USDG</span>
-                  </div>
-
-                  <div className="flex justify-between items-center">
-                    <span className="text-[#171513]/60 dark:text-[#E8DFD1]/60">Selected Coin Side:</span>
-                    <span className="font-bold text-[#171513] dark:text-[#E8DFD1] flex items-center gap-1.5">
-                      <img
-                        src={selectedSide === 'heads' ? '/head.png' : '/tail.png'}
-                        alt=""
-                        className="w-4 h-4 object-contain"
-                      />
-                      <span>{selectedSide === 'heads' ? 'Head (Luna Cat)' : 'Tail (Crescent Tail)'}</span>
-                    </span>
-                  </div>
-
-                  <div className="flex justify-between items-center">
-                    <span className="text-[#171513]/60 dark:text-[#E8DFD1]/60">Target Prize Pot:</span>
-                    <span className="font-bold text-emerald-600 dark:text-emerald-400 text-sm">
-                      {(betAmount * 2).toLocaleString()} USDG (2.0×)
-                    </span>
-                  </div>
-
-                  <div className="border-t border-[#171513]/10 dark:border-[#E8DFD1]/10 pt-2 flex justify-between items-center text-[11px]">
-                    <span className="text-[#171513]/50 dark:text-[#E8DFD1]/50">Your Wallet Balance:</span>
-                    <span className="text-[#171513] dark:text-[#E8DFD1] font-semibold">{usdgBalance.toFixed(2)} USDG</span>
-                  </div>
-                  <div className="flex justify-between items-center text-[11px]">
-                    <span className="text-[#171513]/50 dark:text-[#E8DFD1]/50">Balance After Deposit:</span>
-                    <span className="text-[#9E8055] font-semibold">
-                      {Math.max(0, usdgBalance - betAmount).toFixed(2)} USDG
-                    </span>
-                  </div>
-                </div>
-
-                <div className="p-2.5 border border-[#9E8055]/30 bg-[#9E8055]/10 text-[11px] text-[#171513]/80 dark:text-[#E8DFD1]/80 font-serif leading-tight">
-                  ✦ <strong>Refund Guarantee</strong>: If you cancel the chamber before an opponent joins, your stake of {betAmount} USDG will be returned to your wallet immediately.
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center gap-2 pt-1">
                   <button
                     type="button"
                     disabled={isPayingCreate}
                     onClick={() => setShowCreateConfirmModal(false)}
-                    className="px-5 py-2.5 bg-transparent hover:bg-[#171513]/10 dark:hover:bg-white/10 text-[#171513]/70 dark:text-[#E8DFD1]/70 text-xs font-serif uppercase tracking-wider border border-[#171513]/20 dark:border-[#E8DFD1]/20 transition-colors text-center"
+                    className="w-8 h-8 rounded-full flex items-center justify-center text-[#8993A4] hover:text-[#F5F7FA] bg-white/[0.04] hover:bg-white/[0.1] border border-white/[0.06] transition-all cursor-pointer"
                   >
-                    Cancel
-                  </button>
-                  <button
-                    type="button"
-                    disabled={isPayingCreate || usdgBalance < betAmount}
-                    onClick={handleConfirmAndPayCreate}
-                    className="flex-1 py-2.5 bg-[#171513] hover:bg-[#25221e] dark:bg-[#BCA172] dark:hover:bg-[#DFC493] text-[#F4EFE6] dark:text-[#121110] font-serif text-xs font-bold tracking-widest uppercase border border-[#9E8055]/50 flex items-center justify-center gap-2 transition-all shadow-sm disabled:opacity-50"
-                  >
-                    {isPayingCreate ? (
-                      <>
-                        <Clock className="w-4 h-4 animate-spin text-[#9E8055] dark:text-[#121110]" />
-                        <span>Processing Deposit...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Zap className="w-4 h-4 text-[#9E8055] dark:text-[#121110]" />
-                        <span>Deposit &amp; Open ({betAmount} USDG)</span>
-                      </>
-                    )}
+                    <X className="w-4 h-4" />
                   </button>
                 </div>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+
+                {/* Content */}
+                <div className="space-y-4">
+                  <p className="text-xs text-[#8993A4] leading-relaxed">
+                    You are creating a new Coinflip duel room. Confirm your stake deposit of <strong className="text-[#CDB486] font-mono font-bold">{betAmount} USDG</strong> to open the chamber to the public:
+                  </p>
+
+                  {/* Details Card */}
+                  <div className="p-4 glass-capsule rounded-2xl space-y-2.5 text-xs font-mono">
+                    <div className="flex justify-between items-center">
+                      <span className="text-[#8993A4]">Stake Amount:</span>
+                      <span className="font-bold text-[#CDB486] text-sm">{betAmount} USDG</span>
+                    </div>
+
+                    <div className="flex justify-between items-center">
+                      <span className="text-[#8993A4]">Selected Coin Side:</span>
+                      <span className="font-bold text-[#F5F7FA] flex items-center gap-2">
+                        <img
+                          src={selectedSide === 'heads' ? '/head.png' : '/tail.png'}
+                          alt=""
+                          className="w-4 h-4 object-contain"
+                        />
+                        <span>{selectedSide === 'heads' ? 'Head' : 'Tail'}</span>
+                      </span>
+                    </div>
+
+                    <div className="flex justify-between items-center">
+                      <span className="text-[#8993A4]">Target Prize Pot:</span>
+                      <span className="font-bold text-[#CDB486] text-sm">
+                        {(betAmount * 2).toLocaleString()} USDG (2.0×)
+                      </span>
+                    </div>
+
+                    <div className="border-t border-white/[0.06] pt-2.5 flex justify-between items-center text-[11px]">
+                      <span className="text-[#8993A4]">Your Wallet Balance:</span>
+                      <span className="text-[#F5F7FA] font-semibold">{usdgBalance.toFixed(2)} USDG</span>
+                    </div>
+                    <div className="flex justify-between items-center text-[11px]">
+                      <span className="text-[#8993A4]">Balance After Deposit:</span>
+                      <span className="text-[#CDB486] font-semibold">
+                        {Math.max(0, usdgBalance - betAmount).toFixed(2)} USDG
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="p-3.5 glass-capsule rounded-2xl border border-[#CDB486]/30 bg-[#CDB486]/[0.04] text-[11px] text-[#8993A4] leading-snug">
+                    ✦ <strong className="text-[#CDB486]">Refund Guarantee</strong>: If you cancel the chamber before an opponent joins, your stake of {betAmount} USDG will be returned to your wallet immediately.
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center gap-3 pt-2">
+                    <button
+                      type="button"
+                      disabled={isPayingCreate}
+                      onClick={() => setShowCreateConfirmModal(false)}
+                      className="glass-btn-chip px-5 py-2.5 text-[#8993A4] hover:text-[#F5F7FA] text-xs font-bold uppercase tracking-wider text-center cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      disabled={isPayingCreate || usdgBalance < betAmount}
+                      onClick={handleConfirmAndPayCreate}
+                      className="flex-1 py-3 glass-btn-inflated font-bold text-xs tracking-wider uppercase flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      {isPayingCreate ? (
+                        <>
+                          <Clock className="w-4 h-4 animate-spin text-[#030508]" />
+                          <span>Processing Deposit...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Zap className="w-4 h-4 text-[#030508]" />
+                          <span>Deposit &amp; Open ({betAmount} USDG)</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
 
       {/* ═══════════════════════════════════════════════════════════
-          5. HIGH-FIDELITY DUEL ARENA MODAL (EXACT LAYOUT AS SCREENSHOT)
+          5. HIGH-FIDELITY DUEL ARENA MODAL (CYBER BLUE & BLACK)
           ═══════════════════════════════════════════════════════════ */}
-      <AnimatePresence>
-        {spectateGame && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-4 bg-[#0a0908]/80 dark:bg-[#070605]/85 backdrop-blur-md">
+      {mounted && typeof document !== 'undefined' && createPortal(
+        <AnimatePresence>
+          {spectateGame && (
+            <div className="fixed inset-0 z-[99999] flex items-center justify-center p-2.5 sm:p-4 bg-[#030508]/85 backdrop-blur-xl">
             <motion.div
-              initial={{ scale: 0.94, opacity: 0, y: 15 }}
+              initial={{ scale: 0.95, opacity: 0, y: 15 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.94, opacity: 0, y: 15 }}
-              transition={{ duration: 0.25, ease: 'easeOut' }}
-              className="relative w-full max-w-2xl max-h-[94vh] overflow-y-auto bg-[#F4EFE6] dark:bg-[#161412] text-[#171513] dark:text-[#E8DFD1] shadow-2xl border border-[#171513]/25 dark:border-[#BCA172]/40 flex flex-col font-serif"
+              exit={{ scale: 0.95, opacity: 0, y: 15 }}
+              transition={{ type: 'spring', damping: 26, stiffness: 320 }}
+              className="relative w-full max-w-2xl max-h-[94vh] overflow-y-auto glass-capsule rounded-3xl text-[#F5F7FA] shadow-[0_25px_60px_rgba(0,0,0,0.8),0_0_35px_rgba(205, 180, 134,0.2)] border border-white/10 flex flex-col font-sans"
             >
               {/* ── MODAL HEADER ── */}
-              <div className="flex items-center justify-between px-3.5 sm:px-6 py-3 sm:py-4 border-b border-[#171513]/15 dark:border-[#E8DFD1]/15 bg-[#EAE3D5] dark:bg-[#1F1C18] sticky top-0 z-20">
-                <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
-                  <div className="w-7 h-7 sm:w-8 sm:h-8 border border-[#9E8055] bg-[#9E8055]/15 flex items-center justify-center text-[#9E8055] flex-shrink-0">
-                    <Swords className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#9E8055]" />
+              <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-white/[0.06] sticky top-0 z-20 backdrop-blur-xl bg-[#030508]/85">
+                <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                  <div className="w-9 h-9 rounded-2xl border border-[#CDB486]/30 bg-[#CDB486]/10 flex items-center justify-center text-[#CDB486] flex-shrink-0 shadow-inner">
+                    <Swords className="w-4 h-4 text-[#CDB486]" />
                   </div>
-                  <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap min-w-0">
-                    <span className="font-display font-bold text-sm sm:text-lg tracking-widest uppercase text-[#171513] dark:text-[#E8DFD1]">
+                  <div className="flex items-center gap-2 flex-wrap min-w-0">
+                    <span className="font-heading font-bold text-sm sm:text-base tracking-wide uppercase text-[#F5F7FA]">
                       COINFLIP DUEL
                     </span>
-                    <span className="font-mono text-[10px] sm:text-xs font-bold text-[#9E8055] bg-[#9E8055]/15 px-1.5 sm:px-2 py-0.5 border border-[#9E8055]/30">
+                    <span className="glass-pill-active font-mono text-[10px] sm:text-xs font-bold px-2.5 py-0.5">
                       #CF-{spectateGame.roomNumber || spectateGame.id.replace('cf_', '').slice(0, 6)}
                     </span>
                     {spectateGame.status === 'complete' && (
                       spectateGame.winnerId?.toLowerCase() === account?.toLowerCase() ? (
-                        <span className={`text-[9px] sm:text-[10px] font-mono px-1.5 sm:px-2 py-0.5 font-bold ${spectateGame.isClaimed ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30' : 'bg-amber-500/15 text-amber-600 dark:text-amber-300 border border-amber-500/30 animate-pulse'}`}>
-                          {spectateGame.isClaimed ? '✓ CLAIMED' : '🟡 UNCLAIMED'}
+                        <span className={`text-[9px] sm:text-[10px] font-mono px-2.5 py-0.5 rounded-full font-bold ${spectateGame.isClaimed ? 'glass-pill-active' : 'glass-pill-active animate-pulse'}`}>
+                          {spectateGame.isClaimed ? '✓ CLAIMED' : '● UNCLAIMED'}
                         </span>
                       ) : (
-                        <span className="text-[9px] sm:text-[10px] font-mono px-1.5 sm:px-2 py-0.5 font-bold bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30">
+                        <span className="text-[9px] sm:text-[10px] font-mono px-2.5 py-0.5 rounded-full font-bold bg-rose-500/15 text-rose-300 border border-rose-500/30">
                           ✕ {spectateGame.winnerName} WON
                         </span>
                       )
@@ -1165,34 +1171,34 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
                     setIsConfirmingBet(false);
                     setPvpClaimTx(null);
                   }}
-                  className="w-7 h-7 sm:w-8 sm:h-8 border border-[#171513]/15 dark:border-[#E8DFD1]/15 hover:border-[#9E8055] text-[#171513]/60 dark:text-[#E8DFD1]/60 hover:text-[#9E8055] flex items-center justify-center transition-colors flex-shrink-0"
+                  className="w-8 h-8 rounded-full flex items-center justify-center text-[#8993A4] hover:text-[#F5F7FA] bg-white/[0.04] hover:bg-white/[0.1] border border-white/[0.06] transition-all cursor-pointer flex-shrink-0"
                 >
-                  <X className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  <X className="w-4 h-4" />
                 </button>
               </div>
 
               {/* ── MAIN DUEL STAGE ── */}
-              <div className="relative p-3.5 sm:p-8 bg-[#F8F5EE] dark:bg-[#12100E] overflow-hidden">
-                {/* Subtle Dot Matrix Pattern */}
-                <div className="absolute inset-0 opacity-[0.04] dark:opacity-[0.07] pointer-events-none bg-[radial-gradient(#9E8055_1.2px,transparent_1.2px)] [background-size:20px_20px]" />
+              <div className="relative p-4 sm:p-8 bg-[#05070B] border-b border-[#CDB486]/20 overflow-hidden">
+                {/* Subtle Grid Matrix Pattern */}
+                <div className="absolute inset-0 opacity-10 pointer-events-none bg-[radial-gradient(#CDB486_1.2px,transparent_1.2px)] [background-size:20px_20px]" />
                 
-                {/* Subtle Warm Ether Glow */}
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-[#BCA172]/10 rounded-full blur-3xl pointer-events-none" />
+                {/* Cyber Cyan Glow */}
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-[#CDB486]/10 rounded-full blur-3xl pointer-events-none" />
 
                 {/* 3 Columns: Creator ── Centerpiece Coin ── Opponent */}
-                <div className="relative z-10 grid grid-cols-3 items-center gap-1.5 sm:gap-4">
+                <div className="relative z-10 grid grid-cols-3 items-center gap-2 sm:gap-4">
                   {/* ── LEFT: CREATOR ── */}
-                  <div className="flex flex-col items-center space-y-1.5 sm:space-y-2 text-center min-w-0">
+                  <div className="flex flex-col items-center space-y-2 text-center min-w-0">
                     <div className="relative group">
-                      <div className="w-14 h-14 xs:w-16 xs:h-16 sm:w-24 sm:h-24 overflow-hidden border border-[#171513]/25 dark:border-[#BCA172]/40 bg-[#E8DFD1] dark:bg-[#1C1917] p-0.5 sm:p-1 shadow-md">
+                      <div className="w-14 h-14 xs:w-16 xs:h-16 sm:w-24 sm:h-24 rounded-xl overflow-hidden border-2 border-[#CDB486]/40 bg-[#080C14] p-1 shadow-[0_4px_16px_rgba(0,0,0,0.6)]">
                         <img
                           src={spectateGame.creatorAvatar || '/image/logo.png'}
                           alt={spectateGame.creatorName}
-                          className="w-full h-full object-cover"
+                          className="w-full h-full object-cover rounded-lg"
                         />
                       </div>
                       {/* Chosen Coin Badge Overlay */}
-                      <div className="absolute -top-1.5 -right-1.5 sm:-top-2 sm:-right-2 w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-[#F4EFE6] dark:bg-[#171513] border border-[#9E8055] shadow-md p-0.5 transform group-hover:scale-110 transition-transform">
+                      <div className="absolute -top-1.5 -right-1.5 sm:-top-2 sm:-right-2 w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-[#080C14] border border-[#CDB486] shadow-md p-0.5 transform group-hover:scale-110 transition-transform">
                         <img
                           src={spectateGame.creatorSide === 'heads' ? '/head.png' : '/tail.png'}
                           alt={spectateGame.creatorSide}
@@ -1202,18 +1208,18 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
                     </div>
 
                     {/* Level Badge + Name */}
-                    <div className="flex items-center gap-1 mt-0.5 sm:mt-1 max-w-full">
-                      <span className="px-1 py-0.2 text-[8px] sm:text-[9px] font-mono bg-[#E8DFD1] dark:bg-[#25211D] border border-[#171513]/20 dark:border-[#E8DFD1]/20 text-[#9E8055] font-bold">
-                        60
+                    <div className="flex items-center gap-1 mt-1 max-w-full">
+                      <span className="px-1.5 py-0.2 text-[8px] sm:text-[9px] font-mono bg-[#CDB486]/10 border border-[#CDB486]/30 text-[#CDB486] rounded font-bold">
+                        NODE
                       </span>
-                      <span className="text-[11px] sm:text-sm font-bold font-serif text-[#171513] dark:text-[#E8DFD1] truncate max-w-[70px] xs:max-w-[85px] sm:max-w-[120px]">
+                      <span className="text-[11px] sm:text-sm font-bold text-[#E2E8F0] truncate max-w-[70px] xs:max-w-[85px] sm:max-w-[120px]">
                         {spectateGame.creatorName}
                       </span>
                     </div>
 
                     {/* Bet Amount Pill */}
-                    <div className="px-2 sm:px-3 py-0.5 sm:py-1 bg-[#E8DFD1] dark:bg-[#181614] border border-[#171513]/20 dark:border-[#E8DFD1]/20 text-[10px] sm:text-xs font-mono font-bold text-[#171513] dark:text-[#E8DFD1] flex items-center gap-1 shadow-sm">
-                      <span className="text-[#9E8055] font-bold">≡</span>
+                    <div className="px-2.5 sm:px-3 py-1 bg-[#0D1322] border border-[#CDB486]/30 rounded-lg text-[10px] sm:text-xs font-mono font-bold text-[#E2E8F0] flex items-center gap-1 shadow-sm">
+                      <span className="text-[#CDB486] font-bold">≡</span>
                       <span>{spectateGame.betAmount} USDG</span>
                     </div>
                   </div>
@@ -1222,7 +1228,7 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
                   <div className="flex flex-col items-center justify-center">
                     {/* Metallic Orb Container */}
                     <div
-                      className="relative w-22 h-22 xs:w-26 xs:h-26 sm:w-40 sm:h-40 rounded-full border-2 border-[#9E8055]/50 bg-[#F4EFE6] dark:bg-[#151311] shadow-[0_0_30px_rgba(188,161,114,0.2)] flex items-center justify-center overflow-hidden"
+                      className="relative w-22 h-22 xs:w-26 xs:h-26 sm:w-40 sm:h-40 rounded-full border-2 border-[#CDB486]/60 bg-[#080C14] shadow-[0_0_35px_rgba(205, 180, 134,0.3)] flex items-center justify-center overflow-hidden"
                       style={{ perspective: 1200 }}
                     >
                       <style>{`
@@ -1237,7 +1243,7 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
                         }
                       `}</style>
                       {/* Ambient Inner Glow */}
-                      <div className="absolute inset-0 bg-radial from-[#BCA172]/15 via-transparent to-transparent pointer-events-none" />
+                      <div className="absolute inset-0 bg-radial from-[#CDB486]/25 via-transparent to-transparent pointer-events-none" />
 
                       {/* 3D Animated Coin */}
                       {spectateGame.status === 'waiting' && !isFlippingAnim ? (
@@ -1248,7 +1254,7 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
                             willChange: 'transform',
                           }}
                         >
-                          {/* Front Face: Luna Cat (Head) */}
+                          {/* Front Face: Head */}
                           <div
                             className="absolute inset-0 rounded-full flex items-center justify-center pointer-events-none select-none"
                             style={{
@@ -1259,12 +1265,12 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
                           >
                             <img
                               src="/head.png"
-                              alt="Luna Cat (Head)"
-                              className="w-full h-full object-contain drop-shadow-[0_0_16px_rgba(234,179,8,0.6)]"
+                              alt="Head"
+                              className="w-full h-full object-contain drop-shadow-[0_0_16px_rgba(205,180,134,0.7)]"
                             />
                           </div>
 
-                          {/* Back Face: Crescent Tail (Tail) */}
+                          {/* Back Face: Tail */}
                           <div
                             className="absolute inset-0 rounded-full flex items-center justify-center pointer-events-none select-none"
                             style={{
@@ -1275,8 +1281,8 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
                           >
                             <img
                               src="/tail.png"
-                              alt="Crescent Tail"
-                              className="w-full h-full object-contain drop-shadow-[0_0_16px_rgba(168,85,247,0.6)]"
+                              alt="Tail"
+                              className="w-full h-full object-contain drop-shadow-[0_0_16px_rgba(232,223,207,0.7)]"
                             />
                           </div>
                         </div>
@@ -1309,7 +1315,7 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
                             willChange: 'transform',
                           }}
                         >
-                          {/* Front Face: Luna Cat (Head) */}
+                          {/* Front Face: Head */}
                           <div
                             className="absolute inset-0 rounded-full flex items-center justify-center pointer-events-none select-none"
                             style={{
@@ -1320,16 +1326,16 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
                           >
                             <img
                               src="/head.png"
-                              alt="Luna Cat (Head)"
+                              alt="Head"
                               className={`w-full h-full object-contain ${
                                 spectateGame.status === 'complete' && spectateGame.result === 'heads'
-                                  ? 'drop-shadow-[0_0_24px_rgba(234,179,8,0.9)] animate-pulse'
-                                  : 'drop-shadow-[0_0_16px_rgba(234,179,8,0.6)]'
+                                  ? 'drop-shadow-[0_0_26px_rgba(205,180,134,1)] animate-pulse'
+                                  : 'drop-shadow-[0_0_16px_rgba(205,180,134,0.7)]'
                               }`}
                             />
                           </div>
 
-                          {/* Back Face: Crescent Tail (Tail) */}
+                          {/* Back Face: Tail */}
                           <div
                             className="absolute inset-0 rounded-full flex items-center justify-center pointer-events-none select-none"
                             style={{
@@ -1340,11 +1346,11 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
                           >
                             <img
                               src="/tail.png"
-                              alt="Crescent Tail"
+                              alt="Tail"
                               className={`w-full h-full object-contain ${
                                 spectateGame.status === 'complete' && spectateGame.result === 'tails'
-                                  ? 'drop-shadow-[0_0_24px_rgba(168,85,247,0.9)] animate-pulse'
-                                  : 'drop-shadow-[0_0_16px_rgba(168,85,247,0.6)]'
+                                  ? 'drop-shadow-[0_0_26px_rgba(232,223,207,1)] animate-pulse'
+                                  : 'drop-shadow-[0_0_16px_rgba(232,223,207,0.7)]'
                               }`}
                             />
                           </div>
@@ -1354,23 +1360,23 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
                   </div>
 
                   {/* ── RIGHT: OPPONENT / CHALLENGER ── */}
-                  <div className="flex flex-col items-center space-y-1.5 sm:space-y-2 text-center min-w-0">
+                  <div className="flex flex-col items-center space-y-2 text-center min-w-0">
                     <div className="relative group">
                       {spectateGame.challengerAvatar || spectateGame.challengerId ? (
-                        <div className="w-14 h-14 xs:w-16 xs:h-16 sm:w-24 sm:h-24 overflow-hidden border border-[#171513]/25 dark:border-[#BCA172]/40 bg-[#E8DFD1] dark:bg-[#1C1917] p-0.5 sm:p-1 shadow-md">
+                        <div className="w-14 h-14 xs:w-16 xs:h-16 sm:w-24 sm:h-24 rounded-xl overflow-hidden border-2 border-[#CDB486]/40 bg-[#080C14] p-1 shadow-[0_4px_16px_rgba(0,0,0,0.6)]">
                           <img
                             src={spectateGame.challengerAvatar || '/image/logo.png'}
                             alt={spectateGame.challengerName || 'Challenger'}
-                            className="w-full h-full object-cover"
+                            className="w-full h-full object-cover rounded-lg"
                           />
                         </div>
                       ) : (
-                        <div className="w-14 h-14 xs:w-16 xs:h-16 sm:w-24 sm:h-24 border border-dashed border-[#171513]/30 dark:border-[#E8DFD1]/30 bg-[#E8DFD1]/40 dark:bg-white/5 flex items-center justify-center">
-                          <span className="text-2xl sm:text-4xl font-serif text-[#171513]/30 dark:text-white/30 font-bold">?</span>
+                        <div className="w-14 h-14 xs:w-16 xs:h-16 sm:w-24 sm:h-24 rounded-xl border-2 border-dashed border-[#CDB486]/20 bg-[#080C14]/50 flex items-center justify-center">
+                          <span className="text-2xl sm:text-4xl text-[#64748B] font-bold">?</span>
                         </div>
                       )}
                       {/* Opposing Coin Badge Overlay */}
-                      <div className="absolute -top-1.5 -right-1.5 sm:-top-2 sm:-right-2 w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-[#F4EFE6] dark:bg-[#171513] border border-[#9E8055] shadow-md p-0.5 transform group-hover:scale-110 transition-transform">
+                      <div className="absolute -top-1.5 -right-1.5 sm:-top-2 sm:-right-2 w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-[#080C14] border border-[#CDB486] shadow-md p-0.5 transform group-hover:scale-110 transition-transform">
                         <img
                           src={spectateGame.creatorSide === 'heads' ? '/tail.png' : '/head.png'}
                           alt="Opponent side"
@@ -1380,32 +1386,32 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
                     </div>
 
                     {/* Name & Level Badge */}
-                    <div className="flex items-center gap-1 mt-0.5 sm:mt-1 max-w-full">
+                    <div className="flex items-center gap-1 mt-1 max-w-full">
                       {spectateGame.challengerId && (
-                        <span className="px-1 py-0.2 text-[8px] sm:text-[9px] font-mono bg-[#E8DFD1] dark:bg-[#25211D] border border-[#171513]/20 dark:border-[#E8DFD1]/20 text-[#9E8055] font-bold">
-                          1
+                        <span className="px-1.5 py-0.2 text-[8px] sm:text-[9px] font-mono bg-[#CDB486]/10 border border-[#CDB486]/30 text-[#CDB486] rounded font-bold">
+                          NODE
                         </span>
                       )}
-                      <span className="text-[11px] sm:text-sm font-bold font-serif text-[#171513] dark:text-[#E8DFD1] truncate max-w-[70px] xs:max-w-[85px] sm:max-w-[120px]">
+                      <span className="text-[11px] sm:text-sm font-bold text-[#E2E8F0] truncate max-w-[70px] xs:max-w-[85px] sm:max-w-[120px]">
                         {spectateGame.challengerName || 'Waiting...'}
                       </span>
                     </div>
 
                     {/* Bet Pill */}
-                    <div className="px-2 sm:px-3 py-0.5 sm:py-1 bg-[#E8DFD1] dark:bg-[#181614] border border-[#171513]/20 dark:border-[#E8DFD1]/20 text-[10px] sm:text-xs font-mono font-bold text-[#171513] dark:text-[#E8DFD1] flex items-center gap-1 shadow-sm">
-                      <span className="text-[#9E8055] font-bold">≡</span>
+                    <div className="px-2.5 sm:px-3 py-1 bg-[#0D1322] border border-[#CDB486]/30 rounded-lg text-[10px] sm:text-xs font-mono font-bold text-[#E2E8F0] flex items-center gap-1 shadow-sm">
+                      <span className="text-[#CDB486] font-bold">≡</span>
                       <span>{spectateGame.challengerId ? spectateGame.betAmount : 0} USDG</span>
                     </div>
                   </div>
                 </div>
 
                 {/* ── ACTION AREA UNDERNEATH THE 3-COLUMN STAGE (FULL WIDTH ON MOBILE) ── */}
-                <div className="mt-4 sm:mt-6 w-full flex flex-col items-center justify-center relative z-10">
+                <div className="mt-5 sm:mt-6 w-full flex flex-col items-center justify-center relative z-10">
                   {spectateGame.status === 'waiting' && (
                     <>
                       {spectateGame.creatorId?.toLowerCase() === account?.toLowerCase() ? (
                         <div className="flex flex-col items-center gap-2 sm:gap-2.5 w-full max-w-xs text-center">
-                          <span className="text-[10px] sm:text-[11px] font-serif text-[#9E8055] animate-pulse">
+                          <span className="text-[11px] text-[#CDB486] font-semibold animate-pulse">
                             Stake confirmed on-chain • Awaiting challenger...
                           </span>
 
@@ -1414,40 +1420,40 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
                               type="button"
                               disabled={isSummoningAi || isFlippingAnim}
                               onClick={() => handlePlayVsAiInRoom(spectateGame)}
-                              className="w-full py-2.5 px-4 bg-[#171513] hover:bg-[#2A2621] dark:bg-[#BCA172] dark:hover:bg-[#DFC493] text-[#F4EFE6] dark:text-[#121110] font-serif font-bold text-xs uppercase tracking-widest border border-[#9E8055] shadow-md flex items-center justify-center gap-2 transition-all transform active:scale-95 disabled:opacity-50"
+                              className="w-full py-2.5 px-4 glass-btn-inflated text-xs uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer"
                             >
-                              <Bot className="w-4 h-4 text-[#DFC493] dark:text-[#121110]" />
+                              <Bot className="w-4 h-4 text-[#030508]" />
                               <span>{isSummoningAi ? 'Summoning AI...' : 'VS AI'}</span>
                             </button>
                           </div>
 
-                          <span className="text-[10px] font-serif text-[#171513]/60 dark:text-[#E8DFD1]/60">
+                          <span className="text-[11px] text-[#8993A4]">
                             Duel the smart contract vault immediately with 2.0× return!
                           </span>
                         </div>
                       ) : isConfirmingBet ? (
-                        <div className="flex flex-col items-center gap-2 bg-[#EAE3D5] dark:bg-[#1A1816] border border-[#171513]/20 dark:border-[#E8DFD1]/20 p-3 sm:p-4 shadow-md w-full max-w-xs text-center animate-in fade-in zoom-in-95 duration-200">
-                          <p className="text-xs font-serif text-[#171513] dark:text-[#E8DFD1] leading-tight">
-                            Confirm matching stake of <strong className="text-[#9E8055] font-mono font-bold">{spectateGame.betAmount} USDG</strong> to duel?
+                        <div className="flex flex-col items-center gap-3 glass-capsule rounded-2xl p-4 shadow-xl w-full max-w-xs text-center animate-in fade-in zoom-in-95 duration-200 border border-white/10">
+                          <p className="text-xs text-[#F5F7FA] leading-tight">
+                            Confirm matching stake of <strong className="text-[#CDB486] font-mono font-bold">{spectateGame.betAmount} USDG</strong> to duel?
                           </p>
-                          <div className="text-[10px] font-mono text-[#171513]/60 dark:text-[#E8DFD1]/60">
-                            Balance: <span className="text-[#9E8055] font-bold">{usdgBalance.toFixed(2)} USDG</span>
+                          <div className="text-[11px] font-mono text-[#8993A4]">
+                            Balance: <span className="text-[#CDB486] font-bold">{usdgBalance.toFixed(2)} USDG</span>
                           </div>
-                          <div className="flex items-center gap-2 w-full">
+                          <div className="flex items-center gap-2 w-full pt-1">
                             <button
                               type="button"
                               disabled={isPayingJoin || isSubmitting || usdgBalance < spectateGame.betAmount}
                               onClick={() => handleExecuteJoin(spectateGame)}
-                              className="flex-1 py-2 bg-[#171513] hover:bg-[#25221e] dark:bg-[#BCA172] dark:hover:bg-[#DFC493] text-[#F4EFE6] dark:text-[#121110] text-xs font-serif font-bold uppercase tracking-wider shadow-sm transition-all flex items-center justify-center gap-1.5 border border-[#9E8055]/50 disabled:opacity-50"
+                              className="flex-1 py-2 glass-btn-inflated text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 cursor-pointer"
                             >
                               {isPayingJoin ? (
                                 <>
-                                  <Clock className="w-3.5 h-3.5 animate-spin text-[#9E8055] dark:text-[#121110]" />
+                                  <Clock className="w-3.5 h-3.5 animate-spin text-[#030508]" />
                                   <span className="text-[11px]">Processing...</span>
                                 </>
                               ) : (
                                 <>
-                                  <Zap className="w-3.5 h-3.5 text-[#9E8055] dark:text-[#121110]" />
+                                  <Zap className="w-3.5 h-3.5 text-[#030508]" />
                                   <span>Pay &amp; Duel</span>
                                 </>
                               )}
@@ -1456,7 +1462,7 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
                               type="button"
                               disabled={isPayingJoin || isSubmitting}
                               onClick={() => setIsConfirmingBet(false)}
-                              className="px-3 py-2 bg-transparent hover:bg-[#171513]/10 dark:hover:bg-white/10 text-[#171513]/70 dark:text-[#E8DFD1]/70 text-xs uppercase font-serif border border-[#171513]/20 dark:border-[#E8DFD1]/20 transition-all"
+                              className="px-3.5 py-2 glass-btn-chip text-xs uppercase font-bold cursor-pointer"
                             >
                               Cancel
                             </button>
@@ -1466,7 +1472,7 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
                         <button
                           type="button"
                           onClick={() => setIsConfirmingBet(true)}
-                          className="w-full sm:w-auto px-8 py-2.5 bg-[#171513] hover:bg-[#25221e] dark:bg-[#BCA172] dark:hover:bg-[#DFC493] text-[#F4EFE6] dark:text-[#121110] text-xs sm:text-sm font-serif font-bold uppercase tracking-widest border border-[#9E8055]/50 shadow-md transition-all transform active:scale-95 text-center"
+                          className="w-full sm:w-auto px-8 py-3 glass-btn-inflated text-xs sm:text-sm uppercase tracking-widest text-center cursor-pointer"
                         >
                           Join Duel
                         </button>
@@ -1475,26 +1481,26 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
                   )}
 
                   {spectateGame.status === 'flipping' && (
-                    <div className="px-4 py-2 bg-[#E8DFD1] dark:bg-[#1E1B18] border border-[#9E8055]/50 text-[#9E8055] text-xs font-serif flex items-center gap-2 animate-pulse text-center">
-                      <Clock className="w-4 h-4 animate-spin text-[#9E8055] flex-shrink-0" />
-                      <span className="font-serif tracking-wide text-xs">Resolving Coin Duel...</span>
+                    <div className="px-6 py-2.5 glass-capsule rounded-full text-[#CDB486] text-xs font-semibold flex items-center gap-2.5 animate-pulse text-center">
+                      <Clock className="w-4 h-4 animate-spin text-[#CDB486] flex-shrink-0" />
+                      <span className="tracking-wide text-xs">Resolving Coin Duel...</span>
                     </div>
                   )}
 
                   {spectateGame.status === 'complete' && (
-                    <div className="flex flex-col items-center gap-2 text-center animate-in fade-in zoom-in-95 duration-300 w-full max-w-sm">
+                    <div className="flex flex-col items-center gap-2.5 text-center animate-in fade-in zoom-in-95 duration-300 w-full max-w-sm">
                       {spectateGame.winnerId?.toLowerCase() === account?.toLowerCase() ? (
-                        <div className="px-3.5 py-1.5 bg-emerald-500/15 border border-emerald-500/40 text-emerald-700 dark:text-emerald-300 text-xs font-serif font-bold flex items-center gap-1.5">
-                          <Trophy className="w-4 h-4 text-amber-500 flex-shrink-0" />
+                        <div className="px-5 py-2.5 glass-capsule rounded-2xl border border-[#CDB486]/40 text-[#CDB486] text-xs font-bold flex items-center gap-2">
+                          <Trophy className="w-4 h-4 text-[#CDB486] flex-shrink-0" />
                           <span>Victor: {spectateGame.winnerName} (You Won!)</span>
                         </div>
                       ) : (
-                        <div className="flex flex-col items-center gap-1">
-                          <div className="px-3.5 py-1.5 bg-rose-500/15 border border-rose-500/40 text-rose-700 dark:text-rose-300 text-xs font-serif font-bold flex items-center gap-1.5">
-                            <XCircle className="w-4 h-4 text-rose-500 flex-shrink-0" />
+                        <div className="flex flex-col items-center gap-1.5">
+                          <div className="px-5 py-2.5 glass-capsule rounded-2xl border border-rose-500/40 text-rose-300 text-xs font-bold flex items-center gap-2">
+                            <XCircle className="w-4 h-4 text-rose-400 flex-shrink-0" />
                             <span>Victor: {spectateGame.winnerName}</span>
                           </div>
-                          <span className="text-[10px] font-mono text-[#171513]/50 dark:text-[#E8DFD1]/50 animate-pulse">
+                          <span className="text-[10px] font-mono text-[#8993A4] animate-pulse">
                             Defeat. Closing chamber...
                           </span>
                         </div>
@@ -1502,8 +1508,8 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
 
                       {spectateGame.winnerId?.toLowerCase() === account?.toLowerCase() && (
                         spectateGame.isClaimed ? (
-                          <div className="px-4 py-2 bg-emerald-500/15 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 font-bold text-xs flex items-center justify-center gap-1.5 w-full">
-                            <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+                          <div className="px-5 py-2.5 glass-capsule rounded-2xl border border-[#CDB486]/30 text-[#CDB486] font-bold text-xs flex items-center justify-center gap-2 w-full">
+                            <CheckCircle2 className="w-4 h-4 text-[#CDB486] flex-shrink-0" />
                             <span>Prize Successfully Claimed (+{(spectateGame.winAmount || spectateGame.betAmount * 2).toLocaleString()} USDG)</span>
                           </div>
                         ) : (
@@ -1511,16 +1517,16 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
                             type="button"
                             disabled={isClaimingPvp}
                             onClick={() => handleClaimPvp(spectateGame)}
-                            className="px-4 py-2.5 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white font-serif font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-1.5 shadow-md border border-emerald-400/50 w-full transition-all disabled:opacity-50"
+                            className="px-6 py-3 glass-btn-inflated text-xs uppercase tracking-widest flex items-center justify-center gap-2 w-full cursor-pointer"
                           >
                             {isClaimingPvp ? (
                               <>
-                                <Clock className="w-3.5 h-3.5 animate-spin" />
+                                <Clock className="w-4 h-4 animate-spin text-[#030508]" />
                                 <span>Settling...</span>
                               </>
                             ) : (
                               <>
-                                <Sparkles className="w-3.5 h-3.5 text-yellow-300" />
+                                <Sparkles className="w-4 h-4 text-[#030508]" />
                                 <span>Claim {(spectateGame.winAmount || spectateGame.betAmount * 2).toLocaleString()} USDG</span>
                               </>
                             )}
@@ -1533,10 +1539,10 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
                           href={`${ROBINHOOD_CHAIN_CONFIG.blockExplorer}/tx/${pvpClaimTx}`}
                           target="_blank"
                           rel="noreferrer"
-                          className="inline-flex items-center gap-1 text-[10px] font-mono text-[#9E8055] underline"
+                          className="inline-flex items-center gap-1.5 text-[11px] font-mono text-[#CDB486] hover:underline"
                         >
                           <span>View Tx on Explorer</span>
-                          <ExternalLink className="w-2.5 h-2.5" />
+                          <ExternalLink className="w-3 h-3" />
                         </a>
                       )}
                     </div>
@@ -1545,11 +1551,11 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
               </div>
 
               {/* ── MODAL FOOTER: PROVABLY FAIR & SHARE ── */}
-              <div className="p-3 sm:p-4 bg-[#EAE3D5] dark:bg-[#171513] border-t border-[#171513]/15 dark:border-[#E8DFD1]/15 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 sm:gap-3 text-[10px] sm:text-[11px] font-mono text-[#171513]/60 dark:text-[#E8DFD1]/60">
+              <div className="p-4 sm:p-5 border-t border-white/[0.06] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs font-mono text-[#8993A4]">
                 {/* Hashed Seed and Secret */}
-                <div className="space-y-0.5 max-w-full overflow-hidden">
+                <div className="space-y-1 max-w-full overflow-hidden">
                   <div className="flex items-center gap-1.5 flex-wrap sm:flex-nowrap">
-                    <span className="font-bold text-[#171513]/80 dark:text-[#E8DFD1]/80 flex-shrink-0">HASHED SEED:</span>
+                    <span className="font-bold text-[#F5F7FA] flex-shrink-0">HASHED SEED:</span>
                     <span
                       onClick={() => {
                         const seedHash =
@@ -1558,7 +1564,7 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
                         navigator.clipboard.writeText(seedHash);
                         onShowToast('Hashed seed copied to clipboard!', true);
                       }}
-                      className="truncate max-w-[150px] xs:max-w-[200px] sm:max-w-[340px] cursor-pointer hover:text-[#9E8055] transition-colors"
+                      className="truncate max-w-[150px] xs:max-w-[200px] sm:max-w-[340px] cursor-pointer hover:text-[#CDB486] transition-colors"
                       title="Click to copy hash"
                     >
                       {spectateGame.serverSeedHash ||
@@ -1566,8 +1572,8 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
                     </span>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <span className="font-bold text-[#171513]/80 dark:text-[#E8DFD1]/80 flex-shrink-0">SECRET:</span>
-                    <span className="text-[#171513]/60 dark:text-[#E8DFD1]/60 truncate max-w-[150px] xs:max-w-[200px] sm:max-w-none">
+                    <span className="font-bold text-[#F5F7FA] flex-shrink-0">SECRET:</span>
+                    <span className="text-[#8993A4]/70 truncate max-w-[150px] xs:max-w-[200px] sm:max-w-none">
                       {spectateGame.status === 'complete' && spectateGame.serverSeed
                         ? spectateGame.serverSeed
                         : 'Revealed upon completion'}
@@ -1582,10 +1588,10 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
                     onClick={() =>
                       onShowToast('Provably fair SHA-256 seed commitment verified on Robinhood Chain.', true)
                     }
-                    className="p-1.5 sm:p-2 border border-[#171513]/20 dark:border-[#E8DFD1]/20 hover:border-[#9E8055] text-[#171513]/70 dark:text-[#E8DFD1]/70 hover:text-[#9E8055] transition-colors"
+                    className="p-2.5 rounded-xl border border-white/[0.08] hover:border-[#CDB486]/40 text-[#8993A4] hover:text-[#CDB486] transition-colors bg-white/[0.02] cursor-pointer"
                     title="Provably Fair Verification"
                   >
-                    <Shield className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                    <Shield className="w-4 h-4" />
                   </button>
                   <button
                     type="button"
@@ -1595,17 +1601,19 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
                       playChip();
                       onShowToast('Duel link copied to clipboard!', true);
                     }}
-                    className="px-2.5 sm:px-3 py-1 sm:py-1.5 border border-[#171513]/20 dark:border-[#E8DFD1]/20 hover:border-[#9E8055] text-[#171513]/80 dark:text-[#E8DFD1]/80 hover:text-[#9E8055] text-[11px] sm:text-xs font-serif flex items-center gap-1.5 transition-colors"
+                    className="glass-btn-chip px-3.5 py-2 text-[#CDB486] text-xs font-bold flex items-center gap-1.5 cursor-pointer"
                   >
                     <span>Share</span>
-                    <Share2 className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                    <Share2 className="w-3.5 h-3.5" />
                   </button>
                 </div>
               </div>
             </motion.div>
           </div>
-        )}
-      </AnimatePresence>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
     </div>
   );
 };

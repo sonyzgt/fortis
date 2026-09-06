@@ -9,6 +9,7 @@ export class CoinFlipEngine {
   private games: Map<string, CoinFlipGame> = new Map();
   private completedGames: CoinFlipGame[] = [];
   private unclaimedGames: Map<string, CoinFlipGame> = new Map();
+  private secretSeeds: Map<string, string> = new Map();
   private nextRoomNumber: number = 1001;
 
   public onUpdate?: (games: CoinFlipGame[]) => void;
@@ -92,7 +93,7 @@ export class CoinFlipEngine {
       createdAt: Date.now(),
       isClaimed: false,
     };
-    (game as any)._serverSeedSecret = serverSeed;
+    this.secretSeeds.set(game.id, serverSeed);
 
     this.games.set(game.id, game);
     this.saveToDisk();
@@ -123,8 +124,10 @@ export class CoinFlipEngine {
       return { success: false, message: 'You cannot challenge yourself.' };
     }
 
-    // Pre-calculate provably fair result immediately so all clients animate to the exact target face
-    const result: 'heads' | 'tails' = Math.random() < 0.5 ? 'heads' : 'tails';
+    // Deterministic provably fair outcome based on committed serverSeed
+    const seed = this.secretSeeds.get(game.id) || (game as any)._serverSeedSecret || crypto.randomBytes(32).toString('hex');
+    const hmac = crypto.createHmac('sha256', seed).update(`${game.id}:${game.creatorId}:${challengerId}`).digest('hex');
+    const result: 'heads' | 'tails' = (parseInt(hmac.slice(0, 8), 16) % 2 === 0) ? 'heads' : 'tails';
     game.result = result;
     const creatorWins = game.creatorSide === result;
     game.winnerId = creatorWins ? game.creatorId : challengerId;
@@ -166,8 +169,10 @@ export class CoinFlipEngine {
       return { success: false, message: 'Only the room creator can summon the AI.' };
     }
 
-    // Pre-calculate provably fair result immediately so all clients animate to the exact target face
-    const result: 'heads' | 'tails' = Math.random() < 0.5 ? 'heads' : 'tails';
+    // Pre-calculate provably fair result deterministically from committed serverSeed
+    const seed = this.secretSeeds.get(game.id) || crypto.randomBytes(32).toString('hex');
+    const hmac = crypto.createHmac('sha256', seed).update(`${game.id}:${game.creatorId}:ai_oracle`).digest('hex');
+    const result: 'heads' | 'tails' = (parseInt(hmac.slice(0, 8), 16) % 2 === 0) ? 'heads' : 'tails';
     game.result = result;
     const creatorWins = game.creatorSide === result;
     game.winnerId = creatorWins ? game.creatorId : 'ai_oracle';
@@ -194,8 +199,10 @@ export class CoinFlipEngine {
   }
 
   private resolveGame(game: CoinFlipGame): void {
+    const serverSeed = this.secretSeeds.get(game.id) || (game as any)._serverSeedSecret || crypto.randomBytes(32).toString('hex');
     if (!game.result) {
-      const result: 'heads' | 'tails' = Math.random() < 0.5 ? 'heads' : 'tails';
+      const hmac = crypto.createHmac('sha256', serverSeed).update(`${game.id}:${game.creatorId}:${game.challengerId || 'ai_oracle'}`).digest('hex');
+      const result: 'heads' | 'tails' = (parseInt(hmac.slice(0, 8), 16) % 2 === 0) ? 'heads' : 'tails';
       game.result = result;
       const creatorWins = game.creatorSide === result;
       game.winnerId = creatorWins ? game.creatorId : game.challengerId;
@@ -205,7 +212,9 @@ export class CoinFlipEngine {
     const result = game.result;
     game.status = 'complete';
     game.isClaimed = false;
-    game.serverSeed = (game as any)._serverSeedSecret || crypto.randomBytes(32).toString('hex');
+    game.serverSeed = serverSeed;
+    this.secretSeeds.delete(game.id);
+    delete (game as any)._serverSeedSecret;
 
     // Register as unclaimed game so player can claim anytime even if disconnected
     this.unclaimedGames.set(game.id, { ...game });
@@ -325,70 +334,6 @@ export class CoinFlipEngine {
     return this.completedGames;
   }
 
-  public playAIGame(
-    playerId: string,
-    playerName: string,
-    playerAvatar: string,
-    betAmount: number,
-    playerSide: 'heads' | 'tails'
-  ): {
-    id: string;
-    roomNumber: number;
-    result: 'heads' | 'tails';
-    winnerId: string;
-    winnerName: string;
-    winAmount: number;
-    playerWon: boolean;
-  } {
-    const roomNumber = this.nextRoomNumber++;
-    const result: 'heads' | 'tails' = Math.random() < 0.5 ? 'heads' : 'tails';
-    const playerWon = playerSide === result;
-    const gameId = `cf_ai_${roomNumber}_${Date.now()}`;
-    const winAmount = playerWon ? betAmount * 2 : 0;
-    const serverSeed = crypto.randomBytes(32).toString('hex');
-    const serverSeedHash = crypto.createHash('sha256').update(serverSeed).digest('hex');
-
-    const game: CoinFlipGame = {
-      id: gameId,
-      roomNumber,
-      creatorId: playerId,
-      creatorName: playerName,
-      creatorAvatar: playerAvatar,
-      creatorSide: playerSide,
-      betAmount,
-      status: 'complete',
-      challengerId: 'ai_oracle',
-      challengerName: 'AI Oracle',
-      challengerAvatar: '/image/logo.png',
-      result,
-      winnerId: playerWon ? playerId : 'ai_oracle',
-      winnerName: playerWon ? playerName : 'AI Oracle',
-      winAmount,
-      serverSeedHash,
-      serverSeed,
-      createdAt: Date.now(),
-      isClaimed: false,
-    };
-
-    if (playerWon) {
-      this.unclaimedGames.set(game.id, { ...game });
-    }
-
-    this.completedGames.unshift(game);
-    if (this.completedGames.length > 100) this.completedGames.pop();
-
-    this.saveToDisk();
-
-    return {
-      id: gameId,
-      roomNumber,
-      result,
-      winnerId: game.winnerId!,
-      winnerName: game.winnerName!,
-      winAmount,
-      playerWon,
-    };
-  }
 
   public clearHistory(): void {
     this.completedGames = [];

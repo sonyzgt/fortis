@@ -1,82 +1,62 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  ArrowLeft,
   User,
   Settings,
-  History,
   ShieldCheck,
   Trophy,
-  Coins,
   ExternalLink,
   Copy,
   Check,
   Shuffle,
   Upload,
-  Sparkles,
   Wallet,
-  LogOut,
   Clock,
   CircleDot,
-  Feather,
-  Sun,
-  Moon,
+  Terminal,
 } from 'lucide-react';
 import { useCashFlipWeb3 } from '@/context/CashFlipWeb3Context';
-import { useTheme } from '@/context/ThemeContext';
+import { ProtocolHeader } from '@/components/protocol/ProtocolHeader';
+import { ProtocolFooter } from '@/components/protocol/ProtocolFooter';
 import { ROBINHOOD_CHAIN_CONFIG } from '@/lib/web3/contracts';
 import { getApiBaseUrl } from '@/lib/apiConfig';
 import { getUserStats } from '@/lib/levelSystem';
 import { WalletSelectModal } from '@/components/cashflip/WalletSelectModal';
-import { BookplateCorner, CelestialFlourish } from '@/components/ui/CelestialFlourish';
-
-const PRESET_AVATARS = [
-  '/image/logo.png',
-  'https://api.dicebear.com/7.x/bottts/svg?seed=LuckyWhale',
-  'https://api.dicebear.com/7.x/bottts/svg?seed=CashFlipKing',
-  'https://api.dicebear.com/7.x/bottts/svg?seed=CyberChad',
-  'https://api.dicebear.com/7.x/bottts/svg?seed=EmeraldMaster',
-  'https://api.dicebear.com/7.x/bottts/svg?seed=DegenAce',
-  'https://api.dicebear.com/7.x/bottts/svg?seed=CryptoNinja',
-  'https://api.dicebear.com/7.x/bottts/svg?seed=RobinhoodBull',
-];
+import { VerifyModal } from '@/components/cashflip/VerifyModal';
+import { AmbientLiquidBackground } from '@/components/ui/AmbientLiquidBackground';
 
 const RANDOM_NAMES = [
-  'AetherVoyager',
-  'NocturneSeeker',
-  'CelestialAce',
-  'AstrolabeLord',
+  'AetherNode',
+  'NocturneCipher',
+  'VanguardKofuku',
+  'ZeroExOperator',
   'GildedOracle',
-  'LunarArchon',
-  'AlchemistCashFlip',
-  'VeritasScholar',
-  'OccultObserver',
-  'ZephyrPatron',
+  'ArchonVault',
+  'QuantObserver',
+  'VeritasScalar',
+  'SubZeroUnit',
+  'SpectralApex',
 ];
 
 export default function AccountPage() {
   const {
     account,
     isConnected,
-    connectWallet,
-    disconnectWallet,
     usdgBalance,
     usdgAllowance,
-    refreshBalances,
   } = useCashFlipWeb3();
-  const { theme, toggleTheme } = useTheme();
 
   // Profile Customization State
   const [name, setName] = useState('');
   const [avatar, setAvatar] = useState('/image/logo.png');
-  const [customUrl, setCustomUrl] = useState('');
-  const [activeAvatarTab, setActiveAvatarTab] = useState<'presets' | 'url' | 'upload'>('presets');
   const [copiedAddress, setCopiedAddress] = useState(false);
   const [toastMsg, setToastMsg] = useState<{ ok: boolean; title: string; desc: string } | null>(null);
   const [showWalletModal, setShowWalletModal] = useState(false);
+  const [verifyTargetGameId, setVerifyTargetGameId] = useState<string | null>(null);
+  const [showVerifyModal, setShowVerifyModal] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // History State
@@ -86,7 +66,7 @@ export default function AccountPage() {
   // Load saved profile
   useEffect(() => {
     try {
-      const saved = localStorage.getItem('cashflip_user_profile') || localStorage.getItem('cashflip_user_profile');
+      const saved = localStorage.getItem('kofuku_user_profile') || localStorage.getItem('cashflip_user_profile');
       if (saved) {
         const parsed = JSON.parse(saved);
         if (parsed.name) setName(parsed.name);
@@ -118,75 +98,63 @@ export default function AccountPage() {
           ...(Array.isArray(cfData)
             ? cfData.map((c: any) => ({
                 gameId: `CF-${c.roomNumber || c.id?.slice(0, 6) || 'DUEL'}`,
-                nonce: c.roomNumber || 0,
-                totalPool: c.winAmount || c.betAmount * 2 || 0,
-                endTime: c.claimedAt || c.createdAt || Date.now(),
-                players: [
-                  { address: c.creatorId, totalBetPons: c.betAmount, odds: 50 },
-                  ...(c.challengerId ? [{ address: c.challengerId, totalBetPons: c.betAmount, odds: 50 }] : []),
-                ],
+                totalPool: c.betAmount * 2,
                 winner: {
-                  address: c.winnerId,
-                  prizePons: c.winAmount || c.betAmount * 2,
-                  odds: 50,
-                  claimed: true,
-                  claimTxHash: c.claimTxHash || null,
+                  address: c.winner === 'creator' ? c.creatorAddress : c.challengerAddress,
+                  prize: Number((c.betAmount * 2 * 0.98).toFixed(2)),
+                  winningTicket: c.winningSide === 'heads' ? 'HEADS' : 'TAILS',
                 },
+                timestamp: c.completedAt || c.createdAt || Date.now(),
+                type: 'coinflip',
               }))
             : []),
         ];
+
+        combined.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
         setAllHistory(combined);
       } catch (e) {
-        console.warn('Could not load game history', e);
+        console.warn('Failed to load ledger history', e);
       } finally {
         setLoadingHistory(false);
       }
     };
+
     fetchHistory();
   }, []);
 
-  // Filter personal rounds for the connected account
+  // Filter history for currently connected user
   const myRounds = useMemo(() => {
-    if (!account || !allHistory.length) return [];
-    const norm = account.toLowerCase();
-
-    return allHistory
-      .filter((g) => {
-        const played = g.players?.some((p: any) => p.address?.toLowerCase() === norm);
-        const won = g.winner?.address?.toLowerCase() === norm;
-        return played || won;
-      })
-      .map((g) => {
-        const myPlayerData = g.players?.find((p: any) => p.address?.toLowerCase() === norm);
-        const isVictor = g.winner?.address?.toLowerCase() === norm;
-        const winAmt = g.winner?.prize ?? g.winner?.prizePons ?? 0;
-        return {
-          gameId: g.gameId,
-          nonce: g.nonce,
-          totalPool: g.totalPool || 0,
-          endTime: g.endTime,
-          myBet: myPlayerData?.totalBet ?? myPlayerData?.totalBetPons ?? (isVictor ? winAmt : 0),
-          myOdds: myPlayerData?.odds || (isVictor ? g.winner?.odds : 0),
-          isVictor,
-          prizeWon: isVictor ? winAmt : 0,
-          claimed: isVictor ? !!g.winner?.claimed : false,
-          claimTxHash: isVictor ? g.winner?.claimTxHash : null,
-        };
-      });
-  }, [account, allHistory]);
-
-  const totalWonUsdg = useMemo(() => {
-    return myRounds.reduce((acc, r) => acc + (r.isVictor ? r.prizeWon : 0), 0);
-  }, [myRounds]);
+    if (!account) return [];
+    const accLower = account.toLowerCase();
+    return allHistory.filter((g) => {
+      if (g.winner?.address && g.winner.address.toLowerCase() === accLower) return true;
+      if (Array.isArray(g.players)) {
+        return g.players.some((p: any) => p.address && p.address.toLowerCase() === accLower);
+      }
+      return false;
+    });
+  }, [allHistory, account]);
 
   const totalVictories = useMemo(() => {
-    return myRounds.filter((r) => r.isVictor).length;
-  }, [myRounds]);
+    if (!account) return 0;
+    const accLower = account.toLowerCase();
+    return myRounds.filter(
+      (g) => g.winner?.address && g.winner.address.toLowerCase() === accLower
+    ).length;
+  }, [myRounds, account]);
+
+  const totalWonUsdg = useMemo(() => {
+    if (!account) return 0;
+    const accLower = account.toLowerCase();
+    return myRounds
+      .filter((g) => g.winner?.address && g.winner.address.toLowerCase() === accLower)
+      .reduce((sum, g) => sum + (g.winner?.prize || g.winner?.prizePons || 0), 0);
+  }, [myRounds, account]);
 
   const handleRandomizeName = () => {
     const random = RANDOM_NAMES[Math.floor(Math.random() * RANDOM_NAMES.length)];
     const num = Math.floor(Math.random() * 900) + 100;
-    setName(`${random}${num}`);
+    setName(`${random}-${num}`);
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -229,14 +197,14 @@ export default function AccountPage() {
     const profile = { name: finalName, avatar: finalAvatar };
 
     try {
-      localStorage.setItem('cashflip_user_profile', JSON.stringify(profile));
-      localStorage.setItem('cashflip_profile_configured', 'true');
+      localStorage.setItem('kofuku_user_profile', JSON.stringify(profile));
+      localStorage.setItem('kofuku_profile_configured', 'true');
       localStorage.setItem('cashflip_user_profile', JSON.stringify(profile));
       localStorage.setItem('cashflip_profile_configured', 'true');
       setToastMsg({
         ok: true,
-        title: 'Persona Changes Inscribed',
-        desc: `Callsign: "${finalName}" saved to observatory archives.`,
+        title: 'IDENTITY COMMITTED',
+        desc: `Callsign "${finalName}" saved to profile.`,
       });
       setTimeout(() => setToastMsg(null), 4000);
     } catch (e) {
@@ -254,119 +222,71 @@ export default function AccountPage() {
   const userStats = getUserStats(account);
 
   return (
-    <div className="min-h-screen overflow-y-auto bg-[#E8DFD1] text-[#171513] font-serif select-none pb-24">
-      {/* ── Top Masthead ── */}
-      <header className="sticky top-0 z-40 h-16 border-b border-[#171513]/20 bg-[#E8DFD1] px-4 sm:px-8 flex items-center justify-between shadow-sm">
-        <div className="flex items-center gap-3">
-          <Link
-            href="/"
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-[#F4EFE6] hover:bg-[#DDD2C1] border border-[#171513]/20 text-xs font-serif transition-colors"
-          >
-            <ArrowLeft className="w-3.5 h-3.5 text-[#9E8055]" />
-            <span>Return to Sanctum</span>
-          </Link>
-          <div className="h-4 w-[1px] bg-[#171513]/20 hidden sm:block" />
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 border border-[#9E8055] p-0.5 bg-[#F4EFE6] flex items-center justify-center flex-shrink-0">
-              <img src="/image/logo.png" alt="CashFlip" className="w-full h-full object-contain" />
-            </div>
-            <span className="text-sm font-serif font-semibold tracking-wider text-[#171513]">
-              CASHFLIP OBSERVATOIRE
-            </span>
-            <span className="px-2 py-0.5 border border-[#9E8055] text-[#9E8055] text-[9px] font-mono tracking-widest uppercase">
-              ACCOUNT & HISTORY
-            </span>
-          </div>
-        </div>
+    <div className="min-h-screen bg-[#030508] text-[#F5F7FA] font-sans selection:bg-[#CDB486] selection:text-[#030508] flex flex-col relative overflow-x-hidden">
+      {/* Ambient Liquid Glass Atmospheric Bubbles Background */}
+      <AmbientLiquidBackground />
 
-        <div className="flex items-center gap-2 sm:gap-3">
-          {/* Theme toggle (Dark / Light) */}
-          <button
-            onClick={toggleTheme}
-            className="w-8 h-8 sm:w-9 sm:h-9 border border-[#171513]/20 bg-[#F4EFE6] hover:bg-[#E8DFD1] text-[#171513] flex items-center justify-center transition-colors shadow-sm"
-            title={theme === 'dark' ? 'Ganti ke Tema Terang (Parchment)' : 'Ganti ke Tema Gelap (Nocturnal)'}
-            aria-label="Toggle Theme"
-          >
-            {theme === 'dark' ? (
-              <Sun className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#DFC493]" />
-            ) : (
-              <Moon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#9E8055]" />
-            )}
-          </button>
+      {/* Header */}
+      <ProtocolHeader
+        currentRoute="account"
+        onOpenWalletModal={() => setShowWalletModal(true)}
+      />
 
-          {isConnected && (
-            <button
-              onClick={disconnectWallet}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-[#F4EFE6] hover:bg-red-100 border border-[#171513]/20 text-xs text-red-900 transition-colors font-serif"
-            >
-              <LogOut className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Disconnect</span>
-            </button>
-          )}
-        </div>
-      </header>
-
-      {/* ── Main Content Container ── */}
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 py-8 space-y-6">
+      {/* Main Container */}
+      <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-8 py-8 space-y-6 relative z-10">
         {!isConnected ? (
           /* When wallet is not connected */
-          <div className="editorial-frame p-8 sm:p-12 bg-[#F4EFE6] text-center space-y-4 shadow-sm relative">
-            <BookplateCorner />
-            <div className="w-16 h-16 border border-[#9E8055] bg-[#E8DFD1] p-2 flex items-center justify-center mx-auto shadow-inner">
-              <Wallet className="w-8 h-8 text-[#9E8055]" />
+          <div className="glass-capsule rounded-3xl p-8 sm:p-12 text-center space-y-5 shadow-2xl backdrop-blur-xl">
+            <div className="w-16 h-16 rounded-2xl bg-[#CDB486]/10 border border-[#CDB486]/25 flex items-center justify-center mx-auto text-[#CDB486] shadow-inner">
+              <Wallet className="w-8 h-8" />
             </div>
-            <div className="space-y-1">
-              <h2 className="text-xl font-serif font-semibold text-[#171513]">
-                CONNECT CRYPTOGRAPHIC LEDGER
+            <div className="space-y-2">
+              <h2 className="text-xl font-heading font-bold uppercase tracking-wider text-[#F5F7FA]">
+                CONNECT WALLET IDENTITY
               </h2>
-              <p className="text-xs text-[#171513]/65 max-w-md mx-auto leading-relaxed">
-                Connect your Web3 wallet to inspect your persona registry, manage display credentials, and review historical epoch participations.
+              <p className="text-sm text-[#8993A4] max-w-md mx-auto leading-relaxed">
+                Connect your decentralized Web3 wallet to inspect operator credentials, manage display signatures, and review historical epoch participations.
               </p>
             </div>
             <button
               onClick={() => setShowWalletModal(true)}
-              className="px-6 py-2.5 bg-[#171513] hover:bg-[#25221e] text-[#F4EFE6] font-serif text-xs tracking-widest uppercase border border-[#9E8055]/50 inline-flex items-center gap-2 shadow-sm transition-colors"
+              className="glass-btn-inflated px-8 py-3.5 inline-flex items-center gap-2 cursor-pointer"
             >
-              <Sparkles className="w-3.5 h-3.5 text-[#9E8055]" />
-              <span>CONSULT CODEX & CONNECT</span>
+              <span>CONNECT WALLET ↗</span>
             </button>
           </div>
         ) : (
           /* When wallet is connected */
           <>
-            {/* Top Identity Ledger Plate */}
-            <div className="editorial-frame p-6 bg-[#F4EFE6] shadow-sm space-y-4 relative">
-              <BookplateCorner />
-
-              <div className="flex flex-col sm:flex-row items-center sm:items-start justify-between gap-4 pb-4 border-b border-[#171513]/15">
+            {/* Top Identity Ledger Node */}
+            <div className="glass-capsule rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl backdrop-blur-xl">
+              <div className="flex flex-col sm:flex-row items-center sm:items-start justify-between gap-4 pb-6 border-b border-white/[0.06]">
                 <div className="flex items-center gap-4">
-                  <div className="w-16 h-16 border border-[#9E8055] p-1 bg-[#E8DFD1] flex-shrink-0 shadow-inner">
-                    <img src={avatar || '/image/logo.png'} alt="Persona" className="w-full h-full object-cover" />
+                  <div className="w-16 h-16 rounded-2xl bg-white/[0.04] border border-white/10 p-1 shadow-inner flex-shrink-0 overflow-hidden">
+                    <img src={avatar || '/image/logo.png'} alt="Persona" className="w-full h-full object-cover rounded-xl" />
                   </div>
                   <div className="space-y-1 text-center sm:text-left">
-                    <span className="text-[9px] tracking-[0.25em] font-serif uppercase text-[#9E8055] block">
-                      Inscribed Persona
+                    <span className="text-[10px] tracking-[0.2em] uppercase text-[#CDB486] block font-bold font-mono">
+                      AUTHENTICATED OPERATOR
                     </span>
-                    <h1 className="text-xl font-serif font-semibold text-[#171513]">
-                      {name || 'Initiate Persona'}
+                    <h1 className="text-xl font-heading font-bold text-[#F5F7FA] uppercase tracking-wider">
+                      {name || 'INITIATE CIPHER'}
                     </h1>
-                    <div className="flex items-center gap-2 justify-center sm:justify-start">
-                      <span className="text-xs font-mono text-[#171513]/70">
-                        {account?.slice(0, 10)}...{account?.slice(-8)}
-                      </span>
+                    <div className="flex items-center gap-2 justify-center sm:justify-start text-xs text-[#8993A4]">
+                      <span className="font-mono">{account?.slice(0, 10)}...{account?.slice(-8)}</span>
                       <button
                         onClick={copyAddress}
-                        className="p-1 hover:bg-[#DDD2C1] border border-[#171513]/15 text-[#171513]/60 transition-colors"
-                        title="Copy full ledger address"
+                        className="p-1 hover:bg-[#CDB486]/10 border border-white/[0.08] hover:border-[#CDB486]/30 rounded-lg text-[#8993A4] hover:text-[#CDB486] transition-colors"
+                        title="Copy full address"
                       >
-                        {copiedAddress ? <Check className="w-3 h-3 text-[#9E8055]" /> : <Copy className="w-3 h-3" />}
+                        {copiedAddress ? <Check className="w-3 h-3 text-[#CDB486]" /> : <Copy className="w-3 h-3" />}
                       </button>
                       <a
                         href={`${ROBINHOOD_CHAIN_CONFIG.blockExplorer}/address/${account}`}
                         target="_blank"
                         rel="noreferrer"
-                        className="p-1 hover:bg-[#DDD2C1] border border-[#171513]/15 text-[#171513]/60 transition-colors"
-                        title="Inspect on Robinhood Blockscout"
+                        className="p-1 hover:bg-[#CDB486]/10 border border-white/[0.08] hover:border-[#CDB486]/30 rounded-lg text-[#8993A4] hover:text-[#CDB486] transition-colors"
+                        title="Inspect in Block Explorer"
                       >
                         <ExternalLink className="w-3 h-3" />
                       </a>
@@ -374,43 +294,44 @@ export default function AccountPage() {
                   </div>
                 </div>
 
-                <div className="text-center sm:text-right border-t sm:border-t-0 pt-3 sm:pt-0 border-[#171513]/10">
-                  <span className="text-[9px] font-serif uppercase tracking-widest text-[#9E8055] block">
-                    Sanctuary Balance
+                <div className="text-center sm:text-right font-mono">
+                  <span className="text-[10px] uppercase tracking-widest text-[#8993A4] block">
+                    VAULT RESERVE
                   </span>
-                  <div className="text-lg font-mono font-bold text-[#171513]">
+                  <div className="text-2xl font-bold text-[#CDB486] drop-shadow-[0_0_12px_rgba(205, 180, 134,0.35)]">
                     {usdgBalance.toLocaleString(undefined, { maximumFractionDigits: 2 })}{' '}
-                    <span className="text-xs text-[#9E8055] font-serif">USDG</span>
+                    <span className="text-xs text-[#F5F7FA]/60">USDG</span>
                   </div>
-                  <span className="text-[10px] font-serif text-[#171513]/60 block mt-0.5">
+                  <span className="text-[10px] text-[#64748B] block mt-0.5">
                     Allowance: {usdgAllowance >= 100000000 ? 'Unlimited' : `${usdgAllowance.toLocaleString(undefined, { maximumFractionDigits: 2 })} USDG`}
                   </span>
                 </div>
               </div>
 
               {/* Statistics Triad */}
-              <div className="grid grid-cols-3 gap-3 text-center">
-                <div className="p-3 bg-[#E8DFD1] border border-[#171513]/15">
-                  <span className="text-[9px] uppercase tracking-widest text-[#9E8055] block">
-                    Epochs Participated
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
+                <div className="glass-capsule p-4 rounded-2xl">
+                  <span className="text-[10px] uppercase tracking-widest text-[#8993A4] block font-mono">
+                    EPOCHS PARTICIPATED
                   </span>
-                  <span className="text-base font-mono font-semibold text-[#171513] mt-0.5 block">
+                  <span className="text-xl font-heading font-bold text-[#F5F7FA] mt-1 block">
                     {myRounds.length}
                   </span>
                 </div>
-                <div className="p-3 bg-[#E8DFD1] border border-[#171513]/15">
-                  <span className="text-[9px] uppercase tracking-widest text-[#9E8055] block">
-                    Victories Consecrated
+                <div className="glass-capsule p-4 rounded-2xl relative overflow-hidden">
+                  <div className="absolute inset-0 bg-[#CDB486]/[0.03] pointer-events-none" />
+                  <span className="text-[10px] uppercase tracking-widest text-[#CDB486] block font-mono font-bold">
+                    VICTORIES CONCLUDED
                   </span>
-                  <span className="text-base font-serif font-semibold text-[#171513] mt-0.5 block">
+                  <span className="text-xl font-heading font-bold text-[#CDB486] mt-1 block drop-shadow-[0_0_8px_rgba(205, 180, 134,0.3)]">
                     {totalVictories}
                   </span>
                 </div>
-                <div className="p-3 bg-[#E8DFD1] border border-[#171513]/15">
-                  <span className="text-[9px] uppercase tracking-widest text-[#9E8055] block">
-                    Total Winnings
+                <div className="glass-capsule p-4 rounded-2xl">
+                  <span className="text-[10px] uppercase tracking-widest text-[#8993A4] block font-mono">
+                    TOTAL ALLOTMENT YIELD
                   </span>
-                  <span className="text-base font-mono font-semibold text-[#171513] mt-0.5 block">
+                  <span className="text-xl font-heading font-bold text-[#F5F7FA] mt-1 block">
                     {totalWonUsdg.toLocaleString()} USDG
                   </span>
                 </div>
@@ -418,20 +339,18 @@ export default function AccountPage() {
             </div>
 
             {/* Section 1: Settings & Persona Customization */}
-            <section className="editorial-frame p-6 bg-[#F4EFE6] space-y-4 shadow-sm relative">
-              <BookplateCorner />
-
-              <div className="flex items-center gap-2.5 pb-3 border-b border-[#171513]/15">
-                <Settings className="w-4 h-4 text-[#9E8055]" />
-                <h2 className="text-sm font-serif font-semibold tracking-wider text-[#171513] uppercase">
-                  PERSONA INSCRIPTION & SETTINGS
+            <section className="glass-capsule rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl backdrop-blur-xl">
+              <div className="flex items-center gap-2.5 pb-4 border-b border-white/[0.06]">
+                <Settings className="w-5 h-5 text-[#CDB486]" />
+                <h2 className="text-base font-heading font-bold tracking-wider text-[#F5F7FA] uppercase">
+                  OPERATOR SPECIFICATION & SETTINGS
                 </h2>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Callsign Input */}
-                <div className="space-y-2">
-                  <label className="text-[10px] tracking-[0.2em] font-serif uppercase text-[#171513]/70 block font-medium">
+                <div className="space-y-3">
+                  <label className="text-[11px] tracking-[0.15em] uppercase text-[#8993A4] block font-bold font-mono">
                     CALLSIGN / NICKNAME
                   </label>
                   <div className="flex items-center gap-2">
@@ -440,100 +359,42 @@ export default function AccountPage() {
                       maxLength={20}
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      placeholder="Inscribe title or name..."
-                      className="flex-1 px-3 py-2 bg-[#E8DFD1] border border-[#171513]/25 text-xs font-serif text-[#171513] focus:outline-none focus:border-[#9E8055]"
+                      placeholder="Enter callsign..."
+                      className="glass-input flex-1 px-4 py-2.5 text-xs text-[#F5F7FA] placeholder-[#8993A4]/50"
                     />
                     <button
                       type="button"
                       onClick={handleRandomizeName}
-                      className="px-3 py-2 bg-[#E8DFD1] hover:bg-[#DDD2C1] border border-[#171513]/25 text-xs font-serif text-[#171513] flex items-center gap-1.5 transition-colors"
-                      title="Draw random celestial name"
+                      className="glass-btn-chip px-3.5 py-2.5 flex items-center gap-1.5 cursor-pointer text-[#CDB486]"
+                      title="Generate random callsign"
                     >
-                      <Shuffle className="w-3 h-3 text-[#9E8055]" />
-                      <span className="text-[10px] tracking-wider uppercase">Cast</span>
+                      <Shuffle className="w-3.5 h-3.5" />
+                      <span className="text-[10px] uppercase font-bold font-mono">GEN</span>
                     </button>
                   </div>
-                  <p className="text-[10px] text-[#171513]/60 italic font-serif">
-                    This callsign appears across the arena ledger, victor announcements, and chronicle dispatches.
+                  <p className="text-[11px] text-[#8993A4]/70">
+                    Displayed on the Convergence Carousel, Live Dispatch, and Historical Archives.
                   </p>
                 </div>
 
-                {/* Avatar Source Tabs */}
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <label className="text-[10px] tracking-[0.2em] font-serif uppercase text-[#171513]/70 block font-medium">
-                      SEAL PORTRAIT
-                    </label>
-                    <div className="flex items-center gap-1 text-[9px] font-serif tracking-wider uppercase">
-                      {(['presets', 'url', 'upload'] as const).map((tab) => (
-                        <button
-                          key={tab}
-                          type="button"
-                          onClick={() => setActiveAvatarTab(tab)}
-                          className={`px-2 py-0.5 border transition-colors ${
-                            activeAvatarTab === tab
-                              ? 'bg-[#171513] text-[#F4EFE6] border-[#171513]'
-                              : 'bg-[#E8DFD1] text-[#171513]/70 border-[#171513]/20 hover:text-[#171513]'
-                          }`}
-                        >
-                          {tab}
-                        </button>
-                      ))}
+                {/* Avatar Tabs */}
+                {/* Avatar Upload */}
+                <div className="space-y-3">
+                  <label className="text-[11px] tracking-[0.15em] uppercase text-[#8993A4] block font-bold font-mono">
+                    AVATAR
+                  </label>
+                  <div className="p-4 glass-capsule rounded-2xl flex items-center gap-4 border border-white/[0.08]">
+                    {/* Live Preview */}
+                    <div className="relative w-16 h-16 rounded-2xl bg-white/[0.04] border border-[#CDB486]/30 p-1 flex-shrink-0 overflow-hidden shadow-[0_4px_20px_rgba(205,180,134,0.15)] flex items-center justify-center">
+                      <img
+                        src={avatar || '/image/logo.png'}
+                        alt="Avatar Preview"
+                        className="w-full h-full object-cover rounded-xl"
+                      />
                     </div>
-                  </div>
 
-                  {activeAvatarTab === 'presets' && (
-                    <div className="grid grid-cols-4 gap-2 p-2 bg-[#E8DFD1] border border-[#171513]/15">
-                      {PRESET_AVATARS.map((pUrl, idx) => {
-                        const isSelected = avatar === pUrl;
-                        return (
-                          <button
-                            key={idx}
-                            type="button"
-                            onClick={() => setAvatar(pUrl)}
-                            className={`relative aspect-square p-1 border transition-all flex items-center justify-center ${
-                              isSelected
-                                ? 'border-[#9E8055] bg-[#F4EFE6] ring-1 ring-[#9E8055]'
-                                : 'border-[#171513]/15 bg-[#E8DFD1] hover:border-[#171513]/40'
-                            }`}
-                          >
-                            <img src={pUrl} alt="" className="w-full h-full object-cover" />
-                            {isSelected && (
-                              <div className="absolute top-1 right-1 w-3.5 h-3.5 bg-[#171513] text-[#F4EFE6] flex items-center justify-center">
-                                <Check className="w-2.5 h-2.5" />
-                              </div>
-                            )}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
-
-                  {activeAvatarTab === 'url' && (
-                    <div className="space-y-2 p-2.5 bg-[#E8DFD1] border border-[#171513]/15">
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="url"
-                          value={customUrl}
-                          onChange={(e) => setCustomUrl(e.target.value)}
-                          placeholder="https://... (direct image link)"
-                          className="flex-1 px-3 py-1.5 bg-[#F4EFE6] border border-[#171513]/20 text-xs font-mono text-[#171513] focus:outline-none focus:border-[#9E8055]"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (customUrl.trim()) setAvatar(customUrl.trim());
-                          }}
-                          className="px-3 py-1.5 bg-[#171513] text-[#F4EFE6] font-serif text-[11px] tracking-wider uppercase"
-                        >
-                          Apply
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
-                  {activeAvatarTab === 'upload' && (
-                    <div className="p-3 bg-[#E8DFD1] border border-[#171513]/15 text-center">
+                    {/* Upload Action */}
+                    <div className="flex-1 space-y-1.5">
                       <input
                         type="file"
                         ref={fileInputRef}
@@ -544,149 +405,156 @@ export default function AccountPage() {
                       <button
                         type="button"
                         onClick={() => fileInputRef.current?.click()}
-                        className="w-full py-2.5 border border-dashed border-[#171513]/30 hover:border-[#9E8055] transition-colors flex items-center justify-center gap-2 text-xs font-serif"
+                        className="glass-btn-inflated px-5 py-2.5 text-xs font-bold uppercase tracking-wider flex items-center gap-2 cursor-pointer shadow-lg hover:scale-[1.02] transition-transform"
                       >
-                        <Upload className="w-3.5 h-3.5 text-[#9E8055]" />
-                        <span>Select image file (PNG, JPG, max 2MB)</span>
+                        <Upload className="w-4 h-4" />
+                        <span>UPLOAD AVATAR</span>
                       </button>
+                      <p className="text-[10px] text-[#8993A4] font-mono">
+                        PNG, JPG, WEBP • Max 2MB
+                      </p>
                     </div>
-                  )}
+                  </div>
                 </div>
               </div>
 
-              <div className="flex justify-end pt-2">
+              <div className="pt-2 flex justify-end">
                 <button
                   type="button"
                   onClick={handleSaveProfile}
-                  className="px-6 py-2.5 bg-[#171513] hover:bg-[#25221e] text-[#F4EFE6] font-serif text-xs tracking-widest uppercase border border-[#9E8055]/50 flex items-center gap-2 shadow-sm transition-colors"
+                  className="glass-btn-inflated px-6 py-2.5 text-xs inline-flex items-center gap-2 cursor-pointer"
                 >
-                  <Feather className="w-3.5 h-3.5 text-[#9E8055]" />
-                  <span>RECORD INSCRIPTION</span>
+                  <Check className="w-4 h-4" />
+                  <span>COMMIT IDENTITY</span>
                 </button>
               </div>
             </section>
 
-            {/* Section 2: Personal Orbit History */}
-            <section className="editorial-frame p-6 bg-[#F4EFE6] space-y-4 shadow-sm relative">
-              <BookplateCorner />
-
-              <div className="flex items-center justify-between pb-3 border-b border-[#171513]/15">
+            {/* Section 2: Historical Participation Ledger */}
+            <section className="glass-capsule rounded-3xl p-6 sm:p-8 space-y-4 shadow-2xl backdrop-blur-xl">
+              <div className="flex items-center justify-between pb-4 border-b border-white/[0.06]">
                 <div className="flex items-center gap-2.5">
-                  <History className="w-4 h-4 text-[#9E8055]" />
-                  <h2 className="text-sm font-serif font-semibold tracking-wider text-[#171513] uppercase">
-                    PERSONAL ORBIT CHRONICLE
+                  <ShieldCheck className="w-5 h-5 text-[#CDB486]" />
+                  <h2 className="text-base font-heading font-bold tracking-wider text-[#F5F7FA] uppercase">
+                    PERSONAL SETTLEMENT LEDGER
                   </h2>
                 </div>
-                <span className="text-[10px] font-mono text-[#171513]/60">
-                  {myRounds.length} Rounds Recorded
+                <span className="text-[10px] text-[#8993A4] font-mono">
+                  {myRounds.length} PARTICIPATIONS LOGGED
                 </span>
               </div>
 
-              {loadingHistory ? (
-                <div className="py-12 text-center text-xs font-serif text-[#171513]/60 italic">
-                  Consulting observatory archives...
-                </div>
-              ) : myRounds.length === 0 ? (
-                <div className="py-12 text-center text-xs font-serif text-[#171513]/60 italic space-y-2">
-                  <p>No historical rounds recorded yet for this ledger address.</p>
-                  <Link
-                    href="/"
-                    className="inline-flex items-center gap-1 text-xs text-[#9E8055] font-semibold underline hover:text-[#171513]"
-                  >
-                    <span>Inscribe your premier wager in the Arena</span>
-                    <ArrowLeft className="w-3 h-3 rotate-180" />
-                  </Link>
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs font-serif">
-                    <thead>
-                      <tr className="border-b border-[#171513]/20 text-[#171513]/60 text-[10px] uppercase tracking-wider">
-                        <th className="py-2.5">EPOCH</th>
-                        <th>WAGER</th>
-                        <th>ODDS</th>
-                        <th>OUTCOME</th>
-                        <th>DISPENSATION</th>
-                        <th>STATUS</th>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs border-collapse font-sans">
+                  <thead>
+                    <tr className="border-b border-white/[0.06] text-[#8993A4] text-[10px] font-mono uppercase tracking-wider bg-white/[0.02]">
+                      <th className="py-3 px-4">ROUND ID</th>
+                      <th className="py-3 px-4">STATUS</th>
+                      <th className="py-3 px-4">WINNER ALLOTMENT</th>
+                      <th className="py-3 px-4">TICKET DRAWN</th>
+                      <th className="py-3 px-4 text-right">AUDIT</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/[0.04]">
+                    {myRounds.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="py-8 text-center text-[#8993A4]">
+                          No historical engagements logged for this operator address.
+                        </td>
                       </tr>
-                    </thead>
-                    <tbody className="divide-y divide-[#171513]/10 font-mono text-[11px]">
-                      {myRounds.map((r) => (
-                        <tr key={r.gameId} className="hover:bg-[#E8DFD1]/50 transition-colors">
-                          <td className="py-2.5 font-semibold text-[#171513]">
-                            #{r.gameId.replace(/^CASHFLIP-/, '')}
-                          </td>
-                          <td className="text-[#171513]">
-                            {r.myBet.toLocaleString()} <span className="text-[9px] text-[#9E8055]">USDG</span>
-                          </td>
-                          <td className="text-[#171513]/70">{r.myOdds}%</td>
-                          <td>
-                            {r.isVictor ? (
-                              <span className="px-2 py-0.5 border border-[#9E8055] bg-[#9E8055]/10 text-[#9E8055] text-[9px] font-serif font-bold uppercase tracking-wider">
-                                👑 Victor
-                              </span>
-                            ) : (
-                              <span className="px-2 py-0.5 border border-[#171513]/20 text-[#171513]/60 text-[9px] font-serif uppercase">
-                                Contender
-                              </span>
-                            )}
-                          </td>
-                          <td className="font-semibold text-[#171513]">
-                            {r.isVictor ? (
-                              <span>{r.prizeWon.toLocaleString()} USDG</span>
-                            ) : (
-                              <span className="text-[#171513]/40">—</span>
-                            )}
-                          </td>
-                          <td>
-                            {r.isVictor ? (
-                              r.claimed ? (
-                                <span className="text-[10px] text-[#9E8055] font-serif font-semibold">
-                                  Claimed
+                    ) : (
+                      myRounds.map((g: any, idx: number) => {
+                        const isWinner =
+                          g.winner?.address &&
+                          g.winner.address.toLowerCase() === account?.toLowerCase();
+
+                        return (
+                          <tr key={idx} className="hover:bg-white/[0.02] transition-colors">
+                            <td className="py-3.5 px-4 font-mono font-bold text-[#F5F7FA]">{g.gameId}</td>
+                            <td className="py-3.5 px-4">
+                              {isWinner ? (
+                                <span className="px-2.5 py-1 bg-[#CDB486]/15 text-[#CDB486] border border-[#CDB486]/30 rounded-full font-bold text-[10px] font-mono">
+                                  VICTORY
                                 </span>
                               ) : (
-                                <span className="text-[10px] text-amber-800 font-serif font-semibold animate-pulse">
-                                  Unclaimed
+                                <span className="px-2.5 py-1 bg-white/[0.04] text-[#8993A4] border border-white/[0.06] rounded-full text-[10px] font-mono">
+                                  PARTICIPANT
                                 </span>
-                              )
-                            ) : (
-                              <span className="text-[10px] text-[#171513]/40 font-serif">Settled</span>
-                            )}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
+                              )}
+                            </td>
+                            <td className="py-3.5 px-4 font-mono">
+                              <span className={isWinner ? 'text-[#CDB486] font-bold drop-shadow-[0_0_8px_rgba(205, 180, 134,0.3)]' : 'text-[#8993A4]'}>
+                                {g.winner?.prize ? `${g.winner.prize.toFixed(2)} USDG` : `${(g.totalPool || 0).toFixed(2)} USDG`}
+                              </span>
+                            </td>
+                            <td className="py-3.5 px-4 text-[#8993A4] font-mono">
+                              {g.winner?.winningTicket !== undefined ? `#${g.winner.winningTicket}` : '—'}
+                            </td>
+                            <td className="py-3.5 px-4 text-right">
+                              <button
+                                onClick={() => {
+                                  setVerifyTargetGameId(g.gameId);
+                                  setShowVerifyModal(true);
+                                }}
+                                className="glass-btn-chip px-3 py-1 text-[#CDB486] text-[10px] font-mono uppercase tracking-wider cursor-pointer"
+                              >
+                                VERIFY
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </section>
           </>
         )}
-
-        <CelestialFlourish />
       </main>
 
-      {/* Floating notification */}
-      <AnimatePresence>
-        {toastMsg && (
-          <motion.div
-            initial={{ opacity: 0, y: -15 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -15 }}
-            className="editorial-frame fixed top-20 right-6 z-50 p-4 bg-[#E8DFD1] text-[#171513] border-[#9E8055] shadow-lg text-xs space-y-1 select-none"
-          >
-            <p className="font-serif font-semibold text-[#171513]">{toastMsg.title}</p>
-            <p className="text-[11px] text-[#171513]/70 font-serif">{toastMsg.desc}</p>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Footer */}
+      <ProtocolFooter />
 
-      {/* Wallet Select Modal */}
+      {/* Modals */}
       <WalletSelectModal
         isOpen={showWalletModal}
         onClose={() => setShowWalletModal(false)}
-        onSelect={(type) => connectWallet(type)}
+        onSelect={() => setShowWalletModal(false)}
       />
+
+      <VerifyModal
+        isOpen={showVerifyModal}
+        gameId={verifyTargetGameId}
+        onClose={() => {
+          setShowVerifyModal(false);
+          setVerifyTargetGameId(null);
+        }}
+      />
+
+      {/* Toast Notification */}
+      <AnimatePresence>
+        {toastMsg && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            className={`fixed bottom-6 right-6 z-50 p-4 border rounded-xl max-w-sm w-full font-mono text-xs shadow-2xl ${
+              toastMsg.ok
+                ? 'bg-[#080C14] border-[#CDB486]/40 text-[#E2E8F0] shadow-[0_0_20px_rgba(205, 180, 134,0.15)]'
+                : 'bg-[#0D1322] border-red-500/60 text-red-300 shadow-[0_0_20px_rgba(239,68,68,0.15)]'
+            }`}
+          >
+            <div className="flex items-center justify-between mb-1">
+              <span className="font-bold uppercase tracking-wider text-[10px] text-[#CDB486]">
+                {toastMsg.title}
+              </span>
+              <span className="text-[9px] text-[#64748B]">SYSTEM LOG</span>
+            </div>
+            <p className="text-[11px] leading-relaxed text-[#94A3B8]">{toastMsg.desc}</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none">
+  <defs>
+    <linearGradient id="g1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFF6E0"/>
+      <stop offset="50%" stop-color="#CDB486"/>
+      <stop offset="100%" stop-color="#7D6539"/>
+    </linearGradient>
+    <linearGradient id="g2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="60%" stop-color="#94A3B8"/>
+      <stop offset="100%" stop-color="#475569"/>
+    </linearGradient>
+  </defs>
+  <ellipse cx="125" cy="95" rx="48" ry="62" fill="#0D1117" stroke="url(#g2)" stroke-width="4" transform="rotate(18 125 95)"/>
+  <ellipse cx="125" cy="95" rx="40" ry="52" fill="#151C26" transform="rotate(18 125 95)"/>
+  <circle cx="80" cy="105" r="58" fill="#0B0E14" stroke="url(#g1)" stroke-width="5"/>
+  <circle cx="80" cy="105" r="50" fill="#1A202C" stroke="#CDB486" stroke-width="1.5" stroke-dasharray="3 3"/>
+  <polygon points="80,82 90,96 78,103 74,93" fill="url(#g1)"/>
+  <polygon points="90,96 104,72 83,81" fill="url(#g1)"/>
+  <text x="80" y="132" font-family="system-ui, -apple-system, sans-serif" font-size="12" font-weight="900" fill="#CDB486" text-anchor="middle" letter-spacing="2">PVP</text>
+</svg>

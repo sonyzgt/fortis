@@ -1,13 +1,13 @@
-﻿'use client';
+'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ethers } from 'ethers';
-import { Compass, Check, X, RefreshCw, ExternalLink, ShieldCheck, AlertTriangle, Scroll } from 'lucide-react';
+import { Check, X, RefreshCw, ExternalLink, ShieldCheck, AlertTriangle, Terminal } from 'lucide-react';
 import { deployCashFlipJackpotContract, GAME_SERVER_SIGNER_ADDRESS } from '@/lib/web3/deployer';
-import { CASHFLIP_TOKEN_ADDRESS, ROBINHOOD_CHAIN_CONFIG, getCashFlipTokenAddress } from '@/lib/web3/contracts';
+import { ROBINHOOD_CHAIN_CONFIG, getCashFlipTokenAddress } from '@/lib/web3/contracts';
 import { getApiBaseUrl } from '@/lib/apiConfig';
-import { BookplateCorner, CelestialFlourish } from '@/components/ui/CelestialFlourish';
 
 interface DeployModalProps {
   isOpen: boolean;
@@ -16,12 +16,17 @@ interface DeployModalProps {
 }
 
 export const DeployModal: React.FC<DeployModalProps> = ({ isOpen, onClose, onSuccess }) => {
+  const [mounted, setMounted] = useState(false);
   const [deploying, setDeploying] = useState(false);
   const [deployedAddress, setDeployedAddress] = useState<string | null>(null);
   const [manualAddress, setManualAddress] = useState('');
   const [error, setError] = useState<string | null>(null);
 
-  if (!isOpen) return null;
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!isOpen || !mounted || typeof document === 'undefined') return null;
 
   const handleSaveContract = async (addrToSave: string) => {
     const trimmed = addrToSave.trim();
@@ -31,7 +36,6 @@ export const DeployModal: React.FC<DeployModalProps> = ({ isOpen, onClose, onSuc
     }
 
     try {
-      localStorage.setItem('cashflip_deployed_game_contract', trimmed);
       localStorage.setItem('cashflip_deployed_game_contract', trimmed);
       const apiBase = getApiBaseUrl();
       await fetch(`${apiBase}/api/admin/set-contract`, {
@@ -62,7 +66,7 @@ export const DeployModal: React.FC<DeployModalProps> = ({ isOpen, onClose, onSuc
 
       const tokenToUse = getCashFlipTokenAddress();
       if (!tokenToUse || !tokenToUse.startsWith('0x') || tokenToUse.length !== 42) {
-        throw new Error('Please configure an active Betting Token contract address in the Master Codex before consecrating the Jackpot Escrow.');
+        throw new Error('Please configure an active Betting Token contract address before deploying the Jackpot Escrow.');
       }
 
       // Pass the game server signer address for ECDSA anti-bot protection
@@ -71,85 +75,79 @@ export const DeployModal: React.FC<DeployModalProps> = ({ isOpen, onClose, onSuc
       await handleSaveContract(address);
     } catch (e: any) {
       console.error('Deployment error:', e);
-      setError(e?.message || 'Failed to consecrate smart contract');
+      setError(e?.message || 'Failed to deploy smart contract');
     } finally {
       setDeploying(false);
     }
   };
 
-  return (
+  return createPortal(
     <AnimatePresence>
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-[#0a0908]/75 backdrop-blur-sm"
+        className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-[#030508]/85 backdrop-blur-xl select-none"
         onClick={onClose}
       >
         <motion.div
-          initial={{ opacity: 0, scale: 0.94, y: 16 }}
+          initial={{ opacity: 0, scale: 0.95, y: 15 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.94, y: 16 }}
-          className="editorial-frame bg-[#E8DFD1] text-[#171513] w-full max-w-lg p-6 sm:p-7 shadow-[0_25px_60px_rgba(0,0,0,0.5)] space-y-4 select-none relative"
+          exit={{ opacity: 0, scale: 0.95, y: 15 }}
+          transition={{ type: 'spring', damping: 26, stiffness: 320 }}
+          className="glass-capsule rounded-3xl text-[#F5F7FA] w-full max-w-lg p-6 sm:p-7 shadow-[0_25px_60px_rgba(0,0,0,0.8),0_0_35px_rgba(205, 180, 134,0.1)] space-y-4 relative font-sans border border-white/10"
           onClick={(e) => e.stopPropagation()}
         >
-          <BookplateCorner />
-
           {/* Header */}
-          <div className="flex items-center justify-between pb-3 border-b border-[#171513]/15">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 border border-[#9E8055]/50 bg-[#F4EFE6] flex items-center justify-center text-[#9E8055]">
-                <Compass className="w-4 h-4" />
-              </div>
-              <div>
-                <span className="text-[9px] tracking-[0.25em] font-serif uppercase text-[#9E8055] block">
-                  On-Chain Sanctum
-                </span>
-                <h3 className="text-base font-serif tracking-[0.1em] font-semibold text-[#171513]">
-                  CONSECRATE ESCROW SANCTUARY
-                </h3>
-              </div>
+          <div className="flex items-center justify-between pb-4 border-b border-white/[0.06]">
+            <div className="space-y-0.5">
+              <span className="font-mono text-[10px] tracking-[0.2em] uppercase text-[#CDB486] block font-bold">
+                INFRASTRUCTURE // ADMIN
+              </span>
+              <h3 className="font-heading text-lg font-bold uppercase text-[#F5F7FA] tracking-wide">
+                DEPLOY ESCROW VAULT
+              </h3>
             </div>
             <button
               onClick={onClose}
-              className="p-1.5 border border-[#171513]/10 text-[#171513]/60 hover:text-[#171513] hover:border-[#171513]/30 transition-colors"
+              className="w-8 h-8 rounded-full flex items-center justify-center text-[#8993A4] hover:text-[#F5F7FA] bg-white/[0.04] hover:bg-white/[0.1] border border-white/[0.06] transition-all cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>
           </div>
 
-          <div className="space-y-3 pt-1">
-            <div className="p-3.5 bg-[#F4EFE6] border border-[#171513]/15 space-y-1.5">
-              <p className="font-serif font-semibold text-xs text-[#171513] flex items-center gap-2">
-                <ShieldCheck className="w-3.5 h-3.5 text-[#9E8055]" />
-                <span className="uppercase text-[11px] tracking-wider">Sanctuary Purpose</span>
+          <div className="space-y-3.5 pt-1 text-xs">
+            <div className="p-4 glass-capsule rounded-2xl space-y-2">
+              <p className="font-bold text-[#CDB486] flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4" />
+                <span className="uppercase text-[10px] font-mono tracking-wider">CONTRACT ROLE SPECIFICATION</span>
               </p>
-              <p className="text-[11px] font-serif text-[#171513]/75 leading-relaxed">
-                Empowers victors to receive immediate on-chain settlements autonomously through trustless contract escrow on Robinhood Chain, eliminating centralized intermediaries while strictly observing the 2% sanctuary fee.
+              <p className="text-[11px] text-[#8993A4] leading-relaxed">
+                Facilitates automated non-custodial payouts on Robinhood Chain upon round resolution. The vault retains a 2.0% platform fee for maintenance.
               </p>
             </div>
 
-            <div className="p-3.5 bg-[#F4EFE6] border border-[#171513]/15 space-y-1 text-[11px] font-serif">
-              <div className="flex justify-between items-center py-0.5 border-b border-[#171513]/10">
-                <span className="text-[#171513]/60">Settlement Currency:</span>
-                <span className="font-mono text-xs font-semibold text-[#171513]">
+            <div className="p-4 glass-capsule rounded-2xl space-y-2 text-[11px] font-mono">
+              <div className="flex justify-between items-center py-1 border-b border-white/[0.05]">
+                <span className="text-[#8993A4]">SETTLEMENT TOKEN:</span>
+                <span className="font-bold text-[#F5F7FA]">
                   USDG ({getCashFlipTokenAddress() ? `${getCashFlipTokenAddress().slice(0, 6)}...${getCashFlipTokenAddress().slice(-4)}` : '⚠️ Set Token Address'})
                 </span>
               </div>
-              <div className="flex justify-between items-center py-0.5 border-b border-[#171513]/10">
-                <span className="text-[#171513]/60">Protocol Sanctuary Tithe:</span>
-                <span className="text-[#9E8055] font-semibold">2.0% (Reserved for Admin)</span>
+              <div className="flex justify-between items-center py-1 border-b border-white/[0.05]">
+                <span className="text-[#8993A4]">PLATFORM FEE:</span>
+                <span className="text-[#CDB486] font-bold">2.0%</span>
               </div>
-              <div className="flex justify-between items-center py-0.5">
-                <span className="text-[#171513]/60">Estimated Consecration Gas:</span>
-                <span className="font-mono text-[#171513]">~0.00008 ETH</span>
+              <div className="flex justify-between items-center py-1">
+                <span className="text-[#8993A4]">ESTIMATED GAS:</span>
+                <span className="text-[#F5F7FA]">~0.00008 ETH</span>
               </div>
             </div>
 
             {/* Manual contract address input */}
-            <div className="p-3.5 bg-[#F4EFE6] border border-[#171513]/15 space-y-2">
-              <label className="text-[10px] tracking-[0.2em] font-serif uppercase text-[#171513]/70 block font-medium">
-                Already Consecrated? Bind Existing Sanctuary Address:
+            <div className="p-4 glass-capsule rounded-2xl space-y-2.5">
+              <label className="text-[10px] font-mono tracking-[0.15em] uppercase text-[#8993A4] block font-bold">
+                BIND EXISTING CONTRACT ADDRESS:
               </label>
               <div className="flex gap-2">
                 <input
@@ -157,39 +155,39 @@ export const DeployModal: React.FC<DeployModalProps> = ({ isOpen, onClose, onSuc
                   value={manualAddress}
                   onChange={(e) => setManualAddress(e.target.value)}
                   placeholder="0x... (Escrow Contract Address)"
-                  className="flex-1 px-3 py-1.5 bg-[#E8DFD1] border border-[#171513]/25 text-xs text-[#171513] placeholder-[#171513]/40 focus:outline-none focus:border-[#9E8055] font-mono"
+                  className="glass-input flex-1 px-3.5 py-2 text-xs font-mono text-[#F5F7FA] placeholder-[#8993A4]/50"
                 />
                 <button
                   onClick={() => handleSaveContract(manualAddress)}
-                  className="px-4 py-1.5 bg-[#171513] hover:bg-[#25221e] text-[#F4EFE6] font-serif text-[11px] tracking-wider uppercase border border-[#9E8055]/50 transition-colors"
+                  className="glass-btn-chip px-4 py-2 text-[#CDB486] text-[10px] font-mono tracking-wider uppercase font-bold cursor-pointer"
                 >
-                  Bind
+                  BIND
                 </button>
               </div>
             </div>
 
             {error && (
-              <div className="p-3 bg-red-950/10 border border-red-800/30 text-red-900 rounded text-[11px] flex items-center gap-2 font-serif">
-                <AlertTriangle className="w-4 h-4 text-red-700 flex-shrink-0" />
+              <div className="p-3.5 bg-rose-950/20 border border-rose-500/40 rounded-2xl text-rose-300 text-[11px] flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 text-rose-400 flex-shrink-0" />
                 <span>{error}</span>
               </div>
             )}
 
             {deployedAddress && (
-              <div className="p-3.5 bg-[#F4EFE6] border border-[#9E8055] space-y-1 text-xs">
-                <div className="flex items-center gap-1.5 font-serif font-semibold text-[#171513]">
-                  <Check className="w-3.5 h-3.5 text-[#9E8055]" />
-                  <span>SANCTUARY CONTRACT CONSECRATED!</span>
+              <div className="p-4 glass-capsule rounded-2xl border border-[#CDB486]/40 space-y-1.5 text-xs font-mono">
+                <div className="flex items-center gap-1.5 font-bold text-[#CDB486]">
+                  <Check className="w-4 h-4" />
+                  <span>CONTRACT DEPLOYED SUCCESSFULLY!</span>
                 </div>
-                <p className="text-[10px] break-all font-mono text-[#171513] pt-0.5">{deployedAddress}</p>
+                <p className="text-[11px] break-all text-[#F5F7FA] pt-0.5">{deployedAddress}</p>
                 <a
                   href={`${ROBINHOOD_CHAIN_CONFIG.blockExplorer}/address/${deployedAddress}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex items-center gap-1 text-[10px] text-[#9E8055] underline hover:text-[#171513] pt-1 font-serif"
+                  className="inline-flex items-center gap-1.5 text-[11px] text-[#CDB486] hover:underline pt-1"
                 >
-                  <span>Inspect in Robinhood Explorer</span>
-                  <ExternalLink className="w-3 h-3" />
+                  <span>View in Robinhood Explorer</span>
+                  <ExternalLink className="w-3.5 h-3.5" />
                 </a>
               </div>
             )}
@@ -198,22 +196,23 @@ export const DeployModal: React.FC<DeployModalProps> = ({ isOpen, onClose, onSuc
           <button
             onClick={handleDeploy}
             disabled={deploying}
-            className="w-full py-3 bg-[#171513] hover:bg-[#25221e] text-[#F4EFE6] font-serif text-xs tracking-widest uppercase border border-[#9E8055]/50 flex items-center justify-center gap-2 transition-colors shadow-sm disabled:opacity-50"
+            className="w-full py-3.5 glass-btn-inflated text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer"
           >
             {deploying ? (
               <>
-                <RefreshCw className="w-3.5 h-3.5 animate-spin text-[#9E8055]" />
-                <span>COMMUNING WITH WALLET SIGNER...</span>
+                <RefreshCw className="w-4 h-4 animate-spin text-[#030508]" />
+                <span>REQUESTING WALLET SIGNATURE...</span>
               </>
             ) : (
               <>
-                <Scroll className="w-3.5 h-3.5 text-[#9E8055]" />
-                <span>CONSECRATE NEW SANCTUARY ESCROW</span>
+                <Terminal className="w-4 h-4 text-[#030508]" />
+                <span>DEPLOY NEW CONTRACT ESCROW</span>
               </>
             )}
           </button>
         </motion.div>
       </motion.div>
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 };

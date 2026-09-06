@@ -19,6 +19,10 @@ interface SoundContextType {
   playCoinLand: () => void;
   playCoinVictory: () => void;
   playCoinClaim: () => void;
+  playMineTileClick: () => void;
+  playMineGemReveal: (gemIndex?: number) => void;
+  playMineExplosion: () => void;
+  playMineCashout: () => void;
   pauseBgm: () => void;
   resumeBgm: () => void;
 }
@@ -39,6 +43,10 @@ const SoundContext = createContext<SoundContextType>({
   playCoinLand: () => {},
   playCoinVictory: () => {},
   playCoinClaim: () => {},
+  playMineTileClick: () => {},
+  playMineGemReveal: () => {},
+  playMineExplosion: () => {},
+  playMineCashout: () => {},
   pauseBgm: () => {},
   resumeBgm: () => {},
 });
@@ -143,6 +151,10 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const playCoinLand = useCallback(() => sounds.playCoinLand(), []);
   const playCoinVictory = useCallback(() => sounds.playCoinVictory(), []);
   const playCoinClaim = useCallback(() => sounds.playCoinClaim(), []);
+  const playMineTileClick = useCallback(() => sounds.playMineTileClick(), []);
+  const playMineGemReveal = useCallback((gemIndex?: number) => sounds.playMineGemReveal(gemIndex), []);
+  const playMineExplosion = useCallback(() => sounds.playMineExplosion(), []);
+  const playMineCashout = useCallback(() => sounds.playMineCashout(), []);
 
   return (
     <SoundContext.Provider
@@ -162,6 +174,10 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         playCoinLand,
         playCoinVictory,
         playCoinClaim,
+        playMineTileClick,
+        playMineGemReveal,
+        playMineExplosion,
+        playMineCashout,
         pauseBgm,
         resumeBgm,
       }}

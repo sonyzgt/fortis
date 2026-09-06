@@ -16,6 +16,7 @@ import {
   formatTokenAmount,
   parseTokenAmount,
 } from '@/lib/web3/contracts';
+import { TermsModal } from '@/components/cashflip/TermsModal';
 
 export type TxState = 'idle' | 'approving' | 'betting' | 'claiming' | 'confirmed' | 'failed';
 
@@ -41,6 +42,9 @@ interface CashFlipWeb3ContextType {
   txState: TxState;
   lastTxHash: string | null;
   errorMessage: string | null;
+  showTermsModal: boolean;
+  openTermsModal: () => void;
+  closeTermsModal: () => void;
   connectWallet: (type?: 'okx' | 'metamask' | 'rabby' | 'bitget') => Promise<void>;
   disconnectWallet: () => void;
   approveTokens: (amount?: number) => Promise<string | null>;
@@ -68,6 +72,9 @@ const CashFlipWeb3Context = createContext<CashFlipWeb3ContextType>({
   txState: 'idle',
   lastTxHash: null,
   errorMessage: null,
+  showTermsModal: false,
+  openTermsModal: () => {},
+  closeTermsModal: () => {},
   connectWallet: async () => {},
   disconnectWallet: () => {},
   approveTokens: async () => null,
@@ -88,32 +95,47 @@ export const CashFlipWeb3Provider: React.FC<{ children: React.ReactNode }> = ({ 
   const [txState, setTxState] = useState<TxState>('idle');
   const [lastTxHash, setLastTxHash] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [showTermsModal, setShowTermsModal] = useState<boolean>(false);
 
-  // Load saved CashFlip session
+  const openTermsModal = useCallback(() => {
+    setShowTermsModal(true);
+  }, []);
+
+  const closeTermsModal = useCallback(() => {
+    setShowTermsModal(false);
+  }, []);
+
+  // Load saved Kofuku session
   useEffect(() => {
     if (typeof window === 'undefined') return;
     try {
-      const saved = localStorage.getItem('cashflip_user_session') || localStorage.getItem('cashflip_user_session');
+      const saved = localStorage.getItem('kofuku_user_session') || localStorage.getItem('cashflip_user_session');
       if (saved) {
         const parsed = JSON.parse(saved);
         setAccount(parsed.account);
         setWalletType(parsed.walletType);
         if (parsed.usdgBalance !== undefined) setUsdgBalance(parsed.usdgBalance);
         if (parsed.usdgAllowance !== undefined) setUsdgAllowance(parsed.usdgAllowance);
+
+        const hasAgreed = localStorage.getItem('kofuku_terms_agreed') === 'true' ||
+          localStorage.getItem('cashflip_terms_agreed') === 'true';
+        if (!hasAgreed) {
+          setShowTermsModal(true);
+        }
       }
     } catch (e) {
-      console.error('Failed to load cashflip session', e);
+      console.error('Failed to load kofuku session', e);
     }
   }, []);
 
   const saveSession = useCallback((acc: string | null, type: any, bal: number, allow: number) => {
     if (!acc) {
-      localStorage.removeItem('cashflip_user_session');
+      localStorage.removeItem('kofuku_user_session');
       localStorage.removeItem('cashflip_user_session');
       return;
     }
     const sessionData = JSON.stringify({ account: acc, walletType: type, usdgBalance: bal, usdgAllowance: allow });
-    localStorage.setItem('cashflip_user_session', sessionData);
+    localStorage.setItem('kofuku_user_session', sessionData);
     localStorage.setItem('cashflip_user_session', sessionData);
   }, []);
 
@@ -244,6 +266,15 @@ export const CashFlipWeb3Provider: React.FC<{ children: React.ReactNode }> = ({ 
       setUsdgBalance(initialBal);
       setUsdgAllowance(initialAllow);
       saveSession(selectedAccount, type, initialBal, initialAllow);
+
+      // Trigger terms modal if user hasn't agreed in this session
+      const hasAgreed = typeof window !== 'undefined' && (
+        localStorage.getItem('kofuku_terms_agreed') === 'true' ||
+        localStorage.getItem('cashflip_terms_agreed') === 'true'
+      );
+      if (!hasAgreed) {
+        setShowTermsModal(true);
+      }
     } catch (err: any) {
       setErrorMessage(err?.message || 'Failed to connect wallet');
       console.error(err);
@@ -257,9 +288,28 @@ export const CashFlipWeb3Provider: React.FC<{ children: React.ReactNode }> = ({ 
     setUsdgBalance(0);
     setUsdgAllowance(0);
     setLastTxHash(null);
-    localStorage.removeItem('cashflip_user_session');
-    localStorage.removeItem('cashflip_user_session');
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('kofuku_user_session');
+      localStorage.removeItem('cashflip_user_session');
+      // Clear terms agreement so when connecting again, the popup centang appears!
+      localStorage.removeItem('kofuku_terms_agreed');
+      localStorage.removeItem('cashflip_terms_agreed');
+    }
+    setShowTermsModal(false);
   }, []);
+
+  const handleAcceptTerms = useCallback(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('kofuku_terms_agreed', 'true');
+      localStorage.setItem('cashflip_terms_agreed', 'true');
+    }
+    setShowTermsModal(false);
+  }, []);
+
+  const handleDeclineTerms = useCallback(() => {
+    setShowTermsModal(false);
+    disconnectWallet();
+  }, [disconnectWallet]);
 
   const isApproved = useCallback((amount: number) => {
     if (!account) return false;
@@ -455,6 +505,9 @@ export const CashFlipWeb3Provider: React.FC<{ children: React.ReactNode }> = ({ 
         txState,
         lastTxHash,
         errorMessage,
+        showTermsModal,
+        openTermsModal,
+        closeTermsModal,
         connectWallet,
         disconnectWallet,
         approveTokens,
@@ -466,7 +519,16 @@ export const CashFlipWeb3Provider: React.FC<{ children: React.ReactNode }> = ({ 
       }}
     >
       {children}
+      <TermsModal
+        isOpen={showTermsModal}
+        onAccept={handleAcceptTerms}
+        onDecline={handleDeclineTerms}
+      />
     </CashFlipWeb3Context.Provider>
   );
 };
+
+export const useKofukuWeb3 = useCashFlipWeb3;
+export const KofukuWeb3Provider = CashFlipWeb3Provider;
+
 

@@ -567,7 +567,7 @@ export default function AdminPanelPage() {
           <BookplateCorner />
 
           <div className="mx-auto w-14 h-14 border border-[#9E8055] bg-[#E8DFD1] p-1.5 flex items-center justify-center shadow-inner">
-            <img src="/image/logo.png" alt="CashFlip Logo" className="w-full h-full object-contain" />
+            <img src="/image/logo.png" alt="Kofuku Logo" className="w-full h-full object-contain" />
           </div>
 
           <div>
@@ -661,7 +661,7 @@ export default function AdminPanelPage() {
 
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 border border-[#9E8055] p-1 bg-[#E8DFD1] flex items-center justify-center flex-shrink-0 shadow-inner">
-              <img src="/image/logo.png" alt="CashFlip" className="w-full h-full object-contain" />
+              <img src="/image/logo.png" alt="Kofuku" className="w-full h-full object-contain" />
             </div>
             <Link
               href="/"
@@ -930,7 +930,7 @@ export default function AdminPanelPage() {
                 <span className="text-xs font-mono text-[#9E8055]">USDG</span>
               </div>
               <p className="text-[10px] text-[#171513]/65">
-                Funds in contract escrow (includes 2% retained Admin protocol fees)
+                Funds in contract escrow (includes 2% retained Admin platform fees)
               </p>
             </div>
           </div>

@@ -4,13 +4,13 @@
   "private": true,
   "scripts": {
     "dev": "concurrently -n \"SERVER,NEXT\" -c \"blue,green\" \"npm run dev:server\" \"npm run dev:next\"",
-    "dev:next": "next dev -p 3000",
+    "dev:next": "next dev -p 3001",
     "dev:server": "tsx watch server/index.ts",
     "build:next": "next build",
     "build:server": "tsc -p server/tsconfig.json",
     "build": "npm run build:next && npm run build:server",
     "start": "concurrently -n \"SERVER,NEXT\" -c \"blue,green\" \"npm run start:server\" \"npm run start:next\"",
-    "start:next": "next start -p 3000",
+    "start:next": "next start -p 3001",
     "start:server": "tsx server/index.ts",
     "test": "tsx server/test/evaluator.test.ts"
   },

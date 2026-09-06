@@ -9,6 +9,7 @@ import { ethers } from 'ethers';
 import { JackpotEngine } from './engine/JackpotEngine';
 import { CoinFlipEngine } from './engine/CoinFlipEngine';
 import { CashFlipJackpotEngine } from './engine/CashFlipJackpotEngine';
+import { MinesEngine } from './engine/MinesEngine';
 import { ChatMessage, LeaderboardEntry, WinnerInfo } from './types/jackpot';
 
 // Load .env and .env.local variables
@@ -56,16 +57,66 @@ const activeAdminSessions = new Set<string>();
 // Middleware: Verify Admin Access Token
 const requireAdmin = (req: any, res: any, next: any) => {
   const token = req.headers['x-admin-token'] || req.body?.adminToken || req.body?.token;
-  if (token && typeof token === 'string' && (activeAdminSessions.has(token) || token.startsWith('adm_'))) {
+  if (token && typeof token === 'string' && activeAdminSessions.has(token)) {
     return next();
   }
   return res.status(403).json({ error: 'Unauthorized: Admin authentication token required' });
 };
 
+// --- Persistent Replay Protection for On-Chain Transaction Hashes ---
+const USED_TX_HASHES_FILE = path.join(process.cwd(), 'used_tx_hashes.json');
+const usedTxHashes = new Set<string>();
+
+function loadUsedTxHashes() {
+  try {
+    if (fs.existsSync(USED_TX_HASHES_FILE)) {
+      const data = JSON.parse(fs.readFileSync(USED_TX_HASHES_FILE, 'utf8'));
+      if (Array.isArray(data)) {
+        for (const h of data) {
+          if (typeof h === 'string' && h.trim()) {
+            usedTxHashes.add(h.toLowerCase().trim());
+          }
+        }
+      }
+    }
+  } catch (e) {
+    console.warn('[SECURITY] Could not load used tx hashes:', e);
+  }
+}
+
+function saveUsedTxHashes() {
+  try {
+    const list = Array.from(usedTxHashes).slice(-10000);
+    fs.writeFileSync(USED_TX_HASHES_FILE, JSON.stringify(list, null, 2), 'utf8');
+  } catch (e) {
+    console.warn('[SECURITY] Could not save used tx hashes:', e);
+  }
+}
+
+loadUsedTxHashes();
+
+function isValidTxHash(txHash: unknown): boolean {
+  if (typeof txHash !== 'string') return false;
+  return /^0x[0-9a-fA-F]{64}$/.test(txHash.trim());
+}
+
+function isTxHashUsed(txHash: string): boolean {
+  return usedTxHashes.has(txHash.trim().toLowerCase());
+}
+
+function markTxHashUsed(txHash: string): boolean {
+  const norm = txHash.trim().toLowerCase();
+  if (usedTxHashes.has(norm)) return false;
+  usedTxHashes.add(norm);
+  saveUsedTxHashes();
+  return true;
+}
+
 // Game Engines
 const cashflipJackpot = new CashFlipJackpotEngine();
 const jackpot = new JackpotEngine();
 const coinflip = new CoinFlipEngine();
+const mines = new MinesEngine();
 
 // Global state
 const chatMessages: ChatMessage[] = [];
@@ -138,7 +189,7 @@ function getLeaderboard(): LeaderboardEntry[] {
 }
 
 // --- REST API Endpoints ---
-app.get('/api/health', (_, res) => res.json({ status: 'ok', ts: Date.now(), system: 'CashFlip Engine' }));
+app.get('/api/health', (_, res) => res.json({ status: 'ok', ts: Date.now(), system: 'Kofuku Engine' }));
 
 // CashFlip Game APIs
 app.get('/api/game/current', (_, res) => res.json(cashflipJackpot.getState()));
@@ -154,12 +205,23 @@ app.get('/api/game/:gameId', (req, res) => {
 app.get('/api/game/unclaimed/:address', (req, res) => {
   res.json(cashflipJackpot.getUnclaimedByPlayer(req.params.address));
 });
+app.post('/api/game/claim', (req, res) => {
+  const { gameId, claimTxHash, address } = req.body;
+  if (!gameId) {
+    return res.status(400).json({ error: 'gameId required' });
+  }
+  const ok = cashflipJackpot.markWinningsClaimed(gameId, claimTxHash || 'on-chain');
+  if (address) {
+    const unclaimed = cashflipJackpot.getUnclaimedByPlayer(address);
+    io.emit('cashflip_jackpot_unclaimed', unclaimed);
+  }
+  io.emit('cashflip_jackpot_history', cashflipJackpot.getPastGames());
+  res.json({ success: ok, gameId, claimTxHash: claimTxHash || 'on-chain' });
+});
 app.post('/api/game/reset-claims', (_, res) => {
   cashflipJackpot.resetClaims();
   res.json({ success: true, message: 'All claims reset to unclaimed' });
 });
-// Reset claims on start so players who only had off-chain message signatures can claim on-chain
-cashflipJackpot.resetClaims();
 
 app.get('/api/game/verify/:gameId', (req, res) => {
   const report = cashflipJackpot.verifyGameById(req.params.gameId);
@@ -167,6 +229,70 @@ app.get('/api/game/verify/:gameId', (req, res) => {
     return res.status(404).json({ error: 'Game not found or still active' });
   }
   res.json(report);
+});
+
+// --- Mines Game APIs ---
+app.post('/api/mines/start', (req, res) => {
+  const { playerAddress, playerName, betAmount, mineCount, playerAvatar, clientSeed, gridSize, gameId, txHash } = req.body;
+  if (!isValidTxHash(txHash)) {
+    return res.status(400).json({ success: false, message: 'Valid on-chain transaction hash (txHash) is required to start a game.' });
+  }
+  if (isTxHashUsed(txHash)) {
+    return res.status(400).json({ success: false, message: 'Transaction hash has already been used. Replay detected.' });
+  }
+  const result = mines.startGame(
+    playerAddress,
+    playerName,
+    Number(betAmount),
+    Number(mineCount),
+    playerAvatar,
+    clientSeed,
+    gridSize ? Number(gridSize) : 25,
+    gameId,
+    txHash
+  );
+  if (!result.success) return res.status(400).json(result);
+  markTxHashUsed(txHash);
+  res.json(result);
+});
+
+app.post('/api/mines/reveal', (req, res) => {
+  const { gameId, playerAddress, tileIndex } = req.body;
+  try {
+    const result = mines.revealTile(gameId, playerAddress, Number(tileIndex));
+    res.json(result);
+  } catch (err: any) {
+    res.status(400).json({ error: err?.message || 'Failed to reveal tile' });
+  }
+});
+
+app.post('/api/mines/cashout', (req, res) => {
+  const { gameId, playerAddress } = req.body;
+  try {
+    const result = mines.cashOut(gameId, playerAddress);
+    res.json(result);
+  } catch (err: any) {
+    res.status(400).json({ error: err?.message || 'Failed to cash out' });
+  }
+});
+
+app.get('/api/mines/active/:address', (req, res) => {
+  const g = mines.getActiveGame(req.params.address);
+  res.json(g ? mines.sanitizeGame(g) : null);
+});
+
+app.get('/api/mines/unclaimed/:address', (req, res) => {
+  res.json(mines.getUnclaimedByPlayer(req.params.address));
+});
+
+app.get('/api/mines/history', (_, res) => {
+  res.json(mines.getHistory());
+});
+
+app.get('/api/mines/verify/:gameId', (req, res) => {
+  const rep = mines.verifyGame(req.params.gameId);
+  if (!rep) return res.status(404).json({ error: 'Game not found or round still ongoing' });
+  res.json(rep);
 });
 
 // --- Admin Authentication Endpoints ---
@@ -186,8 +312,7 @@ app.post('/api/admin/login', (req, res) => {
 
 app.post('/api/admin/verify', (req, res) => {
   const token = req.headers['x-admin-token'] || req.body?.token;
-  if (token && typeof token === 'string' && (activeAdminSessions.has(token) || token.startsWith('adm_'))) {
-    activeAdminSessions.add(token);
+  if (token && typeof token === 'string' && activeAdminSessions.has(token)) {
     return res.json({ valid: true });
   }
   res.status(401).json({ valid: false, error: 'Session expired or invalid' });
@@ -201,7 +326,7 @@ app.post('/api/admin/logout', (req, res) => {
   res.json({ success: true });
 });
 
-app.post('/api/admin/set-contract', (req, res) => {
+app.post('/api/admin/set-contract', requireAdmin, (req, res) => {
   const { contractAddress } = req.body;
   if (!contractAddress || !contractAddress.startsWith('0x') || contractAddress.trim().length !== 42) {
     return res.status(400).json({ error: 'Invalid address (must be 42 characters starting with 0x)' });
@@ -325,6 +450,7 @@ app.post('/api/admin/force-refresh', requireAdmin, (req, res) => {
 app.post('/api/admin/clear-history', requireAdmin, (req, res) => {
   cashflipJackpot.clearHistory();
   coinflip.clearHistory();
+  mines.clearHistory();
   io.emit('cashflip_jackpot_history', []);
   io.emit('coinflip_completed_games', []);
   res.json({
@@ -374,6 +500,12 @@ app.post('/api/admin/factory-reset', requireAdmin, (req, res) => {
 
     // 2. Perform factory reset on engine
     cashflipJackpot.factoryReset();
+    mines.clearHistory();
+    coinflip.clearHistory();
+    usedTxHashes.clear();
+    if (fs.existsSync(USED_TX_HASHES_FILE)) {
+      try { fs.unlinkSync(USED_TX_HASHES_FILE); } catch {}
+    }
 
     // 3. Clear Chat & Leaderboard
     chatMessages.length = 0;
@@ -436,9 +568,10 @@ const handleSignClaim = async (req: express.Request, res: express.Response) => {
     const normWinner = winner.toLowerCase();
 
     // 1. Try finding in Coinflip engine
-    let matchedType: 'coinflip' | 'jackpot' | null = null;
+    let matchedType: 'coinflip' | 'jackpot' | 'mines' | null = null;
     const cfGame = coinflip.getGameById(gameId);
     let jpGame: any = null;
+    let minesGame: any = null;
 
     if (cfGame) {
       matchedType = 'coinflip';
@@ -459,6 +592,21 @@ const handleSignClaim = async (req: express.Request, res: express.Response) => {
         if (jpGame.winner.address?.toLowerCase() !== normWinner) {
           return res.status(403).json({ error: 'Address is not the verified winner of this epoch' });
         }
+      } else {
+        // 3. Try finding in Mines engine
+        minesGame = mines.getGameById(gameId);
+        if (minesGame) {
+          matchedType = 'mines';
+          if (minesGame.isClaimed) {
+            return res.status(400).json({ error: `Mines round #${minesGame.id} winnings have already been claimed.` });
+          }
+          if (minesGame.playerAddress.toLowerCase() !== normWinner) {
+            return res.status(403).json({ error: 'Address is not the verified player of this mines excavation' });
+          }
+          if (minesGame.status !== 'cashed_out') {
+            return res.status(400).json({ error: 'Mines round did not complete with successful cashout' });
+          }
+        }
       }
     }
 
@@ -466,21 +614,42 @@ const handleSignClaim = async (req: express.Request, res: express.Response) => {
       return res.status(404).json({ error: 'Game not found or not yet completed' });
     }
 
-    // Validate prize amount
-    const requestedPrizeWei = BigInt(prizeAmount);
+    // Enforce exact server-authoritative prize calculation directly from database records
+    let actualPrizeWei = 0n;
 
     if (matchedType === 'coinflip' && cfGame) {
-      const maxAllowed = BigInt(Math.round(cfGame.betAmount * 2 * 1_000_000 * 1.02)); // +2% tolerance
-      if (requestedPrizeWei > maxAllowed) {
-        return res.status(400).json({ error: 'Requested prize amount exceeds allowed maximum' });
+      if (!cfGame.creatorTxHash) {
+        return res.status(400).json({ error: 'Coinflip room has no verified deposit transaction' });
+      }
+      if (cfGame.challengerId !== 'ai_oracle' && !cfGame.challengerTxHash) {
+        return res.status(400).json({ error: 'Coinflip opponent has no verified deposit transaction' });
+      }
+      actualPrizeWei = BigInt(Math.round(cfGame.winAmount * 1_000_000));
+      if (requestedPrizeWei > actualPrizeWei) {
+        return res.status(400).json({ error: 'Requested prize amount exceeds calculated duel winnings' });
       }
     } else if (matchedType === 'jackpot' && jpGame) {
-      const expectedPool = jpGame.winner?.totalPoolPons || jpGame.totalPool || 0;
-      const maxAllowed = BigInt(Math.round(expectedPool * 1_000_000 * 1.05)); // +5% tolerance
-      if (requestedPrizeWei > maxAllowed && maxAllowed > 0n) {
-        return res.status(400).json({ error: 'Requested prize amount exceeds jackpot pool' });
+      const prizeUSDG = jpGame.winner?.prizePons || 0;
+      actualPrizeWei = BigInt(Math.round(prizeUSDG * 1_000_000));
+      if (requestedPrizeWei > actualPrizeWei && actualPrizeWei > 0n) {
+        return res.status(400).json({ error: 'Requested prize amount exceeds jackpot epoch prize' });
+      }
+    } else if (matchedType === 'mines' && minesGame) {
+      if (!minesGame.txHash) {
+        return res.status(400).json({ error: 'Mines excavation has no verified wager transaction' });
+      }
+      actualPrizeWei = BigInt(Math.round(minesGame.currentPayout * 1_000_000));
+      if (requestedPrizeWei > actualPrizeWei && actualPrizeWei > 0n) {
+        return res.status(400).json({ error: 'Requested prize amount exceeds calculated mines payout' });
       }
     }
+
+    if (actualPrizeWei <= 0n) {
+      return res.status(400).json({ error: 'Calculated prize amount is zero or invalid' });
+    }
+
+    // Always sign the exact server-calculated amount
+    const finalPrizeWei = actualPrizeWei;
 
     // Load the game server signer wallet
     const signerPrivateKey = process.env.GAME_SERVER_SIGNER_PRIVATE_KEY || '';
@@ -495,14 +664,14 @@ const handleSignClaim = async (req: express.Request, res: express.Response) => {
     const messageHash = ethers.keccak256(
       ethers.solidityPacked(
         ['string', 'address', 'uint256'],
-        [gameId, winner, requestedPrizeWei]
+        [gameId, winner, finalPrizeWei]
       )
     );
     // ethers.signMessage prepends "\x19Ethereum Signed Message:\n32" and signs — matching the contract
     const signature = await signerWallet.signMessage(ethers.getBytes(messageHash));
 
     console.log(
-      `[SIGN-CLAIM] Type: ${matchedType.toUpperCase()} | Game: ${gameId} | Winner: ${winner} | Prize: ${ethers.formatUnits(requestedPrizeWei, 6)} USDG | Sig: ${signature.slice(0, 20)}...`
+      `[SIGN-CLAIM] Type: ${matchedType.toUpperCase()} | Game: ${gameId} | Winner: ${winner} | Prize: ${ethers.formatUnits(finalPrizeWei, 6)} USDG | Sig: ${signature.slice(0, 20)}...`
     );
 
     return res.json({
@@ -510,7 +679,7 @@ const handleSignClaim = async (req: express.Request, res: express.Response) => {
       gameId,
       roomNumber: cfGame?.roomNumber || undefined,
       winner,
-      prizeAmount: prizeAmount.toString(),
+      prizeAmount: finalPrizeWei.toString(),
     });
   } catch (err: any) {
     console.error('[SIGN-CLAIM] Error:', err?.message);
@@ -527,7 +696,6 @@ io.on('connection', (socket) => {
   // Send initial states
   socket.emit('cashflip_jackpot_state', cashflipJackpot.getState());
   socket.emit('cashflip_jackpot_history', cashflipJackpot.getPastGames());
-  socket.emit('jackpot_state', jackpot.getState());
   socket.emit('coinflip_games', coinflip.getOpenGames());
   socket.emit('coinflip_completed_games', coinflip.getCompletedGames());
   socket.emit('leaderboard_update', getLeaderboard());
@@ -535,8 +703,19 @@ io.on('connection', (socket) => {
 
   // --- CashFlip Jackpot Events ---
   const handleBet = ({ playerAddress, playerName, amount, amountPons, playerAvatar, txHash }: any) => {
+    if (!isValidTxHash(txHash)) {
+      socket.emit('cashflip_jackpot_bet_result', { success: false, message: 'Valid on-chain transaction hash (txHash) is required for jackpot bets.' });
+      return;
+    }
+    if (isTxHashUsed(txHash)) {
+      socket.emit('cashflip_jackpot_bet_result', { success: false, message: 'Transaction hash has already been used. Replay detected.' });
+      return;
+    }
     const betAmount = amount !== undefined ? amount : (amountPons || 0);
     const result = cashflipJackpot.placeBet(playerAddress, playerName, betAmount, playerAvatar, txHash);
+    if (result.success) {
+      markTxHashUsed(txHash);
+    }
     socket.emit('cashflip_jackpot_bet_result', result);
   };
   socket.on('cashflip_jackpot_bet', handleBet);
@@ -573,27 +752,40 @@ io.on('connection', (socket) => {
 
   // --- CoinFlip Events ---
   socket.on('create_coinflip', ({ creatorId, creatorName, creatorAvatar, betAmount, side, customId, txHash }) => {
+    if (!isValidTxHash(txHash)) {
+      socket.emit('create_coinflip_result', { success: false, message: 'Valid on-chain transaction hash is required to create a duel room.' });
+      return;
+    }
+    if (isTxHashUsed(txHash)) {
+      socket.emit('create_coinflip_result', { success: false, message: 'Transaction hash has already been used. Replay detected.' });
+      return;
+    }
     const result = coinflip.createGame(creatorId, creatorName, betAmount, side, creatorAvatar, customId, txHash);
+    if (result.success) {
+      markTxHashUsed(txHash);
+    }
     socket.emit('create_coinflip_result', result);
   });
 
   socket.on('join_coinflip', ({ gameId, challengerId, challengerName, challengerAvatar, txHash }) => {
+    if (!isValidTxHash(txHash)) {
+      socket.emit('join_coinflip_result', { success: false, message: 'Valid on-chain transaction hash is required to join a duel.' });
+      return;
+    }
+    if (isTxHashUsed(txHash)) {
+      socket.emit('join_coinflip_result', { success: false, message: 'Transaction hash has already been used. Replay detected.' });
+      return;
+    }
     const result = coinflip.joinGame(gameId, challengerId, challengerName, challengerAvatar, txHash);
+    if (result.success) {
+      markTxHashUsed(txHash);
+    }
     socket.emit('join_coinflip_result', result);
   });
 
   socket.on('cancel_coinflip', ({ gameId, requesterId }) => {
     const result = coinflip.cancelGame(gameId, requesterId);
     socket.emit('cancel_coinflip_result', result);
-  });
-
-  socket.on('play_coinflip_ai', ({ playerId, playerName, playerAvatar, betAmount, side }, callback) => {
-    const res = coinflip.playAIGame(playerId, playerName, playerAvatar, betAmount, side);
-    if (typeof callback === 'function') callback(res);
-    socket.emit('coinflip_ai_result', res);
-    if (res.playerWon && playerId) {
-      socket.emit('unclaimed_coinflips', coinflip.getUnclaimedByPlayer(playerId));
-    }
   });
 
   socket.on('get_unclaimed_coinflips', ({ address }: { address: string }) => {
@@ -615,6 +807,87 @@ io.on('connection', (socket) => {
     const result = coinflip.playAgainstAiInRoom(gameId, requesterId);
     if (typeof callback === 'function') callback(result);
     socket.emit('play_coinflip_room_ai_result', result);
+  });
+
+  // --- Mines Events ---
+  socket.on('mines_start', ({ playerAddress, playerName, betAmount, mineCount, playerAvatar, clientSeed, gridSize, gameId, txHash }, callback) => {
+    if (!isValidTxHash(txHash)) {
+      const err = { success: false, message: 'Valid on-chain transaction hash is required to start a Mines game.' };
+      if (typeof callback === 'function') callback(err);
+      socket.emit('mines_start_result', err);
+      return;
+    }
+    if (isTxHashUsed(txHash)) {
+      const err = { success: false, message: 'Transaction hash has already been used. Replay detected.' };
+      if (typeof callback === 'function') callback(err);
+      socket.emit('mines_start_result', err);
+      return;
+    }
+    const result = mines.startGame(
+      playerAddress,
+      playerName,
+      Number(betAmount),
+      Number(mineCount),
+      playerAvatar,
+      clientSeed,
+      gridSize ? Number(gridSize) : 25,
+      gameId,
+      txHash
+    );
+    if (result.success) {
+      markTxHashUsed(txHash);
+    }
+    if (typeof callback === 'function') callback(result);
+    socket.emit('mines_start_result', result);
+  });
+
+  socket.on('mines_reveal', ({ gameId, playerAddress, tileIndex }, callback) => {
+    try {
+      const result = mines.revealTile(gameId, playerAddress, Number(tileIndex));
+      if (typeof callback === 'function') callback({ success: true, result });
+      socket.emit('mines_reveal_result', { success: true, result });
+      if (result.gameOver && result.unclaimedGame) {
+        socket.emit('mines_unclaimed', mines.getUnclaimedByPlayer(playerAddress));
+      }
+    } catch (err: any) {
+      if (typeof callback === 'function') callback({ success: false, error: err?.message });
+      socket.emit('mines_reveal_result', { success: false, error: err?.message });
+    }
+  });
+
+  socket.on('mines_cashout', ({ gameId, playerAddress }, callback) => {
+    try {
+      const result = mines.cashOut(gameId, playerAddress);
+      if (typeof callback === 'function') callback({ success: true, result });
+      socket.emit('mines_cashout_result', { success: true, result });
+      socket.emit('mines_unclaimed', mines.getUnclaimedByPlayer(playerAddress));
+    } catch (err: any) {
+      if (typeof callback === 'function') callback({ success: false, error: err?.message });
+      socket.emit('mines_cashout_result', { success: false, error: err?.message });
+    }
+  });
+
+  socket.on('mines_get_active', ({ address }: { address: string }, callback) => {
+    if (!address) return;
+    const g = mines.getActiveGame(address);
+    const sanitized = g ? mines.sanitizeGame(g) : null;
+    if (typeof callback === 'function') callback(sanitized);
+    socket.emit('mines_active_game', sanitized);
+  });
+
+  socket.on('mines_get_unclaimed', ({ address }: { address: string }) => {
+    if (!address) return;
+    const list = mines.getUnclaimedByPlayer(address);
+    socket.emit('mines_unclaimed', list);
+  });
+
+  socket.on('mines_mark_claimed', ({ gameId, claimTxHash, address }: any) => {
+    const ok = mines.markGameClaimed(gameId, claimTxHash);
+    socket.emit('mines_claim_confirmed', { success: ok, gameId, claimTxHash });
+    if (address) {
+      const list = mines.getUnclaimedByPlayer(address);
+      socket.emit('mines_unclaimed', list);
+    }
   });
 
   // --- Chat ---

@@ -39,9 +39,9 @@ npm run dev
 
 Ini akan menjalankan:
 - **Game Server (Socket.io & Express)** pada `http://localhost:4000`
-- **Frontend (Next.js)** pada `http://localhost:3000`
+- **Frontend (Next.js)** pada `http://localhost:3001`
 
-Buka browser Anda di `http://localhost:3000` untuk mulai bermain!
+Buka browser Anda di `http://localhost:3001` untuk mulai bermain!
 
 ---
 

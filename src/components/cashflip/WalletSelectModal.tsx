@@ -1,9 +1,9 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ArrowRight, ShieldCheck } from 'lucide-react';
-import { BookplateCorner } from '@/components/ui/CelestialFlourish';
+import { X, ArrowRight, ShieldCheck, Wallet } from 'lucide-react';
 
 interface WalletSelectModalProps {
   isOpen: boolean;
@@ -16,7 +16,12 @@ export const WalletSelectModal: React.FC<WalletSelectModalProps> = ({
   onClose,
   onSelect,
 }) => {
-  if (!isOpen) return null;
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!isOpen || !mounted || typeof document === 'undefined') return null;
 
   const win = typeof window !== 'undefined' ? (window as any) : {};
 
@@ -51,57 +56,53 @@ export const WalletSelectModal: React.FC<WalletSelectModalProps> = ({
     },
   ];
 
-  return (
+  return createPortal(
     <AnimatePresence>
-      <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+      <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4">
         {/* Backdrop overlay */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="absolute inset-0 bg-[#121110]/80 backdrop-blur-sm cursor-pointer"
+          className="absolute inset-0 bg-[#030508]/85 backdrop-blur-xl cursor-pointer"
           onClick={onClose}
         />
 
-        {/* Modal Content */}
+        {/* Liquid Glass Modal Window */}
         <motion.div
-          initial={{ opacity: 0, scale: 0.96, y: 10 }}
+          initial={{ opacity: 0, scale: 0.95, y: 15 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.96, y: 10 }}
-          className="relative w-full max-w-md bg-[#F4EFE6] dark:bg-[#1A1816] border border-[#171513] dark:border-[#E8DFD1]/30 p-6 shadow-2xl space-y-5 text-[#171513] dark:text-[#E8DFD1] font-serif overflow-hidden z-10"
+          exit={{ opacity: 0, scale: 0.95, y: 15 }}
+          transition={{ type: 'spring', damping: 26, stiffness: 320 }}
+          className="relative w-full max-w-md glass-capsule rounded-3xl p-6 sm:p-7 shadow-[0_25px_60px_rgba(0,0,0,0.8),0_0_35px_rgba(205, 180, 134,0.1)] space-y-5 text-[#F5F7FA] font-sans z-10 select-none border border-white/10"
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Ornamental Bookplate Corners */}
-          <BookplateCorner position="tl" />
-          <BookplateCorner position="tr" />
-          <BookplateCorner position="bl" />
-          <BookplateCorner position="br" />
-
           {/* Header */}
-          <div className="flex items-center justify-between pb-3 border-b border-[#171513]/15 dark:border-[#E8DFD1]/15">
-            <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 border border-brass/50 bg-[#E8DFD1] p-0.5 flex items-center justify-center flex-shrink-0">
-                <img src="/image/logo.png" alt="CashFlip" className="w-full h-full object-contain" />
+          <div className="flex items-center justify-between pb-4 border-b border-white/[0.06]">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-[#CDB486]/10 border border-[#CDB486]/25 flex items-center justify-center flex-shrink-0 text-[#CDB486] shadow-inner">
+                <Wallet className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-sm font-display font-bold tracking-[0.16em] uppercase">
-                  CONNECT SANCTUARY
+                <h3 className="text-base font-heading font-bold tracking-wide uppercase text-[#F5F7FA]">
+                  CONNECT WALLET
                 </h3>
-                <p className="text-[11px] text-[#625B51] dark:text-[#9E968B] font-serif italic">
-                  Cryptographic Repository · Robinhood Chain
+                <p className="text-xs text-[#8993A4] font-mono">
+                  ROBINHOOD CHAIN 4663
                 </p>
               </div>
             </div>
             <button
               onClick={onClose}
-              className="p-1 text-[#625B51] hover:text-[#171513] dark:text-[#9E968B] dark:hover:text-[#E8DFD1] transition-colors"
+              className="w-8 h-8 rounded-full flex items-center justify-center text-[#8993A4] hover:text-[#F5F7FA] bg-white/[0.04] hover:bg-white/[0.1] border border-white/[0.06] transition-all cursor-pointer"
+              aria-label="Close"
             >
               <X className="w-4 h-4" />
             </button>
           </div>
 
           {/* Wallets List */}
-          <div className="space-y-2">
+          <div className="space-y-2.5">
             {wallets.map((wallet) => (
               <button
                 key={wallet.id}
@@ -109,41 +110,44 @@ export const WalletSelectModal: React.FC<WalletSelectModalProps> = ({
                   onSelect(wallet.id);
                   onClose();
                 }}
-                className="w-full flex items-center justify-between p-3.5 bg-white/60 dark:bg-black/20 border border-[#171513]/15 dark:border-[#E8DFD1]/15 hover:border-brass dark:hover:border-brass hover:bg-[#EFE7DC] dark:hover:bg-[#221F1B] transition-all text-left group"
+                className="w-full flex items-center justify-between p-3.5 glass-capsule rounded-2xl hover:border-[#CDB486]/40 hover:bg-[#CDB486]/[0.05] transition-all text-left group cursor-pointer"
               >
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 border border-[#171513]/25 dark:border-[#E8DFD1]/20 flex items-center justify-center text-sm font-serif text-brass flex-shrink-0">
+                <div className="flex items-center gap-3.5">
+                  <div className="w-10 h-10 rounded-xl bg-white/[0.04] border border-white/10 flex items-center justify-center text-sm font-mono text-[#CDB486] flex-shrink-0 shadow-inner group-hover:scale-105 transition-transform">
                     {wallet.symbol}
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="text-xs font-display font-bold text-[#171513] dark:text-[#E8DFD1] group-hover:text-brass-dark dark:group-hover:text-brass-light transition-colors">
+                      <span className="text-sm font-bold text-[#F5F7FA] group-hover:text-[#CDB486] transition-colors">
                         {wallet.name}
                       </span>
                       {wallet.isInstalled && (
-                        <span className="px-1.5 py-0.2 border border-brass text-brass text-[8px] font-mono tracking-widest uppercase">
-                          ACTIVE
+                        <span className="glass-pill-active text-[9px] font-mono tracking-wider uppercase font-bold px-2 py-0.5">
+                          DETECTED
                         </span>
                       )}
                     </div>
-                    <p className="text-[10px] text-[#625B51] dark:text-[#9E968B] font-serif italic">
+                    <p className="text-[11px] text-[#8993A4] mt-0.5">
                       {wallet.subtitle}
                     </p>
                   </div>
                 </div>
 
-                <ArrowRight className="w-3.5 h-3.5 text-[#625B51] group-hover:text-brass group-hover:translate-x-0.5 transition-all flex-shrink-0" />
+                <div className="w-7 h-7 rounded-full bg-white/[0.03] border border-white/[0.06] flex items-center justify-center group-hover:border-[#CDB486]/40 group-hover:bg-[#CDB486]/10 transition-all flex-shrink-0">
+                  <ArrowRight className="w-3.5 h-3.5 text-[#8993A4] group-hover:text-[#CDB486] group-hover:translate-x-0.5 transition-all" />
+                </div>
               </button>
             ))}
           </div>
 
-          {/* Security Guarantee */}
-          <div className="flex items-center gap-2.5 p-3 border border-[#171513]/10 dark:border-[#E8DFD1]/10 bg-[#E8DFD1]/40 dark:bg-[#141311]/40 text-[11px] text-[#625B51] dark:text-[#9E968B] font-serif italic">
-            <ShieldCheck className="w-4 h-4 text-brass flex-shrink-0" />
-            <span>Non-custodial handshakes. Private keys never leave your sanctuary client.</span>
+          {/* Security Note */}
+          <div className="flex items-center gap-3 p-3.5 rounded-2xl bg-white/[0.02] border border-white/[0.05] text-[11px] text-[#8993A4]">
+            <ShieldCheck className="w-4 h-4 text-[#CDB486] flex-shrink-0" />
+            <span className="leading-snug">Non-custodial connection. Private keys remain exclusively secure in your local wallet.</span>
           </div>
         </motion.div>
       </div>
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 };

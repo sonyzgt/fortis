@@ -388,6 +388,138 @@ class SoundEffects {
     bellOsc.start(t + 0.22);
     bellOsc.stop(t + 1.2);
   }
+
+  // Tactical Mine Tile Click (Pneumatic relay tick)
+  public playMineTileClick(): void {
+    if (!this.enabled) return;
+    const ctx = this.getContext();
+    if (!ctx) return;
+
+    const t = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(800, t);
+    osc.frequency.exponentialRampToValueAtTime(300, t + 0.04);
+
+    gain.gain.setValueAtTime(0.2, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.04);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(t);
+    osc.stop(t + 0.04);
+  }
+
+  // Gem Uncovered: Ascending crystalline harmonic chime
+  public playMineGemReveal(gemIndex: number = 0): void {
+    if (!this.enabled) return;
+    const ctx = this.getContext();
+    if (!ctx) return;
+
+    const t = ctx.currentTime;
+    const baseFreq = 700 + Math.min(gemIndex * 65, 1200);
+
+    // Fundamental crystal tone
+    const osc1 = ctx.createOscillator();
+    const gain1 = ctx.createGain();
+    osc1.type = 'sine';
+    osc1.frequency.setValueAtTime(baseFreq, t);
+    osc1.frequency.exponentialRampToValueAtTime(baseFreq * 1.5, t + 0.18);
+    gain1.gain.setValueAtTime(0.25, t);
+    gain1.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+
+    // Harmonic sparkle
+    const osc2 = ctx.createOscillator();
+    const gain2 = ctx.createGain();
+    osc2.type = 'triangle';
+    osc2.frequency.setValueAtTime(baseFreq * 2, t);
+    gain2.gain.setValueAtTime(0.15, t);
+    gain2.gain.exponentialRampToValueAtTime(0.001, t + 0.45);
+
+    osc1.connect(gain1);
+    gain1.connect(ctx.destination);
+    osc2.connect(gain2);
+    gain2.connect(ctx.destination);
+
+    osc1.start(t);
+    osc1.stop(t + 0.35);
+    osc2.start(t);
+    osc2.stop(t + 0.45);
+  }
+
+  // Demolition Mine Explosion: Sub-bass shockwave + noise distortion
+  public playMineExplosion(): void {
+    if (!this.enabled) return;
+    const ctx = this.getContext();
+    if (!ctx) return;
+
+    const t = ctx.currentTime;
+
+    // 1. Heavy Sub-bass Drop
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(140, t);
+    osc.frequency.exponentialRampToValueAtTime(32, t + 0.45);
+
+    gain.gain.setValueAtTime(0.4, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.5);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(t);
+    osc.stop(t + 0.5);
+
+    // 2. Blast Noise Burst
+    const bufferSize = ctx.sampleRate * 0.3;
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const output = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      output[i] = (Math.random() * 2 - 1) * Math.exp(-i / (ctx.sampleRate * 0.08));
+    }
+
+    const noise = ctx.createBufferSource();
+    noise.buffer = buffer;
+
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(600, t);
+    filter.frequency.exponentialRampToValueAtTime(100, t + 0.3);
+
+    const noiseGain = ctx.createGain();
+    noiseGain.gain.setValueAtTime(0.35, t);
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
+
+    noise.connect(filter);
+    filter.connect(noiseGain);
+    noiseGain.connect(ctx.destination);
+    noise.start(t);
+  }
+
+  // Successful Tactical Cashout: Ascending victory chime fanfare
+  public playMineCashout(): void {
+    if (!this.enabled) return;
+    const ctx = this.getContext();
+    if (!ctx) return;
+
+    const t = ctx.currentTime;
+    const notes = [523.25, 659.25, 783.99, 1046.5]; // C5, E5, G5, C6
+    notes.forEach((freq, i) => {
+      const noteOsc = ctx.createOscillator();
+      const noteGain = ctx.createGain();
+      noteOsc.type = 'sine';
+      noteOsc.frequency.setValueAtTime(freq, t + i * 0.07);
+      noteGain.gain.setValueAtTime(0.25, t + i * 0.07);
+      noteGain.gain.exponentialRampToValueAtTime(0.001, t + i * 0.07 + 0.4);
+
+      noteOsc.connect(noteGain);
+      noteGain.connect(ctx.destination);
+      noteOsc.start(t + i * 0.07);
+      noteOsc.stop(t + i * 0.07 + 0.4);
+    });
+  }
 }
 
 export const sounds = new SoundEffects();

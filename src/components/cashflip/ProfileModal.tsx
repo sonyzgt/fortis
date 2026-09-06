@@ -1,10 +1,10 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { User, Check, X, Shuffle, Upload, Sparkles, Compass } from 'lucide-react';
-import { getUserStats, getUserLevelInfo } from '@/lib/levelSystem';
-import { BookplateCorner, CelestialFlourish } from '@/components/ui/CelestialFlourish';
+import { User, Check, X, Shuffle, Upload, Shield } from 'lucide-react';
+import { getUserStats } from '@/lib/levelSystem';
 
 interface ProfileModalProps {
   isOpen: boolean;
@@ -15,28 +15,17 @@ interface ProfileModalProps {
   onSaveProfile: (name: string, avatar: string) => void;
 }
 
-const PRESET_AVATARS = [
-  '/image/logo.png',
-  'https://api.dicebear.com/7.x/bottts/svg?seed=LuckyWhale',
-  'https://api.dicebear.com/7.x/bottts/svg?seed=CashFlipKing',
-  'https://api.dicebear.com/7.x/bottts/svg?seed=CyberChad',
-  'https://api.dicebear.com/7.x/bottts/svg?seed=EmeraldMaster',
-  'https://api.dicebear.com/7.x/bottts/svg?seed=DegenAce',
-  'https://api.dicebear.com/7.x/bottts/svg?seed=CryptoNinja',
-  'https://api.dicebear.com/7.x/bottts/svg?seed=RobinhoodBull',
-];
-
 const RANDOM_NAMES = [
-  'AetherVoyager',
-  'NocturneSeeker',
-  'CelestialAce',
-  'AstrolabeLord',
+  'AetherNode',
+  'NocturneCipher',
+  'VanguardKofuku',
+  'ZeroExOperator',
   'GildedOracle',
-  'LunarArchon',
-  'AlchemistCashFlip',
-  'VeritasScholar',
-  'OccultObserver',
-  'ZephyrPatron',
+  'ArchonVault',
+  'QuantObserver',
+  'VeritasScalar',
+  'SubZeroUnit',
+  'SpectralApex',
 ];
 
 export const ProfileModal: React.FC<ProfileModalProps> = ({
@@ -49,8 +38,6 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
 }) => {
   const [name, setName] = useState(currentName);
   const [avatar, setAvatar] = useState(currentAvatar || '/image/logo.png');
-  const [customUrl, setCustomUrl] = useState('');
-  const [activeTab, setActiveTab] = useState<'presets' | 'url' | 'upload'>('presets');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -60,12 +47,17 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
     }
   }, [isOpen, currentName, currentAvatar]);
 
-  if (!isOpen) return null;
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!isOpen || !mounted || typeof document === 'undefined') return null;
 
   const handleRandomizeName = () => {
     const random = RANDOM_NAMES[Math.floor(Math.random() * RANDOM_NAMES.length)];
     const num = Math.floor(Math.random() * 900) + 100;
-    setName(`${random}${num}`);
+    setName(`${random}-${num}`);
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -111,42 +103,36 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
 
   const userStats = getUserStats(account);
 
-  return (
+  return createPortal(
     <AnimatePresence>
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0a0908]/75 backdrop-blur-sm"
+        className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-[#030508]/85 backdrop-blur-xl select-none"
         onClick={onClose}
       >
         <motion.div
-          initial={{ opacity: 0, scale: 0.94, y: 16 }}
+          initial={{ opacity: 0, scale: 0.95, y: 15 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.94, y: 16 }}
-          className="editorial-frame bg-[#E8DFD1] text-[#171513] max-w-md w-full relative p-6 sm:p-7 shadow-[0_20px_50px_rgba(0,0,0,0.5)] select-none"
+          exit={{ opacity: 0, scale: 0.95, y: 15 }}
+          transition={{ type: 'spring', damping: 26, stiffness: 320 }}
+          className="glass-capsule rounded-3xl text-[#F5F7FA] max-w-md w-full relative p-6 sm:p-7 shadow-[0_25px_60px_rgba(0,0,0,0.8),0_0_35px_rgba(205, 180, 134,0.1)] font-sans border border-white/10"
           onClick={(e) => e.stopPropagation()}
         >
-          <BookplateCorner />
-
           {/* Header */}
-          <div className="flex items-center justify-between pb-3.5 border-b border-[#171513]/15">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 border border-[#9E8055]/50 bg-[#F4EFE6] flex items-center justify-center text-[#9E8055]">
-                <User className="w-4 h-4" />
-              </div>
-              <div>
-                <span className="text-[9px] tracking-[0.25em] font-serif uppercase text-[#9E8055] block">
-                  Registry of Personae
-                </span>
-                <h3 className="text-base font-serif tracking-[0.1em] font-semibold text-[#171513]">
-                  INSCRIBE IDENTITY
-                </h3>
-              </div>
+          <div className="flex items-center justify-between pb-4 border-b border-white/[0.06]">
+            <div className="space-y-0.5">
+              <span className="font-mono text-[10px] tracking-[0.2em] uppercase text-[#CDB486] block font-bold">
+                OPERATOR PROFILE
+              </span>
+              <h3 className="font-heading text-lg font-bold text-[#F5F7FA] tracking-wide uppercase">
+                EDIT IDENTITY
+              </h3>
             </div>
             <button
               onClick={onClose}
-              className="p-1.5 border border-[#171513]/10 text-[#171513]/60 hover:text-[#171513] hover:border-[#171513]/30 transition-colors"
+              className="w-8 h-8 rounded-full flex items-center justify-center text-[#8993A4] hover:text-[#F5F7FA] bg-white/[0.04] hover:bg-white/[0.1] border border-white/[0.06] transition-all cursor-pointer"
               aria-label="Close"
             >
               <X className="w-4 h-4" />
@@ -154,32 +140,32 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
           </div>
 
           <div className="space-y-4 py-4">
-            {/* Live Profile Preview */}
-            <div className="p-3.5 bg-[#F4EFE6] border border-[#171513]/15 flex items-center gap-3.5 relative">
-              <div className="relative w-14 h-14 border border-[#9E8055] p-0.5 bg-[#E8DFD1] flex-shrink-0">
+            {/* Live Profile Node Preview */}
+            <div className="glass-capsule rounded-2xl p-3.5 flex items-center gap-3.5 relative">
+              <div className="relative w-12 h-12 rounded-xl bg-white/[0.04] border border-white/10 p-0.5 flex-shrink-0 overflow-hidden shadow-inner">
                 <img
                   src={avatar || '/image/logo.png'}
                   alt="Avatar"
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover rounded-lg"
                 />
               </div>
               <div className="min-w-0 flex-1 space-y-0.5">
-                <div className="text-sm font-serif font-semibold text-[#171513] truncate">
-                  {name || 'Initiate Persona'}
+                <div className="text-xs font-bold text-[#F5F7FA] truncate uppercase">
+                  {name || 'INITIATE CIPHER'}
                 </div>
-                <div className="text-[10px] font-mono text-[#171513]/60 truncate">
-                  {account ? `${account.slice(0, 8)}...${account.slice(-6)}` : 'No Ledger Bound'}
+                <div className="text-[11px] font-mono text-[#8993A4] truncate">
+                  {account ? `${account.slice(0, 8)}...${account.slice(-6)}` : 'NO WALLET CONNECTED'}
                 </div>
-                <div className="text-[9px] tracking-wider uppercase font-serif text-[#9E8055]">
-                  Observatory Exp: {userStats.gamesPlayed} Epochs
+                <div className="text-[10px] font-mono tracking-wider uppercase text-[#CDB486]">
+                  DISPATCH COUNT: {userStats.gamesPlayed} ROUNDS
                 </div>
               </div>
             </div>
 
-            {/* Inscribe Name */}
-            <div className="space-y-1.5">
-              <label className="text-[10px] tracking-[0.2em] font-serif uppercase text-[#171513]/70 block font-medium">
-                PERSONA CALLSIGN / NICKNAME
+            {/* Callsign Input */}
+            <div className="space-y-2">
+              <label className="text-[11px] tracking-[0.15em] uppercase text-[#8993A4] block font-bold font-mono">
+                OPERATOR CALLSIGN
               </label>
               <div className="flex items-center gap-2">
                 <input
@@ -187,122 +173,38 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                   maxLength={20}
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="Inscribe title or name..."
-                  className="flex-1 px-3 py-2 bg-[#F4EFE6] border border-[#171513]/25 text-xs font-serif text-[#171513] placeholder-[#171513]/40 focus:outline-none focus:border-[#9E8055]"
+                  placeholder="Enter callsign..."
+                  className="glass-input flex-1 px-4 py-2 text-xs text-[#F5F7FA] placeholder-[#8993A4]/50"
                 />
                 <button
                   type="button"
                   onClick={handleRandomizeName}
-                  className="px-3 py-2 bg-[#E8DFD1] hover:bg-[#F4EFE6] border border-[#171513]/25 text-xs font-serif text-[#171513] flex items-center gap-1.5 transition-colors"
-                  title="Draw random celestial name"
+                  className="glass-btn-chip px-3.5 py-2 flex items-center gap-1.5 cursor-pointer text-[#CDB486]"
+                  title="Randomize callsign"
                 >
-                  <Shuffle className="w-3 h-3 text-[#9E8055]" />
-                  <span className="text-[10px] tracking-wider uppercase">Cast</span>
+                  <Shuffle className="w-3.5 h-3.5" />
+                  <span className="text-[10px] uppercase font-bold font-mono">GEN</span>
                 </button>
               </div>
             </div>
 
-            {/* Avatar Selection Tabs */}
+            {/* Avatar Upload */}
             <div className="space-y-2 pt-1">
-              <div className="flex items-center justify-between">
-                <label className="text-[10px] tracking-[0.2em] font-serif uppercase text-[#171513]/70 block font-medium">
-                  SELECT SEAL PORTRAIT
-                </label>
-                <div className="flex items-center gap-1 text-[9px] font-serif tracking-wider uppercase">
-                  <button
-                    type="button"
-                    onClick={() => setActiveTab('presets')}
-                    className={`px-2 py-1 border transition-colors ${
-                      activeTab === 'presets'
-                        ? 'bg-[#171513] text-[#F4EFE6] border-[#171513]'
-                        : 'bg-[#F4EFE6] text-[#171513]/70 border-[#171513]/20 hover:text-[#171513]'
-                    }`}
-                  >
-                    Archives
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setActiveTab('url')}
-                    className={`px-2 py-1 border transition-colors ${
-                      activeTab === 'url'
-                        ? 'bg-[#171513] text-[#F4EFE6] border-[#171513]'
-                        : 'bg-[#F4EFE6] text-[#171513]/70 border-[#171513]/20 hover:text-[#171513]'
-                    }`}
-                  >
-                    URL
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setActiveTab('upload')}
-                    className={`px-2 py-1 border transition-colors ${
-                      activeTab === 'upload'
-                        ? 'bg-[#171513] text-[#F4EFE6] border-[#171513]'
-                        : 'bg-[#F4EFE6] text-[#171513]/70 border-[#171513]/20 hover:text-[#171513]'
-                    }`}
-                  >
-                    Upload
-                  </button>
+              <label className="text-[11px] tracking-[0.15em] uppercase text-[#8993A4] block font-bold font-mono">
+                AVATAR
+              </label>
+              <div className="p-3.5 glass-capsule rounded-2xl flex items-center gap-4 border border-white/[0.08]">
+                {/* Current Avatar Preview */}
+                <div className="relative w-14 h-14 rounded-xl bg-white/[0.04] border border-[#CDB486]/30 p-1 flex-shrink-0 overflow-hidden shadow-[0_4px_16px_rgba(205,180,134,0.15)] flex items-center justify-center">
+                  <img
+                    src={avatar || '/image/logo.png'}
+                    alt="Avatar Preview"
+                    className="w-full h-full object-cover rounded-lg"
+                  />
                 </div>
-              </div>
 
-              {/* Tab: Presets */}
-              {activeTab === 'presets' && (
-                <div className="grid grid-cols-4 gap-2 p-2.5 bg-[#F4EFE6] border border-[#171513]/15">
-                  {PRESET_AVATARS.map((pUrl, idx) => {
-                    const isSelected = avatar === pUrl;
-                    return (
-                      <button
-                        key={idx}
-                        type="button"
-                        onClick={() => setAvatar(pUrl)}
-                        className={`relative aspect-square p-1 border transition-all flex items-center justify-center ${
-                          isSelected
-                            ? 'border-[#9E8055] bg-[#E8DFD1] shadow-inner ring-1 ring-[#9E8055]'
-                            : 'border-[#171513]/15 bg-[#F4EFE6] hover:border-[#171513]/40'
-                        }`}
-                      >
-                        <img src={pUrl} alt="" className="w-full h-full object-cover" />
-                        {isSelected && (
-                          <div className="absolute top-1 right-1 w-3.5 h-3.5 bg-[#171513] text-[#F4EFE6] flex items-center justify-center">
-                            <Check className="w-2.5 h-2.5" />
-                          </div>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-
-              {/* Tab: URL */}
-              {activeTab === 'url' && (
-                <div className="space-y-2 p-3 bg-[#F4EFE6] border border-[#171513]/15">
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="url"
-                      value={customUrl}
-                      onChange={(e) => setCustomUrl(e.target.value)}
-                      placeholder="https://... (direct image link)"
-                      className="flex-1 px-3 py-1.5 bg-[#E8DFD1] border border-[#171513]/20 text-xs font-mono text-[#171513] focus:outline-none focus:border-[#9E8055]"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (customUrl.trim()) setAvatar(customUrl.trim());
-                      }}
-                      className="px-3 py-1.5 bg-[#171513] text-[#F4EFE6] font-serif text-[11px] tracking-wider uppercase"
-                    >
-                      Apply
-                    </button>
-                  </div>
-                  <p className="text-[10px] font-serif italic text-[#171513]/60">
-                    Provide a public portrait link from Discord, X, or IPFS.
-                  </p>
-                </div>
-              )}
-
-              {/* Tab: Upload */}
-              {activeTab === 'upload' && (
-                <div className="p-4 bg-[#F4EFE6] border border-[#171513]/15 text-center">
+                {/* Upload Action */}
+                <div className="flex-1 space-y-1.5">
                   <input
                     type="file"
                     ref={fileInputRef}
@@ -313,37 +215,40 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="w-full py-4 border border-dashed border-[#171513]/30 hover:border-[#9E8055] transition-colors flex flex-col items-center justify-center gap-1.5"
+                    className="glass-btn-inflated px-4 py-2 text-xs font-bold uppercase tracking-wider flex items-center gap-2 cursor-pointer shadow-md hover:scale-[1.02] transition-transform"
                   >
-                    <Upload className="w-4 h-4 text-[#9E8055]" />
-                    <span className="text-xs font-serif text-[#171513]">Select portrait from local archives</span>
-                    <span className="text-[10px] font-mono text-[#171513]/50">PNG, JPG, WebP max 2MB</span>
+                    <Upload className="w-3.5 h-3.5" />
+                    <span>UPLOAD AVATAR</span>
                   </button>
+                  <p className="text-[10px] text-[#8993A4] font-mono">
+                    PNG, JPG, WEBP • Max 2MB
+                  </p>
                 </div>
-              )}
+              </div>
             </div>
           </div>
 
           {/* Action Buttons */}
-          <div className="flex items-center gap-2.5 pt-3 border-t border-[#171513]/15">
+          <div className="flex items-center gap-3 pt-3 border-t border-white/[0.06]">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 py-2 border border-[#171513]/20 hover:bg-[#171513]/5 text-xs font-serif tracking-wider uppercase text-[#171513]/70 transition-colors"
+              className="flex-1 py-2.5 glass-btn-chip text-xs uppercase tracking-wider text-[#8993A4] hover:text-[#F5F7FA] transition-colors cursor-pointer"
             >
-              Discard
+              DISCARD
             </button>
             <button
               type="button"
               onClick={handleSave}
-              className="flex-1 py-2 bg-[#171513] hover:bg-[#25221e] text-[#F4EFE6] text-xs font-serif tracking-wider uppercase border border-[#9E8055]/50 flex items-center justify-center gap-1.5 transition-colors shadow-sm"
+              className="flex-1 py-2.5 glass-btn-inflated text-xs font-bold tracking-wider uppercase flex items-center justify-center gap-1.5 cursor-pointer"
             >
-              <Check className="w-3.5 h-3.5 text-[#9E8055]" />
-              <span>Record Changes</span>
+              <Check className="w-4 h-4" />
+              <span>COMMIT PROFILE</span>
             </button>
           </div>
         </motion.div>
       </motion.div>
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 };

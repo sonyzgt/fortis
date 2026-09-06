@@ -95,6 +95,7 @@ export class CashFlipJackpotEngine {
   private ticker: NodeJS.Timeout | null = null;
   private countdownStarted: boolean = false;
   private pastGames: CashFlipGameRound[] = [];
+  private claimedGameIds: Set<string> = new Set();
 
   public onUpdate?: (game: CashFlipGameRound) => void;
   public onSystemMessage?: (text: string) => void;
@@ -113,6 +114,11 @@ export class CashFlipJackpotEngine {
         if (Array.isArray(data.pastGames)) {
           this.pastGames = data.pastGames;
         }
+        if (Array.isArray(data.claimedGameIds)) {
+          this.claimedGameIds = new Set(
+            data.claimedGameIds.map((id: string) => String(id).trim().toLowerCase())
+          );
+        }
       }
     } catch (e) {
       console.warn('Could not load jackpot history from disk:', e);
@@ -123,6 +129,7 @@ export class CashFlipJackpotEngine {
     try {
       const data = {
         pastGames: this.pastGames.slice(0, 50),
+        claimedGameIds: Array.from(this.claimedGameIds),
       };
       fs.writeFileSync(HISTORY_FILE, JSON.stringify(data, null, 2), 'utf8');
     } catch (e) {
@@ -136,7 +143,7 @@ export class CashFlipJackpotEngine {
     for (let i = 0; i < 6; i++) {
       code += chars[Math.floor(Math.random() * chars.length)];
     }
-    return `CASHFLIP-${code}`;
+    return `KOFUKU-${code}`;
   }
 
   public startNewGame(): void {
@@ -154,38 +161,41 @@ export class CashFlipJackpotEngine {
     this.revealedServerSeed = '';
     this.winningHash = '';
     this.winningTicket = 0;
-    this.timeRemaining = this.countdownDuration;
+    this.timeRemaining = 0;
 
     // 1. Create Pre-commitment (Provably Fair)
     this.currentCommitment = ProvablyFairEngine.createCommitment(
       this.gameId,
       this.currentNonce,
-      'cashflip-2026'
+      'kofuku-2026'
     );
 
     this.startTime = Date.now();
-    this.endTime = this.startTime + this.countdownDuration * 1000;
+    this.endTime = 0;
 
     this.ticker = setInterval(() => this.tick(), 1000);
     this.broadcast();
 
     if (this.onSystemMessage) {
-      this.onSystemMessage(`🎮 New game ${this.gameId} opened! Waiting for at least 2 players to place USDG bets...`);
+      this.onSystemMessage(`🎮 New game ${this.gameId} opened! Waiting for players to place USDG bets...`);
     }
   }
 
   private tick(): void {
-    if (this.status !== 'open' || !this.countdownStarted) {
+    if (this.status === 'waiting') {
+      // Pure PvP: do not tick countdown when waiting for 2nd player
       return;
     }
 
-    const now = Date.now();
-    this.timeRemaining = Math.max(0, Math.ceil((this.endTime - now) / 1000));
+    if (this.status === 'open' && this.countdownStarted) {
+      const now = Date.now();
+      this.timeRemaining = Math.max(0, Math.ceil((this.endTime - now) / 1000));
 
-    if (this.timeRemaining <= 0) {
-      this.triggerDraw();
-    } else {
-      this.broadcast();
+      if (this.timeRemaining <= 0) {
+        this.triggerDraw();
+      } else {
+        this.broadcast();
+      }
     }
   }
 
@@ -203,7 +213,7 @@ export class CashFlipJackpotEngine {
     this.broadcast();
 
     if (this.onSystemMessage) {
-      this.onSystemMessage(`⚡ 2 players have placed bets! ${this.countdownDuration}s countdown started — place your USDG bets now!`);
+      this.onSystemMessage(`⚡ 2 contenders have entered the pool! ${this.countdownDuration}s countdown initiated!`);
     }
   }
 
@@ -277,8 +287,13 @@ export class CashFlipJackpotEngine {
     });
 
     // Check countdown trigger
-    if (!this.countdownStarted && this.playersMap.size >= this.minPlayers) {
-      this.startCountdown();
+    if (!this.countdownStarted) {
+      if (this.playersMap.size >= this.minPlayers) {
+        this.startCountdown();
+      } else {
+        this.timeRemaining = 0;
+        this.broadcast();
+      }
     } else {
       this.broadcast();
     }
@@ -292,7 +307,7 @@ export class CashFlipJackpotEngine {
   private triggerDraw(): void {
     if (this.ticker) clearInterval(this.ticker);
     this.status = 'spinning';
-    this.timeRemaining = 0;
+    this.timeRemaining = 10;
 
     if (!this.currentCommitment || this.totalTickets <= 0 || this.playersMap.size === 0) {
       this.startNewGame();
@@ -352,19 +367,21 @@ export class CashFlipJackpotEngine {
       this.onSystemMessage(`🎲 Betting closed! Decelerating wheel is selecting the winner for ${this.gameId}...`);
     }
 
-    // 13.0 seconds extended high-speed to zero slow-motion on client, then finalize
+    // 11.5 seconds server delay: 10.0s client slow-mo animation + 1.5s post-spin reveal before finalizing
     setTimeout(() => {
       this.finalizeGame();
-    }, 13000);
+    }, 11500);
   }
 
   private finalizeGame(): void {
-    if (!this.winner) return;
+    const winner = this.winner;
+    if (!winner) return;
 
     this.status = 'complete';
 
     // 2% Platform Fee retained in smart contract for Admin
-    const roundFee = this.winner.feePons || parseFloat((this.winner.totalPoolPons * 0.02).toFixed(4));
+    const totalPool = winner.totalPoolPons ?? 0;
+    const roundFee = winner.feePons || parseFloat((totalPool * 0.02).toFixed(4));
     this.totalBurnedPons += roundFee;
 
     const completedRound = this.getState();
@@ -375,47 +392,52 @@ export class CashFlipJackpotEngine {
     this.broadcast();
 
     if (this.onWinner) {
-      this.onWinner(this.winner, completedRound);
+      this.onWinner(winner, completedRound);
     }
 
     if (this.onSystemMessage) {
+      const prizeStr = (winner.prizePons ?? 0).toLocaleString();
       this.onSystemMessage(
-        `🏆 ${this.winner.name} won ${this.winner.prizePons.toLocaleString()} USDG! (2% Admin fee retained in contract 💎)`
+        `🏆 ${winner.name} won ${prizeStr} USDG! (2% Admin fee retained in contract 💎)`
       );
     }
 
+    // 5 seconds celebration so players see winner highlight & modal before next round starts
     setTimeout(() => {
       this.startNewGame();
-    }, 2500);
+    }, 5000);
   }
 
   /**
    * Mark winnings as claimed on-chain
    */
   public markWinningsClaimed(gameId: string, claimTxHash: string): boolean {
-    if (this.gameId === gameId && this.winner) {
+    if (!gameId) return false;
+    const target = String(gameId).trim().toLowerCase();
+    this.claimedGameIds.add(target);
+
+    let found = false;
+    if (this.gameId && String(this.gameId).trim().toLowerCase() === target && this.winner) {
       this.winner.claimed = true;
       this.winner.claimTxHash = claimTxHash;
-      this.saveToDisk();
-      this.broadcast();
-      return true;
+      found = true;
     }
-    const target = String(gameId).trim().toLowerCase();
     const past = this.pastGames.find((g) => String(g.gameId).trim().toLowerCase() === target);
     if (past && past.winner) {
       past.winner.claimed = true;
       past.winner.claimTxHash = claimTxHash;
-      this.saveToDisk();
-      this.broadcast();
-      return true;
+      found = true;
     }
-    return false;
+    this.saveToDisk();
+    this.broadcast();
+    return found || true;
   }
 
   /**
    * Reset claim status so winners whose claims were not finalized on-chain can claim again
    */
   public resetClaims() {
+    this.claimedGameIds.clear();
     for (const g of this.pastGames) {
       if (g.winner) {
         g.winner.claimed = false;
@@ -439,13 +461,24 @@ export class CashFlipJackpotEngine {
     const list: CashFlipGameRound[] = [];
 
     // Check current round winner if completed and unclaimed
-    if (this.winner && this.winner.address.toLowerCase() === norm && !this.winner.claimed) {
+    if (
+      this.winner &&
+      this.winner.address.toLowerCase() === norm &&
+      !this.winner.claimed &&
+      !this.claimedGameIds.has(String(this.gameId).trim().toLowerCase())
+    ) {
       list.push(this.getState());
     }
 
     // Check past games
     for (const g of this.pastGames) {
-      if (g.winner && g.winner.address.toLowerCase() === norm && !g.winner.claimed) {
+      const gId = String(g.gameId).trim().toLowerCase();
+      if (
+        g.winner &&
+        g.winner.address.toLowerCase() === norm &&
+        !g.winner.claimed &&
+        !this.claimedGameIds.has(gId)
+      ) {
         if (!list.some((item) => item.gameId === g.gameId)) {
           list.push(g);
         }
@@ -459,7 +492,7 @@ export class CashFlipJackpotEngine {
       gameId: this.gameId,
       gameHash: this.currentCommitment?.gameHash || '',
       serverSeedHash: this.currentCommitment?.serverSeedHash || '',
-      publicSeed: this.currentCommitment?.publicSeed || 'cashflip-2026',
+      publicSeed: this.currentCommitment?.publicSeed || 'kofuku-2026',
       nonce: this.currentNonce,
       status: this.status,
       startTime: this.startTime,

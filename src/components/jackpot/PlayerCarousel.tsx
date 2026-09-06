@@ -14,14 +14,25 @@ interface PlayerCarouselProps {
 // ─────────────────────────────────────────────
 // Build reel of cards proportional to tickets
 // ─────────────────────────────────────────────
-function buildCardReel(participants: PotParticipant[]): PotParticipant[] {
-  if (participants.length === 0) return [];
-  if (participants.length === 1) return [participants[0]];
+function buildCardReel(participants: PotParticipant[] = []): PotParticipant[] {
+  if (!participants || !Array.isArray(participants) || participants.length === 0) return [];
+  
+  const targetSize = 60;
+  if (participants.length === 1) {
+    return Array(targetSize).fill(participants[0]);
+  }
 
   const totalTickets = participants.reduce((sum, p) => sum + p.ticketCount, 0);
-  if (totalTickets <= 0) return participants;
-
-  const targetSize = Math.max(30, Math.min(60, Math.max(participants.length * 6, totalTickets)));
+  if (totalTickets <= 0) {
+    const reel: PotParticipant[] = [];
+    while (reel.length < targetSize) {
+      for (const p of participants) {
+        reel.push(p);
+        if (reel.length >= targetSize) break;
+      }
+    }
+    return reel;
+  }
 
   const cardCounts = participants.map((p) => {
     const raw = (p.ticketCount / totalTickets) * targetSize;
@@ -99,7 +110,7 @@ function get3DTransform(p: number) {
 }
 
 export const PlayerCarousel: React.FC<PlayerCarouselProps> = ({
-  participants,
+  participants = [],
   isSpinning,
   winner,
 }) => {
@@ -110,45 +121,40 @@ export const PlayerCarousel: React.FC<PlayerCarouselProps> = ({
 
   const offsetRef = useRef(0);
   const rafRef = useRef<number>(0);
-  const lastTimeRef = useRef<number>(0);
   const lastTickCardRef = useRef(0);
 
   const isDeceleratingRef = useRef(false);
   const spinStartOffsetRef = useRef(0);
   const spinTargetOffsetRef = useRef(0);
   const spinStartTimeRef = useRef(0);
-  const spinDurationRef = useRef(6500);
+  const spinDurationRef = useRef(9200);
 
   const [currentOffset, setCurrentOffset] = useState(0);
   const [hasLandedWinner, setHasLandedWinner] = useState(false);
   const [isDarkening, setIsDarkening] = useState(false);
 
-  const isSpinActiveRef = useRef(false);
+  const spinInitiatedRef = useRef(false);
 
   useEffect(() => {
-    let rollDelayTimer: NodeJS.Timeout | null = null;
-
     if (isSpinning && reelLen > 0) {
-      if (isSpinActiveRef.current) {
-        // Guard against duplicate execution: only spin once per round!
-        return;
+      if (spinInitiatedRef.current) {
+        return; // Already spinning this round
       }
-      isSpinActiveRef.current = true;
+      spinInitiatedRef.current = true;
       setHasLandedWinner(false);
       setIsDarkening(true);
 
-      // Pause backsound when jackpot spin commences
+      // Audio effects
       pauseBgm();
-
-      // Play dramatic cinematic suspense riser
       playSuspenseRiser();
+      playRollStart();
 
       const norm = (str?: string) => (str || '').toLowerCase().trim();
       const winnerId = norm(winner?.playerId || winner?.walletAddress);
 
       let winnerIndices = cardReel
         .map((p, idx) =>
-          (norm(p.playerId) === winnerId || norm(p.walletAddress) === winnerId ? idx : -1)
+          norm(p.playerId) === winnerId || norm(p.walletAddress) === winnerId ? idx : -1
         )
         .filter((idx) => idx !== -1);
 
@@ -158,10 +164,11 @@ export const PlayerCarousel: React.FC<PlayerCarouselProps> = ({
 
       const startOffset = offsetRef.current;
       spinStartOffsetRef.current = startOffset;
-      spinDurationRef.current = 10500;
+      const duration = 10000; // Exactly 10.0s realistic physics slow-mo deceleration
+      spinDurationRef.current = duration;
 
-      // High-speed start through 50-90 cards
-      const minShifts = Math.max(50, Math.min(reelLen * 4.5, 90));
+      // High-speed start through 45-75 cards
+      const minShifts = Math.max(45, Math.min(reelLen * 3.5, 75));
       let finalTarget = Math.ceil(startOffset + minShifts);
       const remainder = ((finalTarget % reelLen) + reelLen) % reelLen;
       const targetRemainder = winnerIndices[0];
@@ -169,30 +176,21 @@ export const PlayerCarousel: React.FC<PlayerCarouselProps> = ({
       if (diff < 0) diff += reelLen;
       finalTarget += diff;
 
-      if (finalTarget - startOffset < 35) {
+      if (finalTarget - startOffset < 30) {
         finalTarget += reelLen;
       }
 
       spinTargetOffsetRef.current = finalTarget;
-
-      rollDelayTimer = setTimeout(() => {
-        playRollStart();
-        spinStartTimeRef.current = performance.now();
-        isDeceleratingRef.current = true;
-      }, 950);
+      spinStartTimeRef.current = performance.now();
+      isDeceleratingRef.current = true;
     } else if (!isSpinning) {
-      isSpinActiveRef.current = false;
-      if (isDeceleratingRef.current && spinTargetOffsetRef.current) {
-        offsetRef.current = spinTargetOffsetRef.current;
-        setCurrentOffset(spinTargetOffsetRef.current);
+      spinInitiatedRef.current = false;
+      // If the spin animation is still completing its natural slow-mo crawl,
+      // do NOT abruptly cancel it or jump! Let it finish to progress >= 1.
+      if (!isDeceleratingRef.current) {
+        setIsDarkening(false);
       }
-      isDeceleratingRef.current = false;
-      setIsDarkening(false);
     }
-
-    return () => {
-      if (rollDelayTimer) clearTimeout(rollDelayTimer);
-    };
   }, [isSpinning, winner?.playerId, winner?.walletAddress, reelLen, pauseBgm, playSuspenseRiser, playRollStart]);
 
   useEffect(() => {
@@ -202,18 +200,22 @@ export const PlayerCarousel: React.FC<PlayerCarouselProps> = ({
         const duration = spinDurationRef.current;
         const progress = Math.min(1, Math.max(0, elapsed / duration));
 
+        // Physics-inspired gradual slow-mo deceleration curve:
+        // Fast blur spin across 0s-3s, visible deceleration across 3s-7s,
+        // and dramatic slow-motion crawl across 7s-10s with rhythmic card ticks.
         const oneMinusP = 1 - progress;
-        const eased = 1 - Math.pow(oneMinusP, 5.6);
+        const eased = 1 - (Math.pow(oneMinusP, 2.5) * 0.75 + Math.pow(oneMinusP, 1.5) * 0.25);
 
         const totalDist = spinTargetOffsetRef.current - spinStartOffsetRef.current;
         offsetRef.current = spinStartOffsetRef.current + totalDist * eased;
 
-        const currentSpeed = (totalDist / (duration / 1000)) * 5.6 * Math.pow(oneMinusP, 4.6);
+        // Instantaneous card velocity for tick sounds:
+        const currentSpeed = (totalDist / 10) * (1.875 * Math.pow(oneMinusP, 1.5) + 0.375 * Math.pow(oneMinusP, 0.5));
 
         const currentCenterCard = Math.floor(offsetRef.current + 0.5);
         if (currentCenterCard !== lastTickCardRef.current) {
           lastTickCardRef.current = currentCenterCard;
-          if (currentSpeed < 18 && currentSpeed > 0.003) {
+          if (currentSpeed < 16 && currentSpeed > 0.03) {
             playTick();
           }
         }
@@ -221,12 +223,12 @@ export const PlayerCarousel: React.FC<PlayerCarouselProps> = ({
         if (progress >= 1) {
           offsetRef.current = spinTargetOffsetRef.current;
           isDeceleratingRef.current = false;
+          setIsDarkening(false);
           setHasLandedWinner(true);
           playWin();
-          // Resume backsound after victory chime concludes
           setTimeout(() => {
             resumeBgm();
-          }, 3500);
+          }, 2500);
         }
         setCurrentOffset(offsetRef.current);
       }
@@ -236,37 +238,27 @@ export const PlayerCarousel: React.FC<PlayerCarouselProps> = ({
 
     rafRef.current = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(rafRef.current);
-  }, [hasLandedWinner, isSpinning, playTick, playWin, resumeBgm]);
+  }, [playTick, playWin, resumeBgm]);
 
   // Viewport Container Wrapper
   const renderViewport = (children: React.ReactNode) => (
     <div className="relative w-full my-6 overflow-visible">
-      {/* Engraved Celestial Crescent Indicator Pin */}
+      {/* Precision Hairline Target Indicator */}
       <CarouselIndicatorPin isSpinning={isSpinning} />
 
-      {/* Antique Armillary Enclosure Frame */}
+      {/* Liquid Glass Facility Chamber */}
       <div
-        className={`relative w-full border transition-all duration-700 overflow-hidden ${
+        className={`relative w-full glass-capsule transition-all duration-700 overflow-hidden border border-white/10 rounded-3xl ${
           isDarkening || isSpinning
-            ? 'bg-[#100F0E] border-brass shadow-[0_12px_40px_rgba(0,0,0,0.85)]'
-            : 'bg-[#F2ECE1] dark:bg-[#1B1916] border-[#171513]/25 dark:border-[#E8DFD1]/20 shadow-[0_8px_30px_rgba(23,21,19,0.08)]'
+            ? 'shadow-[0_20px_60px_rgba(205, 180, 134,0.25)] border-[#CDB486]/50'
+            : 'shadow-[0_16px_40px_rgba(0,0,0,0.8)]'
         }`}
       >
-        {/* Bookplate Corners */}
-        <BookplateCorner position="tl" />
-        <BookplateCorner position="tr" />
-        <BookplateCorner position="bl" />
-        <BookplateCorner position="br" />
-
-        {/* Astronomical coordinate lines */}
-        <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-[#171513]/15 dark:via-[#E8DFD1]/15 to-transparent pointer-events-none" />
-        <div className="absolute inset-x-0 bottom-0 h-[1px] bg-gradient-to-r from-transparent via-[#171513]/15 dark:via-[#E8DFD1]/15 to-transparent pointer-events-none" />
-
-        {/* Dynamic Vignette during spin */}
+        {/* Subtle Convergence Glow during spin */}
         {(isDarkening || isSpinning) && (
           <div className="absolute inset-0 pointer-events-none z-30 overflow-hidden">
-            <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-80 h-80 bg-gradient-to-b from-brass/25 via-brass/5 to-transparent rounded-full blur-2xl animate-pulse" />
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_35%,rgba(16,15,14,0.9)_100%)]" />
+            <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-96 h-96 bg-gradient-to-b from-[#CDB486]/25 via-transparent to-transparent rounded-full blur-3xl animate-pulse" />
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_40%,rgba(3,5,8,0.9)_100%)]" />
           </div>
         )}
 
@@ -319,51 +311,6 @@ export const PlayerCarousel: React.FC<PlayerCarouselProps> = ({
     );
   }
 
-  if (participants.length === 1) {
-    const p = participants[0];
-    const minCard = Math.floor(currentOffset - 4);
-    const maxCard = Math.ceil(currentOffset + 4);
-    const visibleCards = [];
-
-    for (let i = minCard; i <= maxCard; i++) {
-      const relPos = i - currentOffset;
-      if (Math.abs(relPos) > 3.8) continue;
-      const isPlayerCard = ((i % 4) + 4) % 4 === 0;
-      visibleCards.push({
-        key: `single-${i}`,
-        relPos,
-        isPlayer: isPlayerCard,
-        isCenter: Math.abs(relPos) < 0.45,
-      });
-    }
-
-    return renderViewport(
-      visibleCards.map(({ key, relPos, isPlayer, isCenter }) => {
-        const transform = get3DTransform(relPos);
-        return (
-          <div
-            key={key}
-            className="absolute will-change-transform pointer-events-none"
-            style={{
-              left: 'calc(50% - 82.5px)',
-              transform: `translateX(${transform.translateX}px) translateZ(${transform.translateZ}px) rotateY(${transform.rotateY}deg) scale(${transform.scale})`,
-              opacity: transform.opacity,
-              filter: `brightness(${transform.brightness})`,
-              transformStyle: 'preserve-3d',
-              zIndex: transform.zIndex,
-            }}
-          >
-            {isPlayer ? (
-              <ParticipantCard participant={p} isCenter={isCenter} isWinner={false} />
-            ) : (
-              <PlaceholderCard isCenter={isCenter} />
-            )}
-          </div>
-        );
-      })
-    );
-  }
-
   const minCard = Math.floor(currentOffset - 4);
   const maxCard = Math.ceil(currentOffset + 4);
   const visibleCards = [];
@@ -374,6 +321,7 @@ export const PlayerCarousel: React.FC<PlayerCarouselProps> = ({
 
     const pIndex = ((i % reelLen) + reelLen) % reelLen;
     const participant = cardReel[pIndex];
+    if (!participant) continue;
     const norm = (s?: string) => (s || '').toLowerCase().trim();
     const isWinnerCard =
       hasLandedWinner &&
@@ -419,7 +367,14 @@ export const PlayerCarousel: React.FC<PlayerCarouselProps> = ({
 };
 
 // ─────────────────────────────────────────────
-// Antique Engraved Crescent Needle Indicator
+// Cyber Cyan Arrow Target Indicator
+// ─────────────────────────────────────────────
+interface CarouselIndicatorPinProps {
+  isSpinning?: boolean;
+}
+
+// ─────────────────────────────────────────────
+// Glowing Liquid Glass Droplet Indicator
 // ─────────────────────────────────────────────
 interface CarouselIndicatorPinProps {
   isSpinning?: boolean;
@@ -428,43 +383,32 @@ interface CarouselIndicatorPinProps {
 const CarouselIndicatorPin: React.FC<CarouselIndicatorPinProps> = ({ isSpinning = false }) => {
   return (
     <div
-      style={{ left: 'calc(50% - 15px)' }}
-      className={`absolute -top-3.5 -translate-x-1/2 z-50 pointer-events-none flex flex-col items-center select-none ${
-        isSpinning ? 'animate-[bounce_0.22s_infinite]' : ''
+      className={`absolute -top-5 left-1/2 -translate-x-1/2 z-50 pointer-events-none flex flex-col items-center select-none ${
+        isSpinning ? 'animate-[bounce_0.2s_infinite]' : ''
       }`}
     >
-      <div className="relative filter drop-shadow-[0_4px_8px_rgba(23,21,19,0.35)] dark:drop-shadow-[0_4px_12px_rgba(0,0,0,0.8)]">
-        <svg
-          width="30"
-          height="32"
-          viewBox="0 0 30 32"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
+      {/* Glowing Liquid Glass Droplet Indicator */}
+      <div className="relative filter drop-shadow-[0_4px_16px_rgba(205, 180, 134,0.9)]">
+        <div
+          className="w-7 h-9 border border-white/60 flex items-center justify-center relative overflow-hidden"
+          style={{
+            background: 'radial-gradient(circle at 40% 30%, rgba(255, 255, 255, 0.95) 0%, rgba(205, 180, 134, 0.85) 45%, rgba(2, 132, 199, 0.95) 100%)',
+            boxShadow: 'inset 0 2px 4px rgba(255, 255, 255, 0.9), inset 0 -2px 6px rgba(0, 0, 0, 0.5), 0 0 20px rgba(205, 180, 134, 0.7)',
+            clipPath: 'polygon(0% 0%, 100% 0%, 100% 65%, 50% 100%, 0% 65%)',
+          }}
         >
-          {/* Engraved Brass Needle pointing downward */}
-          <path
-            d="M 5,2 L 25,2 L 15,28 Z"
-            fill="#171513"
-            stroke="#9E8055"
-            strokeWidth="1.5"
-            strokeLinejoin="round"
-          />
-          {/* Inner Inset Line */}
-          <path
-            d="M 9,5 L 21,5 L 15,22 Z"
-            fill="#9E8055"
-            opacity="0.9"
-          />
-          {/* North Star Crown */}
-          <circle cx="15" cy="8" r="2.2" fill="#FAF6EE" />
-        </svg>
+          {/* Top Specular Arc */}
+          <div className="absolute top-0.5 inset-x-1 h-2 rounded-full bg-white/80 blur-[0.5px]" />
+          {/* Internal Caustic Core */}
+          <div className="w-2.5 h-2.5 rounded-full bg-white shadow-[0_0_8px_#ffffff]" />
+        </div>
       </div>
     </div>
   );
 };
 
 // ─────────────────────────────────────────────
-// Antique Woodcut Bookplate Token Card
+// Liquid Glass Contender Bubble Card
 // ─────────────────────────────────────────────
 interface ParticipantCardProps {
   participant: PotParticipant;
@@ -477,71 +421,58 @@ const ParticipantCard: React.FC<ParticipantCardProps> = ({
   isCenter,
   isWinner,
 }) => {
+  const cardClass = isWinner
+    ? 'glass-slot-card-center border-amber-400/80 shadow-[0_0_35px_rgba(251,191,36,0.5)]'
+    : isCenter
+    ? 'glass-slot-card-center'
+    : 'glass-slot-card opacity-75';
+
   return (
     <div
       style={{ width: 165 }}
-      className={`relative flex flex-col items-center gap-2.5 py-4 px-3.5 transition-all duration-150 select-none ${
-        isWinner
-          ? 'bg-[#FAF5EA] dark:bg-[#2A2419] border-2 border-brass shadow-[0_12px_28px_rgba(158,128,85,0.4)] text-[#171513] dark:text-[#E8DFD1]'
-          : isCenter
-          ? 'bg-[#FDFCFA] dark:bg-[#22201C] border border-[#171513] dark:border-brass shadow-[0_10px_24px_rgba(23,21,19,0.18)] text-[#171513] dark:text-[#E8DFD1]'
-          : 'bg-[#EDE4D6] dark:bg-[#181614] border border-[#171513]/25 dark:border-[#E8DFD1]/15 opacity-85 text-[#171513] dark:text-[#E8DFD1]'
-      }`}
+      className={`relative flex flex-col items-center gap-3 py-5 px-3.5 select-none ${cardClass}`}
     >
-      {/* Corner Engraving Marks */}
-      <span className="absolute top-1 left-1 text-[7px] text-brass opacity-60">✦</span>
-      <span className="absolute top-1 right-1 text-[7px] text-brass opacity-60">✦</span>
-
-      {/* Center Marker Line */}
-      {isCenter && !isWinner && (
-        <div className="absolute -top-[1px] inset-x-4 h-[2px] bg-brass shadow-[0_0_8px_rgba(158,128,85,0.8)]" />
-      )}
-      {isWinner && (
-        <div className="absolute -top-[1px] inset-x-2 h-[3px] bg-brass animate-pulse shadow-[0_0_12px_rgba(188,161,114,1)]" />
-      )}
-
-      {/* Engraved Woodcut Avatar Frame */}
+      {/* Avatar in Rounded Glass Bubble */}
       <div
-        className={`relative p-1 border ${
+        className={`relative w-14 h-14 rounded-2xl p-0.5 border flex items-center justify-center overflow-hidden transition-transform ${
           isWinner
-            ? 'border-brass bg-brass/10'
+            ? 'border-amber-300 shadow-[0_0_15px_rgba(251,191,36,0.6)] bg-amber-400/20'
             : isCenter
-            ? 'border-[#171513] dark:border-brass'
-            : 'border-[#171513]/30 dark:border-[#E8DFD1]/20'
+            ? 'border-[#CDB486]/80 shadow-[0_0_15px_rgba(205, 180, 134,0.4)] bg-[#CDB486]/10 scale-105'
+            : 'border-white/15 bg-white/[0.03]'
         }`}
       >
         <img
           src={p.playerAvatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${p.playerId}`}
           alt={p.playerName}
-          className="w-14 h-14 object-cover grayscale contrast-125"
+          className="w-full h-full object-cover rounded-xl"
           draggable={false}
         />
         {isWinner && (
-          <div className="absolute inset-0 bg-brass/30 flex items-center justify-center">
-            <span className="text-xl">👑</span>
+          <div className="absolute inset-0 bg-amber-500/20 backdrop-blur-[1px] flex items-center justify-center">
+            <span className="text-[10px] font-sans font-black text-amber-200 tracking-wider">VICTOR</span>
           </div>
         )}
       </div>
 
       {/* Player Name */}
-      <p className="text-xs font-display font-bold tracking-wide truncate w-full text-center">
+      <p className="text-xs font-sans font-bold tracking-tight truncate w-full text-center text-[#F5F7FA]">
         {p.playerName.length > 14 ? p.playerName.slice(0, 13) + '…' : p.playerName}
       </p>
 
-      {/* Token Ledger Pill */}
-      <div className="flex items-center gap-1.5 px-2.5 py-0.5 border border-[#171513]/25 dark:border-[#E8DFD1]/20 bg-[#E8DFD1]/50 dark:bg-[#141311]/50 text-[10px] font-mono tracking-wider">
-        <span className="text-brass">✦</span>
-        <span className="font-bold">
+      {/* USDG Stake Badge as Glass Capsule */}
+      <div className="flex items-center gap-1.5 px-3 py-1 rounded-full border border-white/15 bg-white/[0.04] text-[11px] font-mono tracking-wider font-bold shadow-inner">
+        <span className="text-[#CDB486]">
           {p.totalSpent >= 1000 ? `${(p.totalSpent / 1000).toFixed(1)}k` : p.totalSpent}
         </span>
-        <span className="text-[9px] opacity-70">USDG</span>
+        <span className="text-[9px] text-[#8993A4]">USDG</span>
       </div>
     </div>
   );
 };
 
 // ─────────────────────────────────────────────
-// Antique Waiting Placeholder Card
+// Liquid Glass Placeholder Card
 // ─────────────────────────────────────────────
 interface PlaceholderCardProps {
   isCenter?: boolean;
@@ -550,33 +481,23 @@ interface PlaceholderCardProps {
 const PlaceholderCard: React.FC<PlaceholderCardProps> = ({ isCenter = false }) => (
   <div
     style={{ width: 165 }}
-    className={`relative flex flex-col items-center gap-2.5 py-4 px-3.5 select-none transition-all duration-150 ${
-      isCenter
-        ? 'bg-[#FDFCFA] dark:bg-[#22201C] border border-brass shadow-[0_8px_20px_rgba(23,21,19,0.12)]'
-        : 'bg-[#EDE4D6] dark:bg-[#181614] border border-[#171513]/20 dark:border-[#E8DFD1]/15 opacity-60'
+    className={`relative flex flex-col items-center gap-3 py-5 px-3.5 select-none transition-all duration-200 ${
+      isCenter ? 'glass-slot-card-center' : 'glass-slot-card opacity-40'
     }`}
   >
-    <span className="absolute top-1 left-1 text-[7px] text-brass opacity-40">✦</span>
-    <span className="absolute top-1 right-1 text-[7px] text-brass opacity-40">✦</span>
-
-    {/* Center Indicator */}
-    {isCenter && (
-      <div className="absolute -top-[1px] inset-x-4 h-[2px] bg-brass shadow-[0_0_8px_rgba(158,128,85,0.6)]" />
-    )}
-
-    {/* Empty Astronomical Seal Socket */}
-    <div className="w-14 h-14 border border-dashed border-[#171513]/30 dark:border-[#E8DFD1]/30 flex items-center justify-center">
-      <span className="text-brass text-lg opacity-60">☽</span>
+    {/* Empty Glass Node */}
+    <div className="w-14 h-14 rounded-2xl border border-dashed border-white/20 bg-white/[0.02] flex items-center justify-center">
+      <span className="text-white/30 font-mono text-xs font-bold">--</span>
     </div>
 
-    {/* Elegant Waiting Notation */}
-    <p className="text-[11px] font-serif italic text-[#625B51] dark:text-[#9E968B] tracking-wider">
-      Awaiting Initiate...
+    {/* Label */}
+    <p className="text-[10px] font-sans text-[#8993A4] uppercase tracking-wider">
+      Awaiting Contender
     </p>
 
-    {/* Ledger Stake Empty */}
-    <div className="flex items-center gap-1.5 px-2.5 py-0.5 border border-dashed border-[#171513]/20 dark:border-[#E8DFD1]/15 text-[9px] font-mono text-[#625B51] dark:text-[#9E968B]">
-      <span>0.00 USDG</span>
+    {/* Stake Empty Glass Pill */}
+    <div className="flex items-center gap-1 px-3 py-1 rounded-full border border-white/10 bg-white/[0.02] text-[10px] font-mono text-white/30">
+      <span>—.— USDG</span>
     </div>
   </div>
 );
@@ -634,7 +555,7 @@ export const RightWinnerSidebar: React.FC<RightWinnerSidebarProps> = ({
           winnerName: g.winnerName || 'Duelist',
           winnerAvatar: (g.winnerId?.toLowerCase() === g.creatorId?.toLowerCase() ? g.creatorAvatar : g.challengerAvatar) || '/image/logo.png',
           winnerAddress: g.winnerId,
-          detail: winningSide === 'heads' ? 'Head (Luna Cat)' : 'Tail (Crescent)',
+          detail: winningSide === 'heads' ? 'Head' : 'Tail',
           coinSide: winningSide,
           totalPot: g.winAmount || g.betAmount * 2,
           timestamp: g.claimedAt || g.createdAt || 0,
@@ -657,68 +578,68 @@ export const RightWinnerSidebar: React.FC<RightWinnerSidebarProps> = ({
   const totalCount = jackpotVictories.length + coinflipVictories.length;
 
   return (
-    <aside className="w-full lg:w-[280px] flex-shrink-0 flex flex-col bg-[#EFE7DC] dark:bg-[#181614] border-l border-[#171513]/20 dark:border-[#E8DFD1]/15 h-full overflow-y-auto select-none transition-colors">
-      {/* Editorial Chronicle Masthead */}
-      <div className="p-4 border-b border-[#171513]/15 dark:border-[#E8DFD1]/10 bg-[#E8DFD1]/60 dark:bg-[#141311]/60 flex items-center justify-between">
+    <aside className="w-full lg:w-[280px] flex-shrink-0 flex flex-col bg-[#030508]/80 border-l border-white/10 backdrop-blur-xl h-full overflow-y-auto select-none transition-colors">
+      {/* Masthead */}
+      <div className="p-4 border-b border-white/10 bg-white/[0.02] flex items-center justify-between">
         <div className="flex items-center gap-2.5">
-          <div className="w-6 h-6 border border-[#9E8055]/50 p-0.5 bg-[#F4EFE6] flex items-center justify-center flex-shrink-0">
-            <img src="/image/logo.png" alt="CashFlip" className="w-full h-full object-contain" />
+          <div className="w-7 h-7 rounded-xl border border-white/20 p-1 bg-white/5 flex items-center justify-center flex-shrink-0 shadow-inner">
+            <img src="/image/logo.png" alt="Kofuku" className="w-full h-full object-contain" />
           </div>
           <div>
-            <h2 className="text-xs font-display font-bold tracking-[0.18em] text-[#171513] dark:text-[#E8DFD1] uppercase">
+            <h2 className="text-xs font-sans font-bold tracking-wider text-[#F5F7FA] uppercase">
               ARCHIVES
             </h2>
-            <p className="text-[10px] text-[#625B51] dark:text-[#9E968B] font-serif italic">
+            <p className="text-[10px] text-[#8993A4] font-sans">
               Historical Victories
             </p>
           </div>
         </div>
-        <span className="text-[9px] font-mono tracking-widest text-[#625B51] dark:text-[#9E968B] border border-[#171513]/20 dark:border-[#E8DFD1]/20 px-1.5 py-0.5">
-          ORD. #{totalCount}
+        <span className="text-[10px] font-mono tracking-wider text-[#CDB486] border border-[#CDB486]/30 px-2 py-0.5 rounded-full bg-[#CDB486]/10">
+          #{totalCount}
         </span>
       </div>
 
       {/* Filter Tabs: ALL / JACKPOT / COINFLIP */}
-      <div className="flex items-center border-b border-[#171513]/15 dark:border-[#E8DFD1]/10 bg-[#E8DFD1]/40 dark:bg-[#141311]/40 text-[10px] font-serif">
+      <div className="flex items-center border-b border-white/10 bg-white/[0.01] p-1 gap-1 text-[11px] font-sans">
         <button
           type="button"
           onClick={() => setFilterType('all')}
-          className={`flex-1 py-1.5 text-center font-bold tracking-wider uppercase transition-colors border-r border-[#171513]/10 dark:border-[#E8DFD1]/10 ${
+          className={`flex-1 py-1.5 rounded-lg text-center font-bold tracking-wide uppercase transition-all cursor-pointer ${
             filterType === 'all'
-              ? 'bg-[#FAF5EA] dark:bg-[#201E1B] text-[#9E8055] dark:text-[#DFC493] border-b-2 border-b-[#9E8055]'
-              : 'text-[#625B51] dark:text-[#9E968B] hover:text-[#171513] dark:hover:text-[#E8DFD1]'
+              ? 'glass-pill-active text-xs py-1'
+              : 'text-[#8993A4] hover:text-[#F5F7FA]'
           }`}
         >
-          All ({totalCount})
+          All
         </button>
         <button
           type="button"
           onClick={() => setFilterType('jackpot')}
-          className={`flex-1 py-1.5 text-center font-bold tracking-wider uppercase transition-colors border-r border-[#171513]/10 dark:border-[#E8DFD1]/10 ${
+          className={`flex-1 py-1.5 rounded-lg text-center font-bold tracking-wide uppercase transition-all cursor-pointer ${
             filterType === 'jackpot'
-              ? 'bg-[#FAF5EA] dark:bg-[#201E1B] text-[#9E8055] dark:text-[#DFC493] border-b-2 border-b-[#9E8055]'
-              : 'text-[#625B51] dark:text-[#9E968B] hover:text-[#171513] dark:hover:text-[#E8DFD1]'
+              ? 'glass-pill-active text-xs py-1'
+              : 'text-[#8993A4] hover:text-[#F5F7FA]'
           }`}
         >
-          Jackpot ({jackpotVictories.length})
+          Jackpot
         </button>
         <button
           type="button"
           onClick={() => setFilterType('coinflip')}
-          className={`flex-1 py-1.5 text-center font-bold tracking-wider uppercase transition-colors ${
+          className={`flex-1 py-1.5 rounded-lg text-center font-bold tracking-wide uppercase transition-all cursor-pointer ${
             filterType === 'coinflip'
-              ? 'bg-[#FAF5EA] dark:bg-[#201E1B] text-[#9E8055] dark:text-[#DFC493] border-b-2 border-b-[#9E8055]'
-              : 'text-[#625B51] dark:text-[#9E968B] hover:text-[#171513] dark:hover:text-[#E8DFD1]'
+              ? 'glass-pill-active text-xs py-1'
+              : 'text-[#8993A4] hover:text-[#F5F7FA]'
           }`}
         >
-          Coinflip ({coinflipVictories.length})
+          Coinflip
         </button>
       </div>
 
-      <div className="flex-1 p-3.5 space-y-3">
+      <div className="flex-1 p-3 space-y-2.5">
         {displayedVictories.length === 0 ? (
-          <div className="py-16 text-center text-xs text-[#625B51] dark:text-[#9E968B] font-serif italic">
-            <span className="block text-brass text-lg mb-1">☽</span>
+          <div className="py-16 text-center text-xs text-[#8993A4] font-sans">
+            <span className="block text-[#CDB486] text-lg mb-1">✦</span>
             No recorded victories in this category yet.
           </div>
         ) : (
@@ -727,43 +648,43 @@ export const RightWinnerSidebar: React.FC<RightWinnerSidebarProps> = ({
             return (
               <div
                 key={item.id}
-                className={`p-3 border transition-all ${
+                className={`glass-capsule p-3 transition-all ${
                   isLatest
-                    ? 'bg-[#FAF5EA] dark:bg-[#221F1B] border-brass/60 shadow-sm'
-                    : 'bg-[#F7F2E9]/70 dark:bg-[#1C1A17]/70 border-[#171513]/10 dark:border-[#E8DFD1]/10'
+                    ? 'border-[#CDB486]/50 shadow-[0_0_20px_rgba(205, 180, 134,0.15)]'
+                    : 'border-white/[0.08]'
                 }`}
               >
-                <div className="flex items-center justify-between mb-1.5">
+                <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-1.5">
-                    <span className="text-[10px] font-mono tracking-wider font-bold text-[#625B51] dark:text-[#9E968B]">
+                    <span className="text-[10px] font-mono tracking-wider font-bold text-[#8993A4]">
                       {item.label}
                     </span>
                     <span
-                      className={`text-[8px] font-mono px-1 py-0.2 uppercase font-bold border ${
+                      className={`text-[9px] font-mono px-1.5 py-0.5 rounded-md uppercase font-bold border ${
                         item.gameType === 'coinflip'
-                          ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30'
-                          : 'bg-[#9E8055]/15 text-[#9E8055] dark:text-[#DFC493] border-[#9E8055]/30'
+                          ? 'bg-[#3B82F6]/10 text-[#3B82F6] border-[#3B82F6]/30'
+                          : 'bg-[#CDB486]/10 text-[#CDB486] border-[#CDB486]/30'
                       }`}
                     >
                       {item.gameType === 'coinflip' ? 'COINFLIP' : 'JACKPOT'}
                     </span>
                   </div>
                   {isLatest && (
-                    <span className="text-[8px] font-display font-bold px-1.5 py-0.5 border border-brass text-brass uppercase tracking-widest">
+                    <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded border border-[#CDB486] text-[#CDB486] uppercase tracking-wider">
                       LATEST
                     </span>
                   )}
                 </div>
 
                 <div className="flex items-center gap-2.5 mb-2">
-                  <div className="relative w-8 h-8 border border-[#171513]/30 dark:border-[#E8DFD1]/30 flex-shrink-0 overflow-hidden bg-[#E8DFD1] dark:bg-[#1A1816]">
+                  <div className="relative w-8 h-8 rounded-xl border border-white/15 flex-shrink-0 overflow-hidden bg-white/5 shadow-inner">
                     <img
                       src={item.winnerAvatar || '/image/logo.png'}
                       alt={item.winnerName}
-                      className="w-full h-full object-cover grayscale contrast-125"
+                      className="w-full h-full object-cover"
                     />
                     {item.coinSide && (
-                      <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-[#F4EFE6] dark:bg-[#171513] border border-[#9E8055] p-0.5">
+                      <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-[#030508] border border-[#CDB486] p-0.5">
                         <img
                           src={item.coinSide === 'heads' ? '/head.png' : '/tail.png'}
                           alt=""
@@ -773,23 +694,23 @@ export const RightWinnerSidebar: React.FC<RightWinnerSidebarProps> = ({
                     )}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-xs font-display font-bold text-[#171513] dark:text-[#E8DFD1] truncate">
+                    <p className="text-xs font-sans font-bold text-[#F5F7FA] truncate">
                       {item.winnerName}
                     </p>
-                    <p className="text-[10px] font-serif italic text-[#625B51] dark:text-[#9E968B]">
+                    <p className="text-[10px] font-sans text-[#8993A4]">
                       {item.detail}
                     </p>
                   </div>
                 </div>
 
                 {/* Prize Inscribed Strip */}
-                <div className="pt-1.5 border-t border-[#171513]/10 dark:border-[#E8DFD1]/10 flex items-center justify-between text-xs">
-                  <span className="text-[10px] uppercase font-serif tracking-wider text-[#625B51] dark:text-[#9E968B]">
+                <div className="pt-2 border-t border-white/[0.08] flex items-center justify-between text-xs">
+                  <span className="text-[10px] uppercase font-sans tracking-wider text-[#8993A4]">
                     Awarded
                   </span>
-                  <div className="flex items-center gap-1 font-mono font-bold text-brass-dark dark:text-brass-light">
+                  <div className="flex items-center gap-1 font-mono font-bold text-[#CDB486]">
                     <span>{item.totalPot.toLocaleString()}</span>
-                    <span className="text-[9px] text-[#625B51] dark:text-[#9E968B]">USDG</span>
+                    <span className="text-[9px] text-[#8993A4]">USDG</span>
                   </div>
                 </div>
               </div>

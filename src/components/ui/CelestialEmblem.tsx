@@ -18,10 +18,10 @@ export const CelestialEmblem: React.FC<CelestialEmblemProps> = ({
   return (
     <img
       src="/image/logo.png"
-      alt="CashFlip Logo"
+      alt="Kofuku Logo"
       width={size}
       height={size}
-      className={`object-contain select-none transition-all dark:invert dark:hue-rotate-180 dark:brightness-105 ${className}`}
+      className={`object-contain select-none transition-all ${className}`}
     />
   );
 };

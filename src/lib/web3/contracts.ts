@@ -21,15 +21,16 @@ export function formatTokenAmount(raw: bigint | string): number {
   }
 }
 
-// --- CashFlip Environment Configuration ---
+// --- Kofuku / CashFlip Environment Configuration ---
 export function getCashFlipTokenAddress(): string {
   if (typeof window !== 'undefined') {
-    const saved = localStorage.getItem('cashflip_token_contract');
+    const saved = localStorage.getItem('kofuku_token_contract') || localStorage.getItem('cashflip_token_contract');
     if (saved && saved.startsWith('0x') && saved.length === 42) {
       return saved;
     }
   }
   const envAddr = (
+    process.env.NEXT_PUBLIC_KOFUKU_TOKEN_ADDRESS ||
     process.env.NEXT_PUBLIC_CASHFLIP_TOKEN_ADDRESS ||
     process.env.NEXT_PUBLIC_PONSPOT_TOKEN_ADDRESS ||
     process.env.NEXT_PUBLIC_PONS_TOKEN_ADDRESS ||
@@ -42,8 +43,11 @@ export function getCashFlipTokenAddress(): string {
   return DEFAULT_TOKEN_ADDRESS;
 }
 
+export const getKofukuTokenAddress = getCashFlipTokenAddress;
+
 export const CASHFLIP_TOKEN_ADDRESS =
   (
+    process.env.NEXT_PUBLIC_KOFUKU_TOKEN_ADDRESS ||
     process.env.NEXT_PUBLIC_CASHFLIP_TOKEN_ADDRESS ||
     process.env.NEXT_PUBLIC_PONSPOT_TOKEN_ADDRESS ||
     process.env.NEXT_PUBLIC_PONS_TOKEN_ADDRESS ||
@@ -51,11 +55,13 @@ export const CASHFLIP_TOKEN_ADDRESS =
     DEFAULT_TOKEN_ADDRESS
   ).trim();
 
+export const KOFUKU_TOKEN_ADDRESS = CASHFLIP_TOKEN_ADDRESS;
+
 export const DEFAULT_GAME_CONTRACT_ADDRESS = '0xa626b74Ac9CDbD22Bb6fA5e0F1e7FCce859a4834';
 
 export function getGameContractAddress(): string {
   if (typeof window !== 'undefined') {
-    const saved = localStorage.getItem('cashflip_deployed_game_contract');
+    const saved = localStorage.getItem('kofuku_deployed_game_contract') || localStorage.getItem('cashflip_deployed_game_contract');
     if (
       saved &&
       saved.startsWith('0x') &&
@@ -270,7 +276,19 @@ export async function claimWinningsOnChain(
   }
 }
 
-
+/**
+ * Check if a specific gameId has already been claimed on-chain
+ */
+export async function isGameClaimedOnChain(gameId: string): Promise<boolean> {
+  try {
+    if (!gameId) return false;
+    const contract = getGameContract();
+    const isClaimed = await contract.claimedGames(gameId);
+    return Boolean(isClaimed);
+  } catch (e) {
+    return false;
+  }
+}
 /**
  * Client-side Provably Fair Verification
  */

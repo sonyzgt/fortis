@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none">
+  <defs>
+    <radialGradient id="mineBody" cx="40%" cy="35%" r="60%">
+      <stop offset="0%" stop-color="#3A1218"/>
+      <stop offset="60%" stop-color="#1A070A"/>
+      <stop offset="100%" stop-color="#0B0204"/>
+    </radialGradient>
+    <radialGradient id="coreGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FF4D6D"/>
+      <stop offset="50%" stop-color="#E11D48" stop-opacity="0.7"/>
+      <stop offset="100%" stop-color="#881337" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect x="94" y="16" width="12" height="168" rx="6" fill="#2A0C12" stroke="#E11D48" stroke-width="1.5"/>
+  <rect x="16" y="94" width="168" height="12" rx="6" fill="#2A0C12" stroke="#E11D48" stroke-width="1.5"/>
+  <rect x="94" y="16" width="12" height="168" rx="6" fill="#2A0C12" stroke="#E11D48" stroke-width="1.5" transform="rotate(45 100 100)"/>
+  <rect x="94" y="16" width="12" height="168" rx="6" fill="#2A0C12" stroke="#E11D48" stroke-width="1.5" transform="rotate(-45 100 100)"/>
+  <circle cx="100" cy="100" r="58" fill="url(#mineBody)" stroke="#E11D48" stroke-width="3"/>
+  <circle cx="100" cy="100" r="26" fill="url(#coreGlow)"/>
+  <circle cx="100" cy="100" r="12" fill="#FF4D6D"/>
+  <polygon points="100,90 108,105 92,105" fill="#030508"/>
+</svg>

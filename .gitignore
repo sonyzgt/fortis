@@ -39,4 +39,6 @@ contracts/build/
 # Local game database files
 jackpot_history.json
 coinflip_history.json
+mines_history.json
+used_tx_hashes.json
 
