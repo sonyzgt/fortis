@@ -615,6 +615,7 @@ const handleSignClaim = async (req: express.Request, res: express.Response) => {
     }
 
     // Enforce exact server-authoritative prize calculation directly from database records
+    const requestedPrizeWei = BigInt(prizeAmount || 0);
     let actualPrizeWei = 0n;
 
     if (matchedType === 'coinflip' && cfGame) {
