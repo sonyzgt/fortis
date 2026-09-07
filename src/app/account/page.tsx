@@ -21,7 +21,7 @@ import {
 import { useCashFlipWeb3 } from '@/context/CashFlipWeb3Context';
 import { ProtocolHeader } from '@/components/protocol/ProtocolHeader';
 import { ProtocolFooter } from '@/components/protocol/ProtocolFooter';
-import { ROBINHOOD_CHAIN_CONFIG } from '@/lib/web3/contracts';
+import { ROBINHOOD_CHAIN_CONFIG, TOKEN_SYMBOL } from '@/lib/web3/contracts';
 import { getApiBaseUrl } from '@/lib/apiConfig';
 import { getUserStats } from '@/lib/levelSystem';
 import { WalletSelectModal } from '@/components/cashflip/WalletSelectModal';
@@ -300,10 +300,10 @@ export default function AccountPage() {
                   </span>
                   <div className="text-2xl font-bold text-[#CDB486] drop-shadow-[0_0_12px_rgba(205, 180, 134,0.35)]">
                     {usdgBalance.toLocaleString(undefined, { maximumFractionDigits: 2 })}{' '}
-                    <span className="text-xs text-[#F5F7FA]/60">USDG</span>
+                    <span className="text-xs text-[#F5F7FA]/60">{TOKEN_SYMBOL}</span>
                   </div>
                   <span className="text-[10px] text-[#64748B] block mt-0.5">
-                    Allowance: {usdgAllowance >= 100000000 ? 'Unlimited' : `${usdgAllowance.toLocaleString(undefined, { maximumFractionDigits: 2 })} USDG`}
+                    Allowance: {usdgAllowance >= 100000000 ? 'Unlimited' : `${usdgAllowance.toLocaleString(undefined, { maximumFractionDigits: 2 })} ${TOKEN_SYMBOL}`}
                   </span>
                 </div>
               </div>
@@ -332,7 +332,7 @@ export default function AccountPage() {
                     TOTAL ALLOTMENT YIELD
                   </span>
                   <span className="text-xl font-heading font-bold text-[#F5F7FA] mt-1 block">
-                    {totalWonUsdg.toLocaleString()} USDG
+                    {totalWonUsdg.toLocaleString()} {TOKEN_SYMBOL}
                   </span>
                 </div>
               </div>
@@ -484,7 +484,7 @@ export default function AccountPage() {
                             </td>
                             <td className="py-3.5 px-4 font-mono">
                               <span className={isWinner ? 'text-[#CDB486] font-bold drop-shadow-[0_0_8px_rgba(205, 180, 134,0.3)]' : 'text-[#8993A4]'}>
-                                {g.winner?.prize ? `${g.winner.prize.toFixed(2)} USDG` : `${(g.totalPool || 0).toFixed(2)} USDG`}
+                                {g.winner?.prize ? `${g.winner.prize.toFixed(2)} ${TOKEN_SYMBOL}` : `${(g.totalPool || 0).toFixed(2)} ${TOKEN_SYMBOL}`}
                               </span>
                             </td>
                             <td className="py-3.5 px-4 text-[#8993A4] font-mono">

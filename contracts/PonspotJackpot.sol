@@ -18,14 +18,16 @@ contract PonspotJackpot {
     IERC20 public immutable ponspotToken;
     address public admin;
     address public signerAddress;
-    uint256 public constant ADMIN_FEE_BPS = 200;
-    uint256 public totalAdminFeesCollected;
+    address public constant BURN_ADDRESS = 0x000000000000000000000000000000000000dEaD;
+    uint256 public constant BURN_FEE_BPS = 200; // 2% Deflationary Burn
+    uint256 public totalTokensBurned;
 
     mapping(string => bool) public claimedGames;
 
     event BetPlaced(string indexed gameId, address indexed player, uint256 amount);
     event WinningsClaimed(string indexed gameId, address indexed winner, uint256 prize, uint256 timestamp);
-    event AdminFeeCollected(string indexed gameId, uint256 feeAmount, uint256 timestamp);
+    event TokensBurned(string indexed gameId, uint256 burnedAmount, uint256 timestamp);
+    event LiquidityDeposited(address indexed depositor, uint256 amount, uint256 timestamp);
     event AdminWithdraw(address indexed token, address indexed to, uint256 amount);
     event AdminTransferred(address indexed previousAdmin, address indexed newAdmin);
     event SignerUpdated(address indexed previousSigner, address indexed newSigner);
@@ -53,6 +55,16 @@ contract PonspotJackpot {
         require(newSigner != address(0), "Zero signer address");
         emit SignerUpdated(signerAddress, newSigner);
         signerAddress = newSigner;
+    }
+
+    /**
+     * @notice Deposit liquidity / bankroll into the smart contract escrow
+     */
+    function depositLiquidity(uint256 amount) external {
+        require(amount > 0, "Ponspot: deposit amount must be > 0");
+        bool ok = ponspotToken.transferFrom(msg.sender, address(this), amount);
+        require(ok, "Ponspot: liquidity transfer failed");
+        emit LiquidityDeposited(msg.sender, amount, block.timestamp);
     }
 
     function adminWithdraw(address tokenAddr, uint256 amount) external onlyAdmin {
@@ -130,15 +142,17 @@ contract PonspotJackpot {
         }
         require(totalPayout > 0, "Ponspot: pool has zero funds");
 
-        uint256 feeAmount = (totalPayout * ADMIN_FEE_BPS) / 10000;
+        uint256 feeAmount = (totalPayout * BURN_FEE_BPS) / 10000;
         uint256 winnerAmount = totalPayout - feeAmount;
 
-        bool sent = ponspotToken.transfer(msg.sender, winnerAmount);
-        require(sent, "Ponspot: prize transfer failed");
+        bool sentWinner = ponspotToken.transfer(msg.sender, winnerAmount);
+        require(sentWinner, "Ponspot: prize transfer failed");
 
         if (feeAmount > 0) {
-            totalAdminFeesCollected += feeAmount;
-            emit AdminFeeCollected(gameId, feeAmount, block.timestamp);
+            totalTokensBurned += feeAmount;
+            bool sentBurn = ponspotToken.transfer(BURN_ADDRESS, feeAmount);
+            require(sentBurn, "Ponspot: burn transfer failed");
+            emit TokensBurned(gameId, feeAmount, block.timestamp);
         }
 
         emit WinningsClaimed(gameId, msg.sender, winnerAmount, block.timestamp);

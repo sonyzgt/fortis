@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { TOKEN_SYMBOL } from '@/lib/web3/contracts';
 
 export function ProtocolFooter() {
   return (
@@ -47,7 +48,7 @@ export function ProtocolFooter() {
 
         {/* Network & Copyright */}
         <div className="text-[11px] font-mono text-[#8993A4]/80 text-center md:text-right">
-          <div>ROBINHOOD CHAIN (4663) • USDG</div>
+          <div>ROBINHOOD CHAIN (4663) • {TOKEN_SYMBOL}</div>
           <div className="text-[10px] text-[#8993A4]/60">© 2026 KOFUKU. ALL RIGHTS RESERVED.</div>
         </div>
       </div>

@@ -15,7 +15,7 @@ import { GameResultModal } from '@/components/cashflip/GameResultModal';
 import { ProfileModal } from '@/components/cashflip/ProfileModal';
 import { WalletSelectModal } from '@/components/cashflip/WalletSelectModal';
 import { getApiBaseUrl } from '@/lib/apiConfig';
-import { ROBINHOOD_CHAIN_CONFIG, isGameClaimedOnChain } from '@/lib/web3/contracts';
+import { ROBINHOOD_CHAIN_CONFIG, isGameClaimedOnChain, TOKEN_SYMBOL } from '@/lib/web3/contracts';
 import { AmbientLiquidBackground } from '@/components/ui/AmbientLiquidBackground';
 import {
   ShieldCheck,
@@ -83,7 +83,7 @@ export default function JackpotPage() {
   const [unclaimedGames, setUnclaimedGames] = useState<any[]>([]);
 
   // Bet input state
-  const [betAmount, setBetAmount] = useState<number>(1);
+  const [betAmount, setBetAmount] = useState<number>(100000);
   const [toastMsg, setToastMsg] = useState<{
     ok: boolean;
     title: string;
@@ -467,11 +467,11 @@ export default function JackpotPage() {
       return;
     }
 
-    if (betAmount <= 0) {
+    if (betAmount < 100000) {
       setToastMsg({
         ok: false,
         title: 'TRANSMISSION ERROR',
-        desc: 'Stake magnitude must exceed 0.00 USDG.',
+        desc: `Stake magnitude must be at least 100,000 ${TOKEN_SYMBOL}.`,
       });
       return;
     }
@@ -480,7 +480,7 @@ export default function JackpotPage() {
       setToastMsg({
         ok: false,
         title: 'INSUFFICIENT CAPITAL',
-        desc: `Vault reserve (${usdgBalance.toFixed(2)} USDG) cannot sustain stake (${betAmount.toFixed(2)} USDG).`,
+        desc: `Vault reserve (${usdgBalance.toFixed(2)} ${TOKEN_SYMBOL}) cannot sustain stake (${betAmount.toFixed(2)} ${TOKEN_SYMBOL}).`,
       });
       return;
     }
@@ -500,7 +500,7 @@ export default function JackpotPage() {
         setToastMsg({
           ok: true,
           title: 'STAKE COMMITTED',
-          desc: `Allocated ${betAmount.toFixed(2)} USDG into active settlement matrix.`,
+          desc: `Allocated ${betAmount.toFixed(2)} ${TOKEN_SYMBOL} into active settlement matrix.`,
           txHash,
         });
         if (socket && account) {
@@ -537,7 +537,7 @@ export default function JackpotPage() {
         setToastMsg({
           ok: true,
           title: 'AUTHORIZATION GRANTED',
-          desc: 'Escrow contract permitted to transact USDG reserves.',
+          desc: `Escrow contract permitted to transact ${TOKEN_SYMBOL} reserves.`,
           txHash,
         });
         refreshBalances();
@@ -668,7 +668,7 @@ export default function JackpotPage() {
                     UNCLAIMED REWARD DETECTED ({unclaimedGames.length} EPOCH)
                   </span>
                   <span className="text-[11px] text-[#8993A4] font-mono">
-                    Prize amount: {Number(unclaimedGames[0]?.winner?.prize ?? unclaimedGames[0]?.winner?.prizePons ?? 0).toFixed(2)} USDG in Epoch #{unclaimedGames[0]?.gameId}.
+                    Prize amount: {Number(unclaimedGames[0]?.winner?.prize ?? unclaimedGames[0]?.winner?.prizePons ?? 0).toFixed(2)} {TOKEN_SYMBOL} in Epoch #{unclaimedGames[0]?.gameId}.
                   </span>
                 </div>
               </div>
@@ -694,7 +694,7 @@ export default function JackpotPage() {
               AGGREGATE CAPITAL IN ESCROW
             </span>
             <div className="text-3xl lg:text-4xl font-mono font-black text-[#CDB486] tracking-tight drop-shadow-[0_0_15px_rgba(205, 180, 134,0.3)]">
-              {currentPool.toFixed(2)} <span className="text-sm font-sans text-white/50">USDG</span>
+              {currentPool.toFixed(2)} <span className="text-sm font-sans text-white/50">{TOKEN_SYMBOL}</span>
             </div>
             <span className="text-xs font-mono text-[#8993A4] block">
               TICKETS: {(game?.totalTickets ?? 0).toLocaleString()}
@@ -805,7 +805,7 @@ export default function JackpotPage() {
               </div>
               <div className="text-right font-mono text-[11px]">
                 <span className="text-[#8993A4] block text-[9px] uppercase tracking-wider">VAULT RESERVE</span>
-                <span className="text-[#CDB486] font-bold">{usdgBalance.toFixed(2)} USDG</span>
+                <span className="text-[#CDB486] font-bold">{usdgBalance.toFixed(2)} {TOKEN_SYMBOL}</span>
               </div>
             </div>
 
@@ -815,14 +815,20 @@ export default function JackpotPage() {
                 PRESET STAKE INCREMENTS
               </label>
               <div className="grid grid-cols-5 gap-2 font-mono text-xs">
-                {[0.1, 0.5, 1, 5, 10].map((amt) => (
+                {[
+                  { label: '+100k', val: 100000 },
+                  { label: '+250k', val: 250000 },
+                  { label: '+500k', val: 500000 },
+                  { label: '+1M', val: 1000000 },
+                  { label: '+2M', val: 2000000 },
+                ].map((chip) => (
                   <button
-                    key={amt}
+                    key={chip.val}
                     type="button"
-                    onClick={() => setBetAmount((prev) => Number((prev + amt).toFixed(2)))}
-                    className="glass-btn-chip py-2.5 text-[#F5F7FA] font-bold transition-all"
+                    onClick={() => setBetAmount((prev) => Number((prev + chip.val).toFixed(0)))}
+                    className="glass-btn-chip py-2.5 text-[#F5F7FA] font-bold transition-all cursor-pointer"
                   >
-                    +{amt}
+                    {chip.label}
                   </button>
                 ))}
               </div>
@@ -831,22 +837,22 @@ export default function JackpotPage() {
             {/* Numeric Stake Input */}
             <div className="space-y-2 font-mono">
               <label className="text-[10px] uppercase tracking-wider text-[#8993A4] block">
-                CUSTOM ALLOCATION MAGNITUDE (USDG)
+                CUSTOM ALLOCATION MAGNITUDE ({TOKEN_SYMBOL})
               </label>
               <div className="flex items-center glass-input px-4 py-1.5 focus-within:border-[#CDB486]/60 transition-all">
                 <input
                   type="number"
-                  min="0.1"
-                  step="0.1"
+                  min="100000"
+                  step="10000"
                   value={betAmount || ''}
                   onChange={(e) => setBetAmount(Number(e.target.value))}
-                  placeholder="0.00"
+                  placeholder="100000"
                   className="flex-1 py-2.5 bg-transparent text-[#F5F7FA] text-base font-mono font-bold focus:outline-none"
                 />
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
-                    onClick={() => setBetAmount(1)}
+                    onClick={() => setBetAmount(100000)}
                     className="px-2.5 py-1 text-[11px] text-[#8993A4] hover:text-[#CDB486] rounded-lg border border-white/10 hover:border-[#CDB486]/30 uppercase cursor-pointer transition-colors"
                   >
                     MIN
@@ -889,7 +895,7 @@ export default function JackpotPage() {
                 disabled={txState === 'approving'}
                 className="glass-btn-inflated w-full py-4 text-xs font-bold uppercase tracking-[0.15em] disabled:opacity-50 shadow-lg"
               >
-                {txState === 'approving' ? 'AUTHORIZING USDG VAULT SPEND...' : 'AUTHORIZE USDG FOR SETTLEMENT'}
+                {txState === 'approving' ? `AUTHORIZING ${TOKEN_SYMBOL} VAULT SPEND...` : `AUTHORIZE ${TOKEN_SYMBOL} FOR SETTLEMENT`}
               </button>
             ) : (
               <button
@@ -979,7 +985,7 @@ export default function JackpotPage() {
 
                       <div className="text-right flex-shrink-0">
                         <span className="font-bold text-[#CDB486] block text-xs">
-                          {betVal.toFixed(2)} USDG
+                          {betVal.toFixed(2)} {TOKEN_SYMBOL}
                         </span>
                         <span className="text-[10px] text-[#8993A4]">{prob}% Odds</span>
                       </div>
@@ -1039,10 +1045,10 @@ export default function JackpotPage() {
                           {win?.winningTicket !== undefined ? `#${win.winningTicket}` : '—'}
                         </td>
                         <td className="py-3 px-3 text-[#8993A4]">
-                          {(Number(pg.totalPool) || 0).toFixed(2)} USDG
+                          {(Number(pg.totalPool) || 0).toFixed(2)} {TOKEN_SYMBOL}
                         </td>
                         <td className="py-3 px-3 text-[#CDB486] font-bold">
-                          {((Number(pg.totalPool) || 0) * 0.98).toFixed(2)} USDG
+                          {((Number(pg.totalPool) || 0) * 0.98).toFixed(2)} {TOKEN_SYMBOL}
                         </td>
                         <td className="py-3 px-3 text-right">
                           <button

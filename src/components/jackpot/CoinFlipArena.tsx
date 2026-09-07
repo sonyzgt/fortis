@@ -32,7 +32,7 @@ import { useSound } from '@/context/SoundContext';
 import { useCashFlipWeb3 } from '@/context/CashFlipWeb3Context';
 import { BookplateCorner, CelestialFlourish } from '@/components/ui/CelestialFlourish';
 import { CoinFlipGame } from '@/types/jackpot';
-import { ROBINHOOD_CHAIN_CONFIG } from '@/lib/web3/contracts';
+import { ROBINHOOD_CHAIN_CONFIG, TOKEN_SYMBOL } from '@/lib/web3/contracts';
 
 interface CoinFlipArenaProps {
   account: string | null;
@@ -58,7 +58,7 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
   // Lobby Games State
   const [games, setGames] = useState<CoinFlipGame[]>([]);
   const [selectedSide, setSelectedSide] = useState<'heads' | 'tails'>('heads');
-  const [betAmount, setBetAmount] = useState<number>(10);
+  const [betAmount, setBetAmount] = useState<number>(100000);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   // Sorting & Filtering
@@ -283,7 +283,7 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
     const handleCancelResult = (res: { success: boolean; refundAmount?: number; message?: string }) => {
       if (res.success) {
         if (res.refundAmount) {
-          onShowToast(`Room cancelled. ${res.refundAmount} USDG returned to your wallet.`, true);
+          onShowToast(`Room cancelled. ${res.refundAmount} ${TOKEN_SYMBOL} returned to your wallet.`, true);
           refreshBalances();
         } else {
           onShowToast(res.message || 'Room cancelled.', true);
@@ -306,7 +306,7 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
           if (prev.some((u) => u.id === game.id)) return prev;
           return [{ ...game, isClaimed: false }, ...prev];
         });
-        onShowToast(`🏆 Victory! You won in Room #${game.roomNumber || game.id.slice(-4)}! ${game.winAmount} USDG ready to claim.`, true);
+        onShowToast(`🏆 Victory! You won in Room #${game.roomNumber || game.id.slice(-4)}! ${game.winAmount} ${TOKEN_SYMBOL} ready to claim.`, true);
       }
     };
 
@@ -349,12 +349,12 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
       onShowToast('Connecting to game server...', false);
       return;
     }
-    if (betAmount < 0.5) {
-      onShowToast('Minimum bet is 0.5 USDG.', false);
+    if (betAmount < 100000) {
+      onShowToast(`Minimum bet is 100,000 ${TOKEN_SYMBOL}.`, false);
       return;
     }
     if (usdgBalance < betAmount) {
-      onShowToast(`Insufficient balance. You have ${usdgBalance.toFixed(2)} USDG.`, false);
+      onShowToast(`Insufficient balance. You have ${usdgBalance.toFixed(2)} ${TOKEN_SYMBOL}.`, false);
       return;
     }
     setShowCreateConfirmModal(true);
@@ -368,7 +368,7 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
       return;
     }
     if (usdgBalance < betAmount) {
-      onShowToast(`Insufficient balance. Required: ${betAmount} USDG.`, false);
+      onShowToast(`Insufficient balance. Required: ${betAmount} ${TOKEN_SYMBOL}.`, false);
       return;
     }
 
@@ -390,7 +390,7 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
       });
 
       setShowCreateConfirmModal(false);
-      onShowToast(`Deposit of ${betAmount} USDG confirmed! Room created.`, true);
+      onShowToast(`Deposit of ${betAmount} ${TOKEN_SYMBOL} confirmed! Room created.`, true);
       playChip();
     } catch (e: any) {
       onShowToast(e?.message || 'Failed to process room creation deposit.', false);
@@ -430,7 +430,7 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
       return;
     }
     if (usdgBalance < game.betAmount) {
-      onShowToast(`Insufficient balance. Required: ${game.betAmount} USDG.`, false);
+      onShowToast(`Insufficient balance. Required: ${game.betAmount} ${TOKEN_SYMBOL}.`, false);
       return;
     }
 
@@ -449,7 +449,7 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
         txHash,
       });
 
-      onShowToast(`Payment of ${game.betAmount} USDG confirmed! Duel commenced.`, true);
+      onShowToast(`Payment of ${game.betAmount} ${TOKEN_SYMBOL} confirmed! Duel commenced.`, true);
     } catch (e: any) {
       onShowToast(e?.message || 'Failed to process duel payment.', false);
       setIsSubmitting(false);
@@ -483,7 +483,7 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
         setSpectateGame((current) => current && current.id === game.id ? { ...current, isClaimed: true, claimTxHash: tx } : current);
       }
       playCoinClaim(); // Cascading golden coins sound!
-      onShowToast(`Room #${game.roomNumber || game.id.slice(-4)} winnings (${(game.winAmount || game.betAmount * 2).toLocaleString()} USDG) successfully settled!`, true);
+      onShowToast(`Room #${game.roomNumber || game.id.slice(-4)} winnings (${(game.winAmount || game.betAmount * 2).toLocaleString()} ${TOKEN_SYMBOL}) successfully settled!`, true);
       await refreshBalances();
 
       // Automatically close modal after claim confirmed
@@ -540,9 +540,9 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
   const displayGames = useMemo(() => {
     let list = [...games];
 
-    if (filterAmount === 'small') list = list.filter((g) => g.betAmount <= 10);
-    else if (filterAmount === 'med') list = list.filter((g) => g.betAmount > 10 && g.betAmount <= 50);
-    else if (filterAmount === 'large') list = list.filter((g) => g.betAmount > 50);
+    if (filterAmount === 'small') list = list.filter((g) => g.betAmount <= 250000);
+    else if (filterAmount === 'med') list = list.filter((g) => g.betAmount > 250000 && g.betAmount <= 1000000);
+    else if (filterAmount === 'large') list = list.filter((g) => g.betAmount > 1000000);
 
     if (sortBy === 'high') list.sort((a, b) => b.betAmount - a.betAmount);
     else if (sortBy === 'low') list.sort((a, b) => a.betAmount - b.betAmount);
@@ -568,7 +568,7 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
                 COINFLIP DUELS
               </h2>
               <p className="text-[11px] font-sans text-[#94A3B8]">
-                High-stakes 50/50 cryptographic duels settled in USDG.
+                High-stakes 50/50 cryptographic duels settled in {TOKEN_SYMBOL}.
               </p>
             </div>
           </div>
@@ -578,31 +578,35 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
             {/* Bet Input & Additive Buttons */}
             <div className="flex items-center justify-between sm:justify-start gap-1.5 bg-[#05070B] border border-[#CDB486]/20 rounded-lg p-1.5 w-full sm:w-auto shadow-inner">
               <div className="flex items-center min-w-0">
-                <span className="text-xs font-mono font-bold text-[#CDB486] px-2 flex-shrink-0">USDG</span>
+                <span className="text-xs font-mono font-bold text-[#CDB486] px-2 flex-shrink-0">{TOKEN_SYMBOL}</span>
                 <input
                   type="number"
-                  min="0.5"
-                  step="0.5"
-                  max="50000"
+                  min="100000"
+                  step="10000"
                   value={betAmount || ''}
-                  onChange={(e) => setBetAmount(Math.max(0.5, Number(e.target.value)))}
-                  className="w-16 sm:w-20 bg-transparent font-mono text-xs font-bold text-[#E2E8F0] focus:outline-none px-1"
-                  placeholder="0.5"
+                  onChange={(e) => setBetAmount(Math.max(100000, Number(e.target.value)))}
+                  className="w-20 sm:w-28 bg-transparent font-mono text-xs font-bold text-[#E2E8F0] focus:outline-none px-1"
+                  placeholder="100000"
                 />
               </div>
               {/* Quick Add Chips */}
               <div className="flex items-center gap-1 pl-1.5 border-l border-[#CDB486]/20 overflow-x-auto">
-                {[0.5, 1, 5, 10, 50].map((delta) => (
+                {[
+                  { label: '+100k', val: 100000 },
+                  { label: '+250k', val: 250000 },
+                  { label: '+500k', val: 500000 },
+                  { label: '+1M', val: 1000000 },
+                ].map((chip) => (
                   <button
-                    key={delta}
+                    key={chip.val}
                     type="button"
                     onClick={() => {
-                      setBetAmount((prev) => Number((prev + delta).toFixed(1)));
+                      setBetAmount((prev) => Number((prev + chip.val).toFixed(0)));
                       playTick();
                     }}
-                    className="px-2 py-1 text-[10px] font-mono font-bold rounded bg-[#0D1322] text-[#E2E8F0] hover:bg-[#CDB486] hover:text-[#05070B] transition-all flex-shrink-0 shadow-sm"
+                    className="px-2 py-1 text-[10px] font-mono font-bold rounded bg-[#0D1322] text-[#E2E8F0] hover:bg-[#CDB486] hover:text-[#05070B] transition-all flex-shrink-0 shadow-sm cursor-pointer"
                   >
-                    +{delta}
+                    {chip.label}
                   </button>
                 ))}
               </div>
@@ -684,7 +688,7 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
           <span className="text-[#CDB486]">•</span>
           <div className="flex items-center gap-1.5 px-2.5 py-1 bg-[#0D1322] border border-[#CDB486]/20 rounded text-[11px] font-mono text-[#94A3B8]">
             <span className="w-1.5 h-1.5 rounded-full bg-[#CDB486] animate-pulse" />
-            <span>Settled in USDG</span>
+            <span>Settled in {TOKEN_SYMBOL}</span>
           </div>
         </div>
 
@@ -711,9 +715,9 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
               className="bg-[#080C14] border border-[#CDB486]/20 rounded px-2 py-1 font-mono text-xs text-[#E2E8F0] focus:outline-none focus:border-[#CDB486]"
             >
               <option value="all">All</option>
-              <option value="small">≤ 10 USDG</option>
-              <option value="med">10 - 50 USDG</option>
-              <option value="large">&gt; 50 USDG</option>
+              <option value="small">≤ 250k {TOKEN_SYMBOL}</option>
+              <option value="med">250k - 1M {TOKEN_SYMBOL}</option>
+              <option value="large">&gt; 1M {TOKEN_SYMBOL}</option>
             </select>
           </div>
 
@@ -748,7 +752,7 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
                   </span>
                 </div>
                 <p className="text-xs text-[#94A3B8] mt-0.5 font-sans">
-                  Disconnected before claiming? Your USDG balance is 100% secured on-chain. Settle directly to your connected wallet:
+                  Disconnected before claiming? Your {TOKEN_SYMBOL} balance is 100% secured on-chain. Settle directly to your connected wallet:
                 </p>
               </div>
             </div>
@@ -777,10 +781,10 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
                     <span className="text-xs text-[#94A3B8] font-sans">Prize Pot:</span>
                     <div className="text-right">
                       <span className="text-base font-mono font-extrabold text-[#CDB486]">
-                        +{(uw.winAmount || uw.betAmount * 2).toLocaleString()} USDG
+                        +{(uw.winAmount || uw.betAmount * 2).toLocaleString()} {TOKEN_SYMBOL}
                       </span>
                       <span className="block text-[10px] font-mono text-[#64748B]">
-                        (Net: {netWin} USDG after 2% fee)
+                        (Net: {netWin} {TOKEN_SYMBOL} after 2% burn)
                       </span>
                     </div>
                   </div>
@@ -930,7 +934,7 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
                 <div className="flex items-center justify-between sm:justify-end gap-2 sm:gap-2.5 w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-t-0 border-[#CDB486]/10">
                   {/* Stake Pill */}
                   <div className="px-3 py-1.5 rounded-lg bg-[#05070B] border border-[#CDB486]/30 font-mono text-xs font-bold text-[#CDB486] flex items-center gap-1.5 flex-shrink-0">
-                    <span>{g.betAmount.toLocaleString()} USDG</span>
+                    <span>{g.betAmount.toLocaleString()} {TOKEN_SYMBOL}</span>
                   </div>
 
                   <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
@@ -1041,14 +1045,14 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
                 {/* Content */}
                 <div className="space-y-4">
                   <p className="text-xs text-[#8993A4] leading-relaxed">
-                    You are creating a new Coinflip duel room. Confirm your stake deposit of <strong className="text-[#CDB486] font-mono font-bold">{betAmount} USDG</strong> to open the chamber to the public:
+                    You are creating a new Coinflip duel room. Confirm your stake deposit of <strong className="text-[#CDB486] font-mono font-bold">{betAmount} {TOKEN_SYMBOL}</strong> to open the chamber to the public:
                   </p>
 
                   {/* Details Card */}
                   <div className="p-4 glass-capsule rounded-2xl space-y-2.5 text-xs font-mono">
                     <div className="flex justify-between items-center">
                       <span className="text-[#8993A4]">Stake Amount:</span>
-                      <span className="font-bold text-[#CDB486] text-sm">{betAmount} USDG</span>
+                      <span className="font-bold text-[#CDB486] text-sm">{betAmount} {TOKEN_SYMBOL}</span>
                     </div>
 
                     <div className="flex justify-between items-center">
@@ -1066,24 +1070,24 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
                     <div className="flex justify-between items-center">
                       <span className="text-[#8993A4]">Target Prize Pot:</span>
                       <span className="font-bold text-[#CDB486] text-sm">
-                        {(betAmount * 2).toLocaleString()} USDG (2.0×)
+                        {(betAmount * 2).toLocaleString()} {TOKEN_SYMBOL} (2.0×)
                       </span>
                     </div>
 
                     <div className="border-t border-white/[0.06] pt-2.5 flex justify-between items-center text-[11px]">
                       <span className="text-[#8993A4]">Your Wallet Balance:</span>
-                      <span className="text-[#F5F7FA] font-semibold">{usdgBalance.toFixed(2)} USDG</span>
+                      <span className="text-[#F5F7FA] font-semibold">{usdgBalance.toFixed(2)} {TOKEN_SYMBOL}</span>
                     </div>
                     <div className="flex justify-between items-center text-[11px]">
                       <span className="text-[#8993A4]">Balance After Deposit:</span>
                       <span className="text-[#CDB486] font-semibold">
-                        {Math.max(0, usdgBalance - betAmount).toFixed(2)} USDG
+                        {Math.max(0, usdgBalance - betAmount).toFixed(2)} {TOKEN_SYMBOL}
                       </span>
                     </div>
                   </div>
 
                   <div className="p-3.5 glass-capsule rounded-2xl border border-[#CDB486]/30 bg-[#CDB486]/[0.04] text-[11px] text-[#8993A4] leading-snug">
-                    ✦ <strong className="text-[#CDB486]">Refund Guarantee</strong>: If you cancel the chamber before an opponent joins, your stake of {betAmount} USDG will be returned to your wallet immediately.
+                    ✦ <strong className="text-[#CDB486]">Refund Guarantee</strong>: If you cancel the chamber before an opponent joins, your stake of {betAmount} {TOKEN_SYMBOL} will be returned to your wallet immediately.
                   </div>
 
                   {/* Action Buttons */}
@@ -1110,7 +1114,7 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
                       ) : (
                         <>
                           <Zap className="w-4 h-4 text-[#030508]" />
-                          <span>Deposit &amp; Open ({betAmount} USDG)</span>
+                          <span>Deposit &amp; Open ({betAmount} {TOKEN_SYMBOL})</span>
                         </>
                       )}
                     </button>
@@ -1220,7 +1224,7 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
                     {/* Bet Amount Pill */}
                     <div className="px-2.5 sm:px-3 py-1 bg-[#0D1322] border border-[#CDB486]/30 rounded-lg text-[10px] sm:text-xs font-mono font-bold text-[#E2E8F0] flex items-center gap-1 shadow-sm">
                       <span className="text-[#CDB486] font-bold">≡</span>
-                      <span>{spectateGame.betAmount} USDG</span>
+                      <span>{spectateGame.betAmount} {TOKEN_SYMBOL}</span>
                     </div>
                   </div>
 
@@ -1400,7 +1404,7 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
                     {/* Bet Pill */}
                     <div className="px-2.5 sm:px-3 py-1 bg-[#0D1322] border border-[#CDB486]/30 rounded-lg text-[10px] sm:text-xs font-mono font-bold text-[#E2E8F0] flex items-center gap-1 shadow-sm">
                       <span className="text-[#CDB486] font-bold">≡</span>
-                      <span>{spectateGame.challengerId ? spectateGame.betAmount : 0} USDG</span>
+                      <span>{spectateGame.challengerId ? spectateGame.betAmount : 0} {TOKEN_SYMBOL}</span>
                     </div>
                   </div>
                 </div>
@@ -1434,10 +1438,10 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
                       ) : isConfirmingBet ? (
                         <div className="flex flex-col items-center gap-3 glass-capsule rounded-2xl p-4 shadow-xl w-full max-w-xs text-center animate-in fade-in zoom-in-95 duration-200 border border-white/10">
                           <p className="text-xs text-[#F5F7FA] leading-tight">
-                            Confirm matching stake of <strong className="text-[#CDB486] font-mono font-bold">{spectateGame.betAmount} USDG</strong> to duel?
+                            Confirm matching stake of <strong className="text-[#CDB486] font-mono font-bold">{spectateGame.betAmount} {TOKEN_SYMBOL}</strong> to duel?
                           </p>
                           <div className="text-[11px] font-mono text-[#8993A4]">
-                            Balance: <span className="text-[#CDB486] font-bold">{usdgBalance.toFixed(2)} USDG</span>
+                            Balance: <span className="text-[#CDB486] font-bold">{usdgBalance.toFixed(2)} {TOKEN_SYMBOL}</span>
                           </div>
                           <div className="flex items-center gap-2 w-full pt-1">
                             <button
@@ -1510,7 +1514,7 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
                         spectateGame.isClaimed ? (
                           <div className="px-5 py-2.5 glass-capsule rounded-2xl border border-[#CDB486]/30 text-[#CDB486] font-bold text-xs flex items-center justify-center gap-2 w-full">
                             <CheckCircle2 className="w-4 h-4 text-[#CDB486] flex-shrink-0" />
-                            <span>Prize Successfully Claimed (+{(spectateGame.winAmount || spectateGame.betAmount * 2).toLocaleString()} USDG)</span>
+                            <span>Prize Successfully Claimed (+{(spectateGame.winAmount || spectateGame.betAmount * 2).toLocaleString()} {TOKEN_SYMBOL})</span>
                           </div>
                         ) : (
                           <button
@@ -1527,7 +1531,7 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
                             ) : (
                               <>
                                 <Sparkles className="w-4 h-4 text-[#030508]" />
-                                <span>Claim {(spectateGame.winAmount || spectateGame.betAmount * 2).toLocaleString()} USDG</span>
+                                <span>Claim {(spectateGame.winAmount || spectateGame.betAmount * 2).toLocaleString()} {TOKEN_SYMBOL}</span>
                               </>
                             )}
                           </button>
@@ -1596,7 +1600,7 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
                   <button
                     type="button"
                     onClick={() => {
-                      const shareText = `Join my Coinflip #${spectateGame.id.replace('cf_', '').slice(0, 7)} duel for ${spectateGame.betAmount} USDG!`;
+                      const shareText = `Join my Coinflip #${spectateGame.id.replace('cf_', '').slice(0, 7)} duel for ${spectateGame.betAmount} ${TOKEN_SYMBOL}!`;
                       navigator.clipboard.writeText(shareText);
                       playChip();
                       onShowToast('Duel link copied to clipboard!', true);

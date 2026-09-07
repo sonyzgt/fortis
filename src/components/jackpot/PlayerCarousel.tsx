@@ -4,6 +4,7 @@ import React, { useRef, useEffect, useState, useMemo } from 'react';
 import { PotParticipant, PastRound, WinnerInfo } from '@/types/jackpot';
 import { useSound } from '@/context/SoundContext';
 import { BookplateCorner } from '@/components/ui/CelestialFlourish';
+import { TOKEN_SYMBOL } from '@/lib/web3/contracts';
 
 interface PlayerCarouselProps {
   participants: PotParticipant[];
@@ -460,12 +461,12 @@ const ParticipantCard: React.FC<ParticipantCardProps> = ({
         {p.playerName.length > 14 ? p.playerName.slice(0, 13) + '…' : p.playerName}
       </p>
 
-      {/* USDG Stake Badge as Glass Capsule */}
+      {/* Stake Badge as Glass Capsule */}
       <div className="flex items-center gap-1.5 px-3 py-1 rounded-full border border-white/15 bg-white/[0.04] text-[11px] font-mono tracking-wider font-bold shadow-inner">
         <span className="text-[#CDB486]">
           {p.totalSpent >= 1000 ? `${(p.totalSpent / 1000).toFixed(1)}k` : p.totalSpent}
         </span>
-        <span className="text-[9px] text-[#8993A4]">USDG</span>
+        <span className="text-[9px] text-[#8993A4]">{TOKEN_SYMBOL}</span>
       </div>
     </div>
   );
@@ -497,7 +498,7 @@ const PlaceholderCard: React.FC<PlaceholderCardProps> = ({ isCenter = false }) =
 
     {/* Stake Empty Glass Pill */}
     <div className="flex items-center gap-1 px-3 py-1 rounded-full border border-white/10 bg-white/[0.02] text-[10px] font-mono text-white/30">
-      <span>—.— USDG</span>
+      <span>—.— {TOKEN_SYMBOL}</span>
     </div>
   </div>
 );
@@ -710,7 +711,7 @@ export const RightWinnerSidebar: React.FC<RightWinnerSidebarProps> = ({
                   </span>
                   <div className="flex items-center gap-1 font-mono font-bold text-[#CDB486]">
                     <span>{item.totalPot.toLocaleString()}</span>
-                    <span className="text-[9px] text-[#8993A4]">USDG</span>
+                    <span className="text-[9px] text-[#8993A4]">{TOKEN_SYMBOL}</span>
                   </div>
                 </div>
               </div>

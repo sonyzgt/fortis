@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import { useCashFlipWeb3 } from '@/context/CashFlipWeb3Context';
 import { useSound } from '@/context/SoundContext';
-import { ROBINHOOD_CHAIN_CONFIG, getCashFlipTokenAddress } from '@/lib/web3/contracts';
+import { ROBINHOOD_CHAIN_CONFIG, getCashFlipTokenAddress, TOKEN_SYMBOL } from '@/lib/web3/contracts';
 
 interface ProtocolHeaderProps {
   currentRoute: 'home' | 'jackpot' | 'coinflip' | 'mines' | 'account' | 'docs';
@@ -134,7 +134,7 @@ export const ProtocolHeader: React.FC<ProtocolHeaderProps> = ({
             >
               <div className="text-right font-sans leading-tight hidden sm:block">
                 <span className="font-mono text-xs font-bold text-[#F5F0E6] block">
-                  {usdgBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USDG
+                  {usdgBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {TOKEN_SYMBOL}
                 </span>
                 <span className="font-mono text-[10px] text-[#8993A4]">
                   {account.slice(0, 6)}...{account.slice(-4)}
@@ -160,7 +160,7 @@ export const ProtocolHeader: React.FC<ProtocolHeaderProps> = ({
                       <p className="font-semibold text-[#F5F0E6] truncate">{displayName}</p>
                       <p className="font-mono text-[11px] text-[#8993A4] truncate">{account}</p>
                       <p className="font-mono text-xs font-bold text-[#CDB486] mt-1">
-                        {usdgBalance.toFixed(2)} USDG
+                        {usdgBalance.toFixed(2)} {TOKEN_SYMBOL}
                       </p>
                     </div>
 

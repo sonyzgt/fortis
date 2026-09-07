@@ -38,6 +38,9 @@ import {
   getGameContractAddress,
   getCashFlipTokenAddress,
   withdrawBettingContractOnChain,
+  depositBankrollOnChain,
+  TOKEN_SYMBOL,
+  TOKEN_DECIMALS,
   parseTokenAmount,
   formatTokenAmount,
   getCashFlipBalance,
@@ -70,6 +73,9 @@ export default function AdminPanelPage() {
   const [showDeployModal, setShowDeployModal] = useState(false);
   const [bettingWithdrawAmount, setBettingWithdrawAmount] = useState<string>('');
   const [isWithdrawingBetting, setIsWithdrawingBetting] = useState<boolean>(false);
+  const [bettingDepositAmount, setBettingDepositAmount] = useState<string>('');
+  const [isDepositingBetting, setIsDepositingBetting] = useState<boolean>(false);
+  const [adminWalletTokenBalance, setAdminWalletTokenBalance] = useState<string>('0');
   const [manualContractInput, setManualContractInput] = useState('');
   const [statusMsg, setStatusMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [gameStats, setGameStats] = useState<any>(null);
@@ -245,6 +251,15 @@ export default function AdminPanelPage() {
       }
     }
 
+    if (account && account.startsWith('0x')) {
+      try {
+        const userBalRaw = await getCashFlipBalance(account);
+        setAdminWalletTokenBalance(formatTokenAmount(userBalRaw).toString());
+      } catch (e) {
+        console.warn('Could not fetch wallet token balance:', e);
+      }
+    }
+
     try {
       const stateRes = await fetch(`${apiBase}/api/game/state?_t=${ts}`);
       const stateData = await stateRes.json();
@@ -280,19 +295,19 @@ export default function AdminPanelPage() {
       });
       const data = await res.json();
       if (data.success || res.ok) {
-        localStorage.setItem('cashflip_token_contract', trimmed);
+        localStorage.setItem('kofuku_token_contract', trimmed);
         localStorage.setItem('cashflip_token_contract', trimmed);
         setActiveTokenContract(trimmed);
         setStatusMsg({ ok: true, text: `Active betting token updated to: ${trimmed}` });
         fetchContractInfo();
       } else {
-        throw new Error(data.error || 'Failed to update token');
+        throw new Error(data.error || 'Failed to update token on server');
       }
     } catch (e: any) {
-      localStorage.setItem('cashflip_token_contract', trimmed);
+      localStorage.setItem('kofuku_token_contract', trimmed);
       localStorage.setItem('cashflip_token_contract', trimmed);
       setActiveTokenContract(trimmed);
-      setStatusMsg({ ok: true, text: `Betting token saved locally in browser: ${trimmed}` });
+      setStatusMsg({ ok: true, text: `Betting token updated locally: ${trimmed}` });
       fetchContractInfo();
     }
   };
@@ -311,19 +326,19 @@ export default function AdminPanelPage() {
       });
       const data = await res.json();
       if (data.success || res.ok) {
-        localStorage.setItem('cashflip_deployed_game_contract', trimmed);
+        localStorage.setItem('kofuku_deployed_game_contract', trimmed);
         localStorage.setItem('cashflip_deployed_game_contract', trimmed);
         setActiveContract(trimmed);
-        setStatusMsg({ ok: true, text: `Active smart contract updated to: ${trimmed}` });
+        setStatusMsg({ ok: true, text: `Active smart contract successfully bound to: ${trimmed}` });
         fetchContractInfo();
       } else {
-        throw new Error(data.error || 'Failed to update contract');
+        throw new Error(data.error || 'Failed to update contract on server');
       }
     } catch (e: any) {
-      localStorage.setItem('cashflip_deployed_game_contract', trimmed);
+      localStorage.setItem('kofuku_deployed_game_contract', trimmed);
       localStorage.setItem('cashflip_deployed_game_contract', trimmed);
       setActiveContract(trimmed);
-      setStatusMsg({ ok: true, text: `Smart contract saved locally in browser: ${trimmed}` });
+      setStatusMsg({ ok: true, text: `Smart contract bound locally: ${trimmed}` });
       fetchContractInfo();
     }
   };
@@ -337,7 +352,7 @@ export default function AdminPanelPage() {
 
     const availableBal = Number(contractVaultBalance);
     if (availableBal > 0 && num > availableBal) {
-      setStatusMsg({ ok: false, text: `Insufficient sanctuary balance (Available: ${availableBal.toLocaleString()} USDG)` });
+      setStatusMsg({ ok: false, text: `Insufficient sanctuary balance (Available: ${availableBal.toLocaleString()} ${TOKEN_SYMBOL})` });
       return;
     }
 
@@ -409,7 +424,7 @@ export default function AdminPanelPage() {
 
       setStatusMsg({
         ok: true,
-        text: `Successfully withdrew ${num.toLocaleString()} USDG from Sanctuary Escrow to Admin Wallet! Hash: ${txHash.slice(0, 10)}...`,
+        text: `Successfully withdrew ${num.toLocaleString()} ${TOKEN_SYMBOL} from Sanctuary Escrow to Admin Wallet! Hash: ${txHash.slice(0, 10)}...`,
       });
       setBettingWithdrawAmount('');
       fetchContractInfo();
@@ -424,6 +439,89 @@ export default function AdminPanelPage() {
       }
     } finally {
       setIsWithdrawingBetting(false);
+    }
+  };
+
+  const handleDepositBetting = async () => {
+    const num = parseFloat(bettingDepositAmount);
+    if (isNaN(num) || num <= 0) {
+      setStatusMsg({ ok: false, text: 'Please enter a valid deposit amount!' });
+      return;
+    }
+
+    let targetContract = (activeContract || getGameContractAddress() || '').trim();
+    if (!targetContract.startsWith('0x') || targetContract.length !== 42) {
+      try {
+        const res = await fetch(`${getApiBase()}/api/contract-address`);
+        const data = await res.json();
+        if (data.contractAddress && data.contractAddress.length === 42) {
+          targetContract = data.contractAddress;
+          setActiveContract(targetContract);
+        }
+      } catch {}
+    }
+
+    if (!targetContract || !targetContract.startsWith('0x') || targetContract.length !== 42) {
+      setStatusMsg({ ok: false, text: `Escrow Contract address (${targetContract}) is invalid.` });
+      return;
+    }
+
+    setIsDepositingBetting(true);
+    try {
+      const win = typeof window !== 'undefined' ? (window as any) : {};
+      const providerObj = win.okxwallet || win.ethereum || win.rabby || win.bitkeep?.ethereum;
+      if (!providerObj) {
+        throw new Error('Wallet extension (MetaMask, OKX Wallet, Rabby) not detected in your browser.');
+      }
+
+      try {
+        await providerObj.request({
+          method: 'wallet_switchEthereumChain',
+          params: [{ chainId: ROBINHOOD_CHAIN_CONFIG.chainHexId }],
+        });
+      } catch (switchError: any) {
+        if (switchError.code === 4902 || switchError.message?.includes('Unrecognized chain')) {
+          await providerObj.request({
+            method: 'wallet_addEthereumChain',
+            params: [
+              {
+                chainId: ROBINHOOD_CHAIN_CONFIG.chainHexId,
+                chainName: ROBINHOOD_CHAIN_CONFIG.name,
+                rpcUrls: [ROBINHOOD_CHAIN_CONFIG.rpcUrl],
+                nativeCurrency: ROBINHOOD_CHAIN_CONFIG.nativeCurrency,
+                blockExplorerUrls: [ROBINHOOD_CHAIN_CONFIG.blockExplorer],
+              },
+            ],
+          });
+        }
+      }
+
+      const provider = new ethers.BrowserProvider(providerObj);
+      await provider.send('eth_requestAccounts', []);
+      const signer = await provider.getSigner();
+
+      const depositWei = parseTokenAmount(num);
+
+      setStatusMsg({ ok: true, text: `Please confirm token approval & deposit of ${num} ${TOKEN_SYMBOL} in your wallet...` });
+      const txHash = await depositBankrollOnChain(signer, depositWei, targetContract);
+
+      setStatusMsg({
+        ok: true,
+        text: `Successfully deposited ${num.toLocaleString()} ${TOKEN_SYMBOL} into Escrow Bankroll Pool! Hash: ${txHash.slice(0, 10)}...`,
+      });
+      setBettingDepositAmount('');
+      fetchContractInfo();
+      refreshBalances?.();
+    } catch (e: any) {
+      console.error('Deposit bankroll error:', e);
+      if (e?.code === 'ACTION_REJECTED' || e?.code === 4001) {
+        setStatusMsg({ ok: false, text: 'Deposit transaction was cancelled in wallet.' });
+      } else {
+        const msg = e?.info?.error?.message || e?.data?.message || e?.reason || e?.shortMessage || e?.message || 'Failed to deposit liquidity into escrow contract';
+        setStatusMsg({ ok: false, text: msg });
+      }
+    } finally {
+      setIsDepositingBetting(false);
     }
   };
 
@@ -765,7 +863,7 @@ export default function AdminPanelPage() {
               </div>
               <div>
                 <h2 className="text-sm font-serif font-semibold tracking-wider text-[#171513] flex items-center gap-2">
-                  <span>SETTLEMENT CURRENCY CONTRACT (ERC-20 USDG)</span>
+                  <span>SETTLEMENT CURRENCY CONTRACT (ERC-20 {TOKEN_SYMBOL})</span>
                   <span className="px-1.5 py-0.5 border border-[#9E8055] text-[#9E8055] text-[9px] font-mono uppercase">
                     Configurable
                   </span>
@@ -809,7 +907,7 @@ export default function AdminPanelPage() {
                 </a>
               ) : (
                 <span className="text-[10px] text-amber-800 italic">
-                  Paste USDG production token address below
+                  Paste {TOKEN_SYMBOL} production token address below
                 </span>
               )}
             </div>
@@ -920,17 +1018,17 @@ export default function AdminPanelPage() {
 
             <div className="p-4 bg-[#E8DFD1] border border-[#171513]/15 space-y-1.5">
               <span className="text-[10px] text-[#9E8055] uppercase tracking-widest font-semibold block">
-                USDG RESERVES IN SANCTUARY
+                {TOKEN_SYMBOL} RESERVES IN SANCTUARY
               </span>
               <div className="flex items-center gap-2">
                 <Coins className="w-4 h-4 text-[#9E8055]" />
                 <span className="text-lg font-serif font-bold text-[#171513]">
                   {Number(contractVaultBalance).toLocaleString()}
                 </span>
-                <span className="text-xs font-mono text-[#9E8055]">USDG</span>
+                <span className="text-xs font-mono text-[#9E8055]">{TOKEN_SYMBOL}</span>
               </div>
               <p className="text-[10px] text-[#171513]/65">
-                Funds in contract escrow (includes 2% retained Admin platform fees)
+                Funds in contract escrow (house bankroll for coinflip & jackpot)
               </p>
             </div>
           </div>
@@ -985,6 +1083,70 @@ export default function AdminPanelPage() {
             </div>
           </div>
 
+          {/* Deposit Liquidity / Bankroll to Escrow Smart Contract */}
+          <div className="p-4 bg-[#E8DFD1] border border-[#171513]/15 space-y-2.5">
+            <div className="flex justify-between items-start flex-wrap gap-2">
+              <div>
+                <span className="text-xs font-serif font-semibold text-[#171513] flex items-center gap-1.5">
+                  <Coins className="w-3.5 h-3.5 text-[#9E8055]" />
+                  Deposit Bankroll / House Reserves to Escrow:
+                </span>
+                <p className="text-[10px] text-[#171513]/65 font-serif mt-0.5">
+                  Fund the smart contract house liquidity so players can win on Coinflip (vs AI) and Mines cashout multipliers.
+                </p>
+              </div>
+              <div className="text-right font-mono text-[10px] text-[#171513]/75">
+                <span>Wallet Balance: </span>
+                <span className="font-bold text-[#9E8055]">{Number(adminWalletTokenBalance || '0').toLocaleString()} {TOKEN_SYMBOL}</span>
+              </div>
+            </div>
+
+            <div className="flex gap-2 flex-wrap sm:flex-nowrap">
+              <div className="relative flex-1 min-w-[180px]">
+                <input
+                  type="number"
+                  step="any"
+                  value={bettingDepositAmount}
+                  onChange={(e) => setBettingDepositAmount(e.target.value)}
+                  placeholder={`Amount of ${TOKEN_SYMBOL}`}
+                  className="w-full px-3 py-2 bg-[#F4EFE6] border border-[#171513]/25 text-[#171513] font-mono text-xs focus:outline-none focus:border-[#9E8055]"
+                />
+                <span className="absolute right-3 top-2 text-[10px] font-mono font-semibold text-[#9E8055]">
+                  {TOKEN_SYMBOL}
+                </span>
+              </div>
+
+              <div className="flex gap-1">
+                {['50', '100', '500', '1000'].map((preset) => (
+                  <button
+                    key={preset}
+                    type="button"
+                    onClick={() => setBettingDepositAmount(preset)}
+                    className="px-2 py-2 bg-[#F4EFE6] hover:bg-[#DDD2C1] border border-[#171513]/20 text-[10px] font-mono text-[#171513]"
+                  >
+                    +{preset}
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => setBettingDepositAmount(String(adminWalletTokenBalance || '0'))}
+                  className="px-2 py-2 bg-[#171513] text-[#F4EFE6] text-[10px] font-mono font-semibold"
+                >
+                  MAX
+                </button>
+              </div>
+
+              <button
+                onClick={handleDepositBetting}
+                disabled={isDepositingBetting || !bettingDepositAmount || parseFloat(bettingDepositAmount) <= 0}
+                className="px-4 py-2 bg-[#9E8055] hover:bg-[#8B7049] text-[#F4EFE6] font-serif text-xs tracking-wider uppercase border border-[#171513]/25 flex items-center justify-center gap-1.5 flex-shrink-0 disabled:opacity-50 cursor-pointer"
+              >
+                <Coins className="w-3.5 h-3.5 text-[#F4EFE6]" />
+                <span>{isDepositingBetting ? 'EXECUTING...' : 'DEPOSIT TO ESCROW'}</span>
+              </button>
+            </div>
+          </div>
+
           {/* Withdraw Balance from Betting Smart Contract to Admin */}
           <div className="p-4 bg-[#E8DFD1] border border-[#171513]/15 space-y-2.5">
             <div>
@@ -992,7 +1154,7 @@ export default function AdminPanelPage() {
                 Withdraw Reserves from Sanctuary to Admin Wallet:
               </span>
               <p className="text-[10px] text-[#171513]/65 font-serif mt-0.5">
-                Transfer USDG tokens (including accumulated 2% platform tithes) directly to your connected Admin wallet.
+                Transfer {TOKEN_SYMBOL} reserves directly to your connected Admin wallet.
               </p>
             </div>
 
@@ -1003,11 +1165,11 @@ export default function AdminPanelPage() {
                   step="any"
                   value={bettingWithdrawAmount}
                   onChange={(e) => setBettingWithdrawAmount(e.target.value)}
-                  placeholder="Amount of USDG"
+                  placeholder={`Amount of ${TOKEN_SYMBOL}`}
                   className="w-full px-3 py-2 bg-[#F4EFE6] border border-[#171513]/25 text-[#171513] font-mono text-xs focus:outline-none focus:border-[#9E8055]"
                 />
                 <span className="absolute right-3 top-2 text-[10px] font-mono font-semibold text-[#9E8055]">
-                  USDG
+                  {TOKEN_SYMBOL}
                 </span>
               </div>
 
@@ -1100,7 +1262,7 @@ export default function AdminPanelPage() {
             <div className="p-3 bg-[#E8DFD1] border border-[#171513]/15">
               <span className="text-[9px] uppercase tracking-widest text-[#9E8055] block">TOTAL POOL</span>
               <span className="text-sm font-mono font-semibold text-[#171513] mt-0.5 block">
-                {(gameStats?.totalPool || 0).toLocaleString()} USDG
+                {(gameStats?.totalPool || 0).toLocaleString()} {TOKEN_SYMBOL}
               </span>
             </div>
           </div>
@@ -1131,7 +1293,7 @@ export default function AdminPanelPage() {
                         {g.winner?.address ? `${g.winner.address.slice(0, 6)}...${g.winner.address.slice(-4)}` : '-'}
                       </td>
                       <td className="font-semibold text-[#171513]">
-                        {(g.winner?.prize ?? g.winner?.prizePons ?? 0).toLocaleString()} USDG
+                        {(g.winner?.prize ?? g.winner?.prizePons ?? 0).toLocaleString()} {TOKEN_SYMBOL}
                       </td>
                       <td>
                         {g.winner?.claimed ? (

@@ -8,7 +8,7 @@ import { ThemeProvider } from '@/context/ThemeContext';
 
 export const metadata: Metadata = {
   title: 'KOFUKU — Provably Fair Coinflip Duels & Autonomous Jackpot',
-  description: 'Antique astronomical ledger, high-stakes 50/50 Coinflip duels, and non-custodial on-chain games using USDG token on Robinhood Chain.',
+  description: 'Antique astronomical ledger, high-stakes 50/50 Coinflip duels, and non-custodial on-chain games using KOFUKU token on Robinhood Chain.',
   icons: {
     icon: [
       { url: '/favicon.ico?v=3', sizes: 'any' },

@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Check, X, Search, RefreshCw, Copy, ShieldCheck } from 'lucide-react';
-import { verifyGameClientSide } from '@/lib/web3/contracts';
+import { verifyGameClientSide, TOKEN_SYMBOL } from '@/lib/web3/contracts';
 import { getApiBaseUrl } from '@/lib/apiConfig';
 
 interface VerifyModalProps {
@@ -220,8 +220,8 @@ export const VerifyModal: React.FC<VerifyModalProps> = ({ isOpen, gameId, onClos
                   </div>
 
                   <div className="flex items-center justify-between">
-                    <span className="text-[#8993A4]">TOTAL USDG POOL:</span>
-                    <span className="font-bold text-[#CDB486]">{gameData.totalPool?.toLocaleString()} USDG</span>
+                    <span className="text-[#8993A4]">TOTAL {TOKEN_SYMBOL} POOL:</span>
+                    <span className="font-bold text-[#CDB486]">{gameData.totalPool?.toLocaleString()} {TOKEN_SYMBOL}</span>
                   </div>
 
                   {gameData.winner && (

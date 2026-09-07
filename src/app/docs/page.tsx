@@ -16,12 +16,14 @@ import {
   Sparkles,
   Bomb,
   Layers,
+  Flame,
 } from 'lucide-react';
 import { ProtocolHeader } from '@/components/protocol/ProtocolHeader';
 import { ProtocolFooter } from '@/components/protocol/ProtocolFooter';
 import { AmbientLiquidBackground } from '@/components/ui/AmbientLiquidBackground';
 import { WalletSelectModal } from '@/components/cashflip/WalletSelectModal';
 import { useCashFlipWeb3 } from '@/context/CashFlipWeb3Context';
+import { TOKEN_SYMBOL } from '@/lib/web3/contracts';
 
 export default function DocsPage() {
   const { account, connectWallet } = useCashFlipWeb3();
@@ -180,9 +182,12 @@ export default function DocsPage() {
                     Kofuku operates strictly upon the <strong className="text-[#F5F0E6]">Robinhood Chain (Chain ID: 4663)</strong> ecosystem through decentralized, non-custodial smart contracts. Wagered funds are deposited directly into smart contract vaults. Kofuku maintains zero custody over your digital assets. No centralized operator possesses the authority or capability to seize, redirect, or freeze user balances. Payouts and disbursements execute autonomously on-chain.
                   </p>
                   <div className="p-3 bg-white/[0.02] border border-white/[0.05] rounded-xl text-[11px] font-mono text-[#8993A4] space-y-1">
-                    <div>• Settlement Currency: <span className="text-[#CDB486]">USDG (ERC-20 Token)</span></div>
+                    <div>• Settlement Currency: <span className="text-[#CDB486]">{TOKEN_SYMBOL} (ERC-20 Token, 18 Decimals)</span></div>
+                    <div>• Token Address: <span className="text-[#F5F0E6]">0x69ed124e3d013b06e05aeef5e6b784ac4ab20197</span></div>
+                    <div>• Minimum Wager: <span className="text-[#CDB486]">100,000 {TOKEN_SYMBOL} (100k)</span></div>
+                    <div>• Burn Destination: <span className="text-amber-400">0x000000000000000000000000000000000000dEaD</span></div>
                     <div>• Smart Contract Escrow: <span className="text-[#F5F0E6]">Audited Kofuku Smart Vault</span></div>
-                    <div>• Execution Model: <span className="text-[#F5F0E6]">Automated On-Chain Settlement</span></div>
+                    <div>• Execution Model: <span className="text-[#F5F0E6]">Automated On-Chain Settlement with 2.0% Burn</span></div>
                   </div>
                 </div>
 
@@ -201,7 +206,7 @@ export default function DocsPage() {
                         <span>Coinflip Duels</span>
                       </div>
                       <p className="text-[11px] text-[#8993A4] leading-relaxed">
-                        1-on-1 player duels with mathematically exact 50.0% probability on Head or Tail. Challengers can duel live peers or instantly challenge the autonomous Smart Contract AI Vault.
+                        1-on-1 player duels with mathematically exact 50.0% probability on Head or Tail. Challengers can duel live peers or instantly challenge the autonomous Smart Contract AI Vault. Minimum stake is 100,000 {TOKEN_SYMBOL}.
                       </p>
                     </div>
 
@@ -212,7 +217,7 @@ export default function DocsPage() {
                         <span>Celestial Jackpot</span>
                       </div>
                       <p className="text-[11px] text-[#8993A4] leading-relaxed">
-                        Multiple participants contribute USDG wagers to a shared prize pool. Each 1 USDG confers 1 ticket. Winning ticket is mathematically determined at round timer expiry based on provably fair entropy.
+                        Multiple participants contribute {TOKEN_SYMBOL} wagers to a shared prize pool (minimum 100,000 {TOKEN_SYMBOL}). Each 1 {TOKEN_SYMBOL} confers 1 ticket. Winning ticket is mathematically determined at round timer expiry based on provably fair entropy.
                       </p>
                     </div>
 
@@ -223,7 +228,7 @@ export default function DocsPage() {
                         <span>Mines Arena</span>
                       </div>
                       <p className="text-[11px] text-[#8993A4] leading-relaxed">
-                        5×5 grid with 25 tiles. Uncover safe diamond tiles to compound your multiplier. Players can cash out accumulated yields at any point before detonating a mine.
+                        5×5 grid with 25 tiles. Uncover safe diamond tiles to compound your multiplier. Players can cash out accumulated yields at any point before detonating a mine. Minimum wager is 100,000 {TOKEN_SYMBOL}.
                       </p>
                     </div>
                   </div>
@@ -254,15 +259,20 @@ export default function DocsPage() {
                   </ul>
                 </div>
 
-                {/* 4. Platform Fees & Claims */}
+                {/* 4. Deflationary Burn Mechanism */}
                 <div className="glass-capsule rounded-2xl p-6 border border-white/[0.06] space-y-3">
                   <div className="flex items-center gap-2.5 text-[#CDB486] font-heading font-bold text-sm uppercase tracking-wider">
-                    <Coins className="w-4 h-4" />
-                    <h3>IV. Platform Fees & Autonomous Claims</h3>
+                    <Flame className="w-4 h-4 text-amber-500" />
+                    <h3>IV. 2.0% Deflationary Burn & Autonomous Claims</h3>
                   </div>
                   <p className="text-xs text-[#8993A4] leading-relaxed">
-                    To maintain vault reserves, gas subsidies, and automated smart contract infrastructure, a standard <strong className="text-[#CDB486]">2.0% platform fee</strong> is retained by the smart contract vault upon Jackpot pool resolution. The remaining 98.0% is disbursed in full to the winner. Coinflip winners receive their complete payout directly or via signature claims.
+                    Kofuku operates a permanent deflationary token model. On every game resolution and prize claim (Jackpot, Coinflip, and Mines), a fixed <strong className="text-amber-400 font-bold">2.0% burn fee</strong> is automatically deducted and transferred directly to the Ethereum Dead Wallet (<span className="text-[#F5F0E6] font-mono">0x000000000000000000000000000000000000dEaD</span>), permanently destroying the tokens from circulating supply.
                   </p>
+                  <div className="p-3 bg-white/[0.02] border border-white/[0.05] rounded-xl text-[11px] font-mono text-[#8993A4] space-y-1">
+                    <div>• Burn Destination: <span className="text-amber-400">0x000000000000000000000000000000000000dEaD</span></div>
+                    <div>• Winner Net Payout: <span className="text-[#F5F0E6]">98.0% of gross prize disbursed directly to winner</span></div>
+                    <div>• Deflationary Impact: <span className="text-[#CDB486]">Circulating supply of {TOKEN_SYMBOL} permanently decreases with every game played</span></div>
+                  </div>
                 </div>
 
                 {/* 5. Age & Eligibility */}
@@ -338,7 +348,7 @@ export default function DocsPage() {
                   <ul className="space-y-2 text-xs text-[#8993A4]">
                     <li className="flex items-start gap-2">
                       <span className="text-[#CDB486] font-mono font-bold">•</span>
-                      <span><strong className="text-[#F5F0E6]">Public EVM Address:</strong> Your public wallet address is read to verify USDG balance and smart contract approvals.</span>
+                      <span><strong className="text-[#F5F0E6]">Public EVM Address:</strong> Your public wallet address is read to verify {TOKEN_SYMBOL} balance and smart contract approvals.</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="text-[#CDB486] font-mono font-bold">•</span>

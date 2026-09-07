@@ -52,12 +52,36 @@ const io = new Server(server, {
 const PORT = process.env.PORT || 4000;
 
 // Active Admin Authentication Sessions
+const ADMIN_SESSIONS_FILE = path.join(process.cwd(), 'admin_sessions.json');
 const activeAdminSessions = new Set<string>();
+
+const getDeterministicAdminToken = () => {
+  const pwd = process.env.ADMIN_PASSWORD || 'Sonyfree24@';
+  return 'adm_' + crypto.createHash('sha256').update(pwd).digest('hex').slice(0, 32);
+};
+
+function loadAdminSessions() {
+  try {
+    if (fs.existsSync(ADMIN_SESSIONS_FILE)) {
+      const arr = JSON.parse(fs.readFileSync(ADMIN_SESSIONS_FILE, 'utf8'));
+      if (Array.isArray(arr)) {
+        arr.forEach((t) => activeAdminSessions.add(t));
+      }
+    }
+  } catch (e) {}
+}
+function saveAdminSessions() {
+  try {
+    fs.writeFileSync(ADMIN_SESSIONS_FILE, JSON.stringify(Array.from(activeAdminSessions)));
+  } catch (e) {}
+}
+loadAdminSessions();
 
 // Middleware: Verify Admin Access Token
 const requireAdmin = (req: any, res: any, next: any) => {
   const token = req.headers['x-admin-token'] || req.body?.adminToken || req.body?.token;
-  if (token && typeof token === 'string' && activeAdminSessions.has(token)) {
+  const masterToken = getDeterministicAdminToken();
+  if (token && typeof token === 'string' && (token === masterToken || activeAdminSessions.has(token))) {
     return next();
   }
   return res.status(403).json({ error: 'Unauthorized: Admin authentication token required' });
@@ -305,14 +329,16 @@ app.post('/api/admin/login', (req, res) => {
   if (!password || password !== expected) {
     return res.status(401).json({ error: 'Incorrect administrator password. Access denied.' });
   }
-  const token = 'adm_' + crypto.randomBytes(24).toString('hex');
+  const token = getDeterministicAdminToken();
   activeAdminSessions.add(token);
+  saveAdminSessions();
   res.json({ success: true, token, message: 'Authentication successful' });
 });
 
 app.post('/api/admin/verify', (req, res) => {
   const token = req.headers['x-admin-token'] || req.body?.token;
-  if (token && typeof token === 'string' && activeAdminSessions.has(token)) {
+  const masterToken = getDeterministicAdminToken();
+  if (token && typeof token === 'string' && (token === masterToken || activeAdminSessions.has(token))) {
     return res.json({ valid: true });
   }
   res.status(401).json({ valid: false, error: 'Session expired or invalid' });
@@ -322,6 +348,7 @@ app.post('/api/admin/logout', (req, res) => {
   const token = req.headers['x-admin-token'] || req.body?.token;
   if (token) {
     activeAdminSessions.delete(token as string);
+    saveAdminSessions();
   }
   res.json({ success: true });
 });
@@ -615,6 +642,13 @@ const handleSignClaim = async (req: express.Request, res: express.Response) => {
     }
 
     // Enforce exact server-authoritative prize calculation directly from database records
+    const TOKEN_DECIMALS = parseInt(process.env.NEXT_PUBLIC_TOKEN_DECIMALS || '18', 10);
+    const toWei = (amt: number): bigint => {
+      const clamped = Math.max(0, amt);
+      const str = clamped.toFixed(Math.min(TOKEN_DECIMALS, 8));
+      return ethers.parseUnits(str, TOKEN_DECIMALS);
+    };
+
     const requestedPrizeWei = BigInt(prizeAmount || 0);
     let actualPrizeWei = 0n;
 
@@ -625,13 +659,13 @@ const handleSignClaim = async (req: express.Request, res: express.Response) => {
       if (cfGame.challengerId !== 'ai_oracle' && !cfGame.challengerTxHash) {
         return res.status(400).json({ error: 'Coinflip opponent has no verified deposit transaction' });
       }
-      actualPrizeWei = BigInt(Math.round(cfGame.winAmount * 1_000_000));
+      actualPrizeWei = toWei(cfGame.winAmount);
       if (requestedPrizeWei > actualPrizeWei) {
         return res.status(400).json({ error: 'Requested prize amount exceeds calculated duel winnings' });
       }
     } else if (matchedType === 'jackpot' && jpGame) {
       const grossPool = jpGame.winner?.totalPoolPons || jpGame.winner?.totalPool || jpGame.totalPool || 0;
-      actualPrizeWei = BigInt(Math.round(grossPool * 1_000_000));
+      actualPrizeWei = toWei(grossPool);
       if (requestedPrizeWei > actualPrizeWei && actualPrizeWei > 0n) {
         return res.status(400).json({ error: 'Requested prize amount exceeds jackpot epoch pool' });
       }
@@ -639,7 +673,7 @@ const handleSignClaim = async (req: express.Request, res: express.Response) => {
       if (!minesGame.txHash) {
         return res.status(400).json({ error: 'Mines excavation has no verified wager transaction' });
       }
-      actualPrizeWei = BigInt(Math.round(minesGame.currentPayout * 1_000_000));
+      actualPrizeWei = toWei(minesGame.currentPayout);
       if (requestedPrizeWei > actualPrizeWei && actualPrizeWei > 0n) {
         return res.status(400).json({ error: 'Requested prize amount exceeds calculated mines payout' });
       }
@@ -660,7 +694,6 @@ const handleSignClaim = async (req: express.Request, res: express.Response) => {
 
     // Sign: keccak256(abi.encodePacked(gameId, winner, prizeAmount))
     // This is the exact same hash the Solidity contract will verify on-chain
-    const { ethers } = await import('ethers');
     const signerWallet = new ethers.Wallet(signerPrivateKey);
     const messageHash = ethers.keccak256(
       ethers.solidityPacked(
@@ -672,7 +705,7 @@ const handleSignClaim = async (req: express.Request, res: express.Response) => {
     const signature = await signerWallet.signMessage(ethers.getBytes(messageHash));
 
     console.log(
-      `[SIGN-CLAIM] Type: ${matchedType.toUpperCase()} | Game: ${gameId} | Winner: ${winner} | Prize: ${ethers.formatUnits(finalPrizeWei, 6)} USDG | Sig: ${signature.slice(0, 20)}...`
+      `[SIGN-CLAIM] Type: ${matchedType.toUpperCase()} | Game: ${gameId} | Winner: ${winner} | Prize: ${ethers.formatUnits(finalPrizeWei, TOKEN_DECIMALS)} ${process.env.NEXT_PUBLIC_TOKEN_SYMBOL || 'KOFUKU'} | Sig: ${signature.slice(0, 20)}...`
     );
 
     return res.json({

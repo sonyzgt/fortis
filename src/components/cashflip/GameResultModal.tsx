@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import { ShieldCheck, Check, ExternalLink, RefreshCw, ArrowRight, X, Trophy } from 'lucide-react';
 import { useCashFlipWeb3 } from '@/context/CashFlipWeb3Context';
-import { ROBINHOOD_CHAIN_CONFIG, isGameClaimedOnChain } from '@/lib/web3/contracts';
+import { ROBINHOOD_CHAIN_CONFIG, isGameClaimedOnChain, TOKEN_SYMBOL } from '@/lib/web3/contracts';
 
 interface GameResultModalProps {
   isOpen: boolean;
@@ -191,12 +191,12 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
             </div>
             <div className="text-4xl font-heading font-bold tracking-tight text-[#CDB486] flex items-center justify-center gap-2 drop-shadow-[0_0_15px_rgba(205, 180, 134,0.35)]">
               <span>{((winner as any).prize ?? winner.prizePons ?? 0).toLocaleString()}</span>
-              <span className="text-sm font-mono font-bold text-[#F5F7FA]/70">USDG</span>
+              <span className="text-sm font-mono font-bold text-[#F5F7FA]/70">{TOKEN_SYMBOL}</span>
             </div>
             <div className="flex items-center justify-around text-[11px] text-[#8993A4] font-mono pt-3 mt-3 border-t border-white/[0.06]">
-              <span>Gross: {((winner as any).totalPool ?? winner.totalPoolPons ?? 0).toLocaleString()} USDG</span>
+              <span>Gross: {((winner as any).totalPool ?? winner.totalPoolPons ?? 0).toLocaleString()} {TOKEN_SYMBOL}</span>
               <span>•</span>
-              <span>Fee (2%): {((winner as any).fee ?? winner.feePons ?? 0).toLocaleString()} USDG</span>
+              <span className="text-amber-400/90">Burned (2%): {((winner as any).fee ?? winner.feePons ?? 0).toLocaleString()} {TOKEN_SYMBOL}</span>
             </div>
           </div>
 

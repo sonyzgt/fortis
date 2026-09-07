@@ -3,14 +3,24 @@ import CashFlipTokenABI from './abi/CashFlipTokenABI.json';
 import CashFlipJackpotABI from './abi/CashFlipJackpotABI.json';
 import { getApiBaseUrl } from '@/lib/apiConfig';
 
-export const DEFAULT_TOKEN_ADDRESS = '0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168';
-export const TOKEN_SYMBOL = 'USDG';
-export const TOKEN_DECIMALS = 6;
+export const DEFAULT_TOKEN_ADDRESS = '0x69ed124e3d013b06e05aeef5e6b784ac4ab20197';
+export const TOKEN_SYMBOL = (process.env.NEXT_PUBLIC_TOKEN_SYMBOL || 'KOFUKU').trim();
+export const TOKEN_DECIMALS = parseInt(process.env.NEXT_PUBLIC_TOKEN_DECIMALS || '18', 10);
 
 export function parseTokenAmount(amount: number | string): bigint {
-  const num = typeof amount === 'number' ? amount : parseFloat(amount);
+  if (typeof amount === 'string') {
+    const clean = amount.trim();
+    if (!clean || isNaN(Number(clean)) || Number(clean) <= 0) return 0n;
+    const parts = clean.split('.');
+    if (parts.length === 2 && parts[1].length > TOKEN_DECIMALS) {
+      return ethers.parseUnits(`${parts[0]}.${parts[1].slice(0, TOKEN_DECIMALS)}`, TOKEN_DECIMALS);
+    }
+    return ethers.parseUnits(clean, TOKEN_DECIMALS);
+  }
+  const num = amount;
   if (isNaN(num) || num <= 0) return 0n;
-  const fixedStr = Number(num).toFixed(TOKEN_DECIMALS);
+  const maxDec = Math.min(TOKEN_DECIMALS, 8);
+  const fixedStr = Number(num).toFixed(maxDec);
   return ethers.parseUnits(fixedStr, TOKEN_DECIMALS);
 }
 
@@ -446,5 +456,39 @@ export async function rescueTokenFromContract(
   const tx = await contract.adminWithdraw(tokenAddress, amountWei);
   const receipt = await tx.wait();
   return receipt?.hash || tx.hash;
+}
+
+/**
+ * Deposit liquidity / house bankroll into smart contract escrow pool
+ */
+export async function depositBankrollOnChain(
+  signer: ethers.Signer,
+  amountWei: bigint,
+  contractAddress?: string
+): Promise<string> {
+  const targetContract = contractAddress || getGameContractAddress();
+  const tokenContract = getCashFlipContract(signer);
+  const userAddress = await signer.getAddress();
+
+  // 1. Check & approve allowance if needed
+  const currentAllowance: bigint = await tokenContract.allowance(userAddress, targetContract);
+  if (currentAllowance < amountWei) {
+    const approveTx = await tokenContract.approve(targetContract, ethers.MaxUint256);
+    await approveTx.wait();
+  }
+
+  // 2. Call depositLiquidity on the game contract if available, otherwise direct transfer
+  try {
+    const gameContract = getGameContract(signer, targetContract);
+    const fn = gameContract.getFunction('depositLiquidity(uint256)');
+    const tx = await fn(amountWei);
+    const receipt = await tx.wait();
+    return receipt.hash || tx.hash;
+  } catch (err: any) {
+    console.warn('depositLiquidity function call failed, falling back to direct token transfer:', err);
+    const tx = await tokenContract.transfer(targetContract, amountWei);
+    const receipt = await tx.wait();
+    return receipt.hash || tx.hash;
+  }
 }
 

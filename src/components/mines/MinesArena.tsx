@@ -16,6 +16,7 @@ import { useCashFlipWeb3 } from '@/context/CashFlipWeb3Context';
 import { useSound } from '@/context/SoundContext';
 import { useSocket } from '@/context/SocketContext';
 import { MinesGame, MinesTileResult, MinesCashoutResult, MinesVerifyReport } from '@/types/mines';
+import { TOKEN_SYMBOL } from '@/lib/web3/contracts';
 
 interface MinesArenaProps {
   account: string | null;
@@ -25,7 +26,13 @@ interface MinesArenaProps {
   onShowToast: (msg: string, ok?: boolean) => void;
 }
 
-const QUICK_AMOUNTS = [5, 10, 25, 50, 100];
+const QUICK_AMOUNTS = [
+  { label: '100k', val: 100000 },
+  { label: '250k', val: 250000 },
+  { label: '500k', val: 500000 },
+  { label: '1M', val: 1000000 },
+  { label: '2M', val: 2000000 },
+];
 
 export const MinesArena: React.FC<MinesArenaProps> = ({
   account,
@@ -51,7 +58,7 @@ export const MinesArena: React.FC<MinesArenaProps> = ({
   // Wager & Mines configuration (Fixed 5x5 Matrix, 25 tiles)
   const totalTiles = 25;
   const maxMines = 24;
-  const [betAmount, setBetAmount] = useState<number>(10);
+  const [betAmount, setBetAmount] = useState<number>(100000);
   const [mineCount, setMineCount] = useState<number>(3); // Default 3 mines for 5x5
 
   // Active game state
@@ -127,12 +134,12 @@ export const MinesArena: React.FC<MinesArenaProps> = ({
       onOpenWalletModal();
       return;
     }
-    if (betAmount < 0.5) {
-      onShowToast('Minimum wager is 0.5 USDG', false);
+    if (betAmount < 100000) {
+      onShowToast(`Minimum wager is 100,000 ${TOKEN_SYMBOL}`, false);
       return;
     }
     if (usdgBalance < betAmount) {
-      onShowToast(`Insufficient USDG balance (${usdgBalance.toFixed(2)} available)`, false);
+      onShowToast(`Insufficient ${TOKEN_SYMBOL} balance (${usdgBalance.toFixed(2)} available)`, false);
       return;
     }
 
@@ -173,7 +180,7 @@ export const MinesArena: React.FC<MinesArenaProps> = ({
 
       setActiveGame(data.game);
       await refreshBalances();
-      onShowToast(`Wager of ${betAmount} USDG confirmed on Robinhood Chain! Touch a capsule to reveal.`, true);
+      onShowToast(`Wager of ${betAmount} ${TOKEN_SYMBOL} confirmed on Robinhood Chain! Touch a capsule to reveal.`, true);
     } catch (e: any) {
       console.error('Mines start error:', e);
       if (
@@ -238,7 +245,7 @@ export const MinesArena: React.FC<MinesArenaProps> = ({
         if (data.status === 'cashed_out') {
           playMineCashout();
           confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } });
-          onShowToast(`ALL SAFE CAPSULES REVEALED: +${data.payout.toFixed(2)} USDG!`, true);
+          onShowToast(`ALL SAFE CAPSULES REVEALED: +${data.payout.toFixed(2)} ${TOKEN_SYMBOL}!`, true);
 
           const maxWinGame: MinesGame = {
             ...activeGame,
@@ -298,7 +305,7 @@ export const MinesArena: React.FC<MinesArenaProps> = ({
 
       playMineCashout();
       confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } });
-      onShowToast(`CASHED OUT: +${data.payout.toFixed(2)} USDG (${data.multiplier.toFixed(2)}x)!`, true);
+      onShowToast(`CASHED OUT: +${data.payout.toFixed(2)} ${TOKEN_SYMBOL} (${data.multiplier.toFixed(2)}x)!`, true);
 
       const cashedGame: MinesGame = {
         ...activeGame,
@@ -392,7 +399,7 @@ export const MinesArena: React.FC<MinesArenaProps> = ({
               <p className="text-xs text-[#8993A4]">
                 Total:{' '}
                 <span className="font-mono font-bold text-[#CDB486]">
-                  {unclaimedWins.reduce((acc, g) => acc + g.currentPayout, 0).toFixed(2)} USDG
+                  {unclaimedWins.reduce((acc, g) => acc + g.currentPayout, 0).toFixed(2)} {TOKEN_SYMBOL}
                 </span>
               </p>
             </div>
@@ -406,7 +413,7 @@ export const MinesArena: React.FC<MinesArenaProps> = ({
                 disabled={claimingGameId === g.id}
                 className="btn-liquid-glass text-xs px-4 py-2"
               >
-                {claimingGameId === g.id ? 'Claiming...' : `Claim ${g.currentPayout.toFixed(2)} USDG`}
+                {claimingGameId === g.id ? 'Claiming...' : `Claim ${g.currentPayout.toFixed(2)} ${TOKEN_SYMBOL}`}
               </button>
             ))}
           </div>
@@ -546,41 +553,41 @@ export const MinesArena: React.FC<MinesArenaProps> = ({
             <div className="flex items-center justify-between text-xs">
               <span className="font-medium text-[#8993A4] tracking-wide uppercase">BET</span>
               <span className="text-[#8993A4]">
-                Balance: <strong className="font-mono text-[#F5F7FA]">{usdgBalance.toFixed(2)} USDG</strong>
+                Balance: <strong className="font-mono text-[#F5F7FA]">{usdgBalance.toFixed(2)} {TOKEN_SYMBOL}</strong>
               </span>
             </div>
 
             <div className="relative">
               <input
                 type="number"
-                step="1"
-                min="0.5"
-                max="1000"
+                step="10000"
+                min="100000"
+                max="10000000"
                 disabled={isGameRunning}
                 value={betAmount}
-                onChange={(e) => setBetAmount(Math.max(0, parseFloat(e.target.value) || 0))}
+                onChange={(e) => setBetAmount(Math.max(100000, parseFloat(e.target.value) || 0))}
                 className="glass-input w-full px-4 py-3.5 font-mono text-lg font-bold text-[#F5F7FA] transition-colors disabled:opacity-50"
               />
               <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-[#8993A4]">
-                USDG
+                {TOKEN_SYMBOL}
               </span>
             </div>
 
             {/* Quick Amounts */}
             <div className="grid grid-cols-5 gap-1.5 pt-1">
-              {QUICK_AMOUNTS.map((amt) => (
+              {QUICK_AMOUNTS.map((amtObj) => (
                 <button
-                  key={amt}
+                  key={amtObj.val}
                   type="button"
                   disabled={isGameRunning}
-                  onClick={() => setBetAmount(amt)}
+                  onClick={() => setBetAmount(amtObj.val)}
                   className={`py-2 text-xs font-mono font-medium transition-all cursor-pointer disabled:opacity-40 ${
-                    betAmount === amt
+                    betAmount === amtObj.val
                       ? 'glass-btn-chip border-[#CDB486]/60 text-[#CDB486] shadow-[0_0_12px_rgba(205, 180, 134,0.25)]'
                       : 'glass-btn-chip text-[#8993A4] hover:text-[#F5F7FA]'
                   }`}
                 >
-                  {amt}
+                  {amtObj.label}
                 </button>
               ))}
             </div>
@@ -644,7 +651,7 @@ export const MinesArena: React.FC<MinesArenaProps> = ({
                 POTENTIAL WIN
               </span>
               <span className="font-mono text-2xl font-extrabold text-[#E5C07B]">
-                {potentialWin.toFixed(2)} <span className="text-xs text-[#8993A4]">USDG</span>
+                {potentialWin.toFixed(2)} <span className="text-xs text-[#8993A4]">{TOKEN_SYMBOL}</span>
               </span>
             </div>
           </div>
@@ -665,7 +672,7 @@ export const MinesArena: React.FC<MinesArenaProps> = ({
                   </>
                 ) : (
                   <span>
-                    CASH OUT {activeGame.currentPayout.toFixed(2)} USDG ({activeGame.currentMultiplier.toFixed(2)}×)
+                    CASH OUT {activeGame.currentPayout.toFixed(2)} {TOKEN_SYMBOL} ({activeGame.currentMultiplier.toFixed(2)}×)
                   </span>
                 )}
               </button>
@@ -682,7 +689,7 @@ export const MinesArena: React.FC<MinesArenaProps> = ({
                     <span>CONFIRMING IN WALLET...</span>
                   </>
                 ) : (
-                  <span>START GAME ({betAmount} USDG)</span>
+                  <span>START GAME ({betAmount} {TOKEN_SYMBOL})</span>
                 )}
               </button>
             )}

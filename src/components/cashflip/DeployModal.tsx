@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ethers } from 'ethers';
 import { Check, X, RefreshCw, ExternalLink, ShieldCheck, AlertTriangle, Terminal } from 'lucide-react';
 import { deployCashFlipJackpotContract, GAME_SERVER_SIGNER_ADDRESS } from '@/lib/web3/deployer';
-import { ROBINHOOD_CHAIN_CONFIG, getCashFlipTokenAddress } from '@/lib/web3/contracts';
+import { ROBINHOOD_CHAIN_CONFIG, getCashFlipTokenAddress, TOKEN_SYMBOL } from '@/lib/web3/contracts';
 import { getApiBaseUrl } from '@/lib/apiConfig';
 
 interface DeployModalProps {
@@ -36,11 +36,16 @@ export const DeployModal: React.FC<DeployModalProps> = ({ isOpen, onClose, onSuc
     }
 
     try {
+      localStorage.setItem('kofuku_deployed_game_contract', trimmed);
       localStorage.setItem('cashflip_deployed_game_contract', trimmed);
       const apiBase = getApiBaseUrl();
+      const token = typeof window !== 'undefined' ? sessionStorage.getItem('cashflip_admin_token') || '' : '';
       await fetch(`${apiBase}/api/admin/set-contract`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'x-admin-token': token } : {}),
+        },
         body: JSON.stringify({ contractAddress: trimmed }),
       });
       onSuccess(trimmed);
@@ -123,7 +128,7 @@ export const DeployModal: React.FC<DeployModalProps> = ({ isOpen, onClose, onSuc
                 <span className="uppercase text-[10px] font-mono tracking-wider">CONTRACT ROLE SPECIFICATION</span>
               </p>
               <p className="text-[11px] text-[#8993A4] leading-relaxed">
-                Facilitates automated non-custodial payouts on Robinhood Chain upon round resolution. The vault retains a 2.0% platform fee for maintenance.
+                Facilitates automated non-custodial payouts on Robinhood Chain upon round resolution. The vault executes an automatic 2.0% deflationary burn to the dead address (0x...dEaD) on every claim.
               </p>
             </div>
 
@@ -131,12 +136,12 @@ export const DeployModal: React.FC<DeployModalProps> = ({ isOpen, onClose, onSuc
               <div className="flex justify-between items-center py-1 border-b border-white/[0.05]">
                 <span className="text-[#8993A4]">SETTLEMENT TOKEN:</span>
                 <span className="font-bold text-[#F5F7FA]">
-                  USDG ({getCashFlipTokenAddress() ? `${getCashFlipTokenAddress().slice(0, 6)}...${getCashFlipTokenAddress().slice(-4)}` : '⚠️ Set Token Address'})
+                  {TOKEN_SYMBOL} ({getCashFlipTokenAddress() ? `${getCashFlipTokenAddress().slice(0, 6)}...${getCashFlipTokenAddress().slice(-4)}` : '⚠️ Set Token Address'})
                 </span>
               </div>
               <div className="flex justify-between items-center py-1 border-b border-white/[0.05]">
-                <span className="text-[#8993A4]">PLATFORM FEE:</span>
-                <span className="text-[#CDB486] font-bold">2.0%</span>
+                <span className="text-[#8993A4]">DEFLATIONARY BURN:</span>
+                <span className="text-[#CDB486] font-bold">2.0% (to 0x...dEaD)</span>
               </div>
               <div className="flex justify-between items-center py-1">
                 <span className="text-[#8993A4]">ESTIMATED GAS:</span>

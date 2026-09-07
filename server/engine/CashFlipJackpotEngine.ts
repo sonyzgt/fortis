@@ -231,11 +231,11 @@ export class CashFlipJackpotEngine {
       return { success: false, message: 'Game is currently spinning or completed. Please wait for the next round.' };
     }
 
-    if (amountPons < 0.1) {
-      return { success: false, message: 'Minimum bet is 0.1 USDG.' };
+    if (amountPons < 100000) {
+      return { success: false, message: 'Minimum bet is 100,000 KOFUKU.' };
     }
 
-    const ticketCount = Math.max(1, Math.floor(amountPons * 100)); // 0.01 USDG = 1 Ticket (1 USDG = 100 Tickets)
+    const ticketCount = Math.max(1, Math.floor(amountPons)); // 1 KOFUKU = 1 Ticket
     const startTicket = this.totalTickets;
     const endTicket = startTicket + ticketCount - 1;
 

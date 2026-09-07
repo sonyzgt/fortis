@@ -71,8 +71,8 @@ export class CoinFlipEngine {
       }
     }
 
-    if (betAmount < 0.5 || betAmount > 100000) {
-      return { success: false, message: 'Bet amount must be between 0.5 - 100,000 USDG.' };
+    if (betAmount < 100000 || betAmount > 100000000) {
+      return { success: false, message: 'Bet amount must be between 100,000 - 100,000,000 KOFUKU.' };
     }
 
     const roomNumber = this.nextRoomNumber++;

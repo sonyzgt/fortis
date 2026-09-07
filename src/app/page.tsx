@@ -23,7 +23,7 @@ import {
   CheckCircle2,
   ExternalLink,
 } from 'lucide-react';
-import { ROBINHOOD_CHAIN_CONFIG, CASHFLIP_TOKEN_ADDRESS, getCashFlipTokenAddress } from '@/lib/web3/contracts';
+import { ROBINHOOD_CHAIN_CONFIG, CASHFLIP_TOKEN_ADDRESS, getCashFlipTokenAddress, TOKEN_SYMBOL } from '@/lib/web3/contracts';
 import { AmbientLiquidBackground } from '@/components/ui/AmbientLiquidBackground';
 
 export default function KofukuHomePage() {
@@ -313,7 +313,7 @@ export default function KofukuHomePage() {
                 TOTAL WAGERED
               </span>
               <div className="font-mono text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#F5F0E6]">
-                0 <span className="text-lg text-[#CDB486]">USDG</span>
+                0 <span className="text-lg text-[#CDB486]">{TOKEN_SYMBOL}</span>
               </div>
             </div>
 
@@ -331,7 +331,7 @@ export default function KofukuHomePage() {
                 LARGEST WIN
               </span>
               <div className="font-mono text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#CDB486]">
-                0 <span className="text-lg text-[#CDB486]">USDG</span>
+                0 <span className="text-lg text-[#CDB486]">{TOKEN_SYMBOL}</span>
               </div>
             </div>
           </div>
@@ -388,7 +388,7 @@ export default function KofukuHomePage() {
                 ROBINHOOD CHAIN
               </h3>
               <p className="text-sm text-[#8993A4] leading-relaxed">
-                Powered by Chain ID 4663. Ultra-fast sub-second finality, minimal transaction fees, and native settlement in USDG.
+                Powered by Chain ID 4663. Ultra-fast sub-second finality, minimal transaction fees, and native settlement in {TOKEN_SYMBOL}.
               </p>
             </div>
           </div>
