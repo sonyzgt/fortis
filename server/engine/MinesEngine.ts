@@ -379,6 +379,14 @@ export class MinesEngine {
     return this.completedGames.slice(0, 50);
   }
 
+  public getAllCompletedGames(): MinesGame[] {
+    return this.completedGames;
+  }
+
+  public getAllActiveGames(): MinesGame[] {
+    return Array.from(this.activeGames.values());
+  }
+
   public clearHistory(): void {
     this.completedGames = [];
     this.unclaimedGames.clear();

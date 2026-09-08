@@ -47,6 +47,49 @@ export default function KofukuHomePage() {
     avatar: '',
   });
 
+  // Live Platform Telemetry Stats
+  const [stats, setStats] = useState<{
+    totalWagered: number;
+    totalPlayers: number;
+    largestWin: number;
+  }>({
+    totalWagered: 0,
+    totalPlayers: 0,
+    largestWin: 0,
+  });
+
+  useEffect(() => {
+    fetch('/api/platform/stats')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data) {
+          setStats({
+            totalWagered: Number(data.totalWagered) || 0,
+            totalPlayers: Number(data.totalPlayers) || 0,
+            largestWin: Number(data.largestWin) || 0,
+          });
+        }
+      })
+      .catch((err) => console.warn('Failed to load platform stats', err));
+  }, []);
+
+  useEffect(() => {
+    if (!socket) return;
+    const handleStats = (data: any) => {
+      if (data) {
+        setStats({
+          totalWagered: Number(data.totalWagered) || 0,
+          totalPlayers: Number(data.totalPlayers) || 0,
+          largestWin: Number(data.largestWin) || 0,
+        });
+      }
+    };
+    socket.on('platform_stats', handleStats);
+    return () => {
+      socket.off('platform_stats', handleStats);
+    };
+  }, [socket]);
+
   useEffect(() => {
     try {
       const saved = localStorage.getItem('kofuku_user_profile') || localStorage.getItem('cashflip_user_profile');
@@ -348,7 +391,7 @@ export default function KofukuHomePage() {
                 TOTAL WAGERED
               </span>
               <div className="font-mono text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#F5F0E6]">
-                0 <span className="text-lg text-[#CDB486]">{TOKEN_SYMBOL}</span>
+                {stats.totalWagered.toLocaleString()} <span className="text-lg text-[#CDB486]">{TOKEN_SYMBOL}</span>
               </div>
             </div>
 
@@ -357,7 +400,7 @@ export default function KofukuHomePage() {
                 PLAYERS
               </span>
               <div className="font-mono text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#F5F0E6]">
-                0
+                {stats.totalPlayers.toLocaleString()}
               </div>
             </div>
 
@@ -366,7 +409,7 @@ export default function KofukuHomePage() {
                 LARGEST WIN
               </span>
               <div className="font-mono text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#CDB486]">
-                0 <span className="text-lg text-[#CDB486]">{TOKEN_SYMBOL}</span>
+                {stats.largestWin.toLocaleString()} <span className="text-lg text-[#CDB486]">{TOKEN_SYMBOL}</span>
               </div>
             </div>
           </div>

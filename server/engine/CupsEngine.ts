@@ -333,6 +333,14 @@ export class CupsEngine {
     return this.completedGames.slice(0, 50);
   }
 
+  public getAllCompletedGames(): CupsGame[] {
+    return this.completedGames;
+  }
+
+  public getAllActiveGames(): CupsGame[] {
+    return Array.from(this.activeGames.values());
+  }
+
   /**
    * Provably fair verification for completed rounds
    */

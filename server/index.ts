@@ -179,6 +179,7 @@ cashflipJackpot.onWinner = (winner, round) => {
     });
   }
   io.emit('leaderboard_update', getLeaderboard());
+  broadcastPlatformStats();
 };
 
 // --- Legacy Jackpot Callbacks ---
@@ -194,6 +195,7 @@ jackpot.onWinner = (winner: WinnerInfo) => {
 // --- CoinFlip Callbacks ---
 coinflip.onUpdate = (games) => {
   io.emit('coinflip_games', games);
+  broadcastPlatformStats();
 };
 coinflip.onSystemMessage = undefined;
 
@@ -206,6 +208,7 @@ coinflip.onGameComplete = (game) => {
       game,
     });
   }
+  broadcastPlatformStats();
 };
 
 function getLeaderboard(): LeaderboardEntry[] {
@@ -214,8 +217,93 @@ function getLeaderboard(): LeaderboardEntry[] {
     .slice(20);
 }
 
+function getPlatformStats() {
+  let totalWagered = 0;
+  let largestWin = 0;
+  const playersSet = new Set<string>();
+
+  // 1. Cups
+  const cupsHistory = cups.getAllCompletedGames();
+  const cupsActive = cups.getAllActiveGames();
+  for (const g of [...cupsHistory, ...cupsActive]) {
+    totalWagered += (Number(g.betAmount) || 0);
+    if (g.status === 'won' && (Number(g.payout) || 0) > largestWin) {
+      largestWin = Number(g.payout);
+    }
+    if (g.playerAddress && g.playerAddress.startsWith('0x')) {
+      playersSet.add(g.playerAddress.toLowerCase());
+    }
+  }
+
+  // 2. Mines
+  const minesHistory = mines.getAllCompletedGames();
+  const minesActive = mines.getAllActiveGames();
+  for (const g of [...minesHistory, ...minesActive]) {
+    totalWagered += (Number(g.betAmount) || 0);
+    const win = g.status === 'cashed_out' ? (Number(g.currentPayout) || 0) : 0;
+    if (win > largestWin) {
+      largestWin = win;
+    }
+    if (g.playerAddress && g.playerAddress.startsWith('0x')) {
+      playersSet.add(g.playerAddress.toLowerCase());
+    }
+  }
+
+  // 3. Coinflip
+  const cfCompleted = coinflip.getCompletedGames();
+  const cfOpen = coinflip.getOpenGames();
+  for (const g of cfCompleted) {
+    totalWagered += (Number(g.betAmount) || 0) * 2;
+    if ((Number(g.winAmount) || 0) > largestWin) {
+      largestWin = Number(g.winAmount);
+    }
+    if (g.creatorId && g.creatorId.startsWith('0x')) playersSet.add(g.creatorId.toLowerCase());
+    if (g.challengerId && g.challengerId.startsWith('0x')) playersSet.add(g.challengerId.toLowerCase());
+  }
+  for (const g of cfOpen) {
+    totalWagered += (Number(g.betAmount) || 0);
+    if (g.creatorId && g.creatorId.startsWith('0x')) playersSet.add(g.creatorId.toLowerCase());
+  }
+
+  // 4. Jackpot
+  const jpPast = cashflipJackpot.getPastGames();
+  const jpCurrent = cashflipJackpot.getState();
+  for (const round of jpPast) {
+    totalWagered += (Number(round.totalPool) || 0);
+    if (round.winner) {
+      const prize = round.winner.prize !== undefined ? Number(round.winner.prize) : (Number(round.winner.prizePons) || 0);
+      if (prize > largestWin) largestWin = prize;
+    }
+    if (Array.isArray(round.players)) {
+      for (const p of round.players) {
+        if (p.address && p.address.startsWith('0x')) playersSet.add(p.address.toLowerCase());
+      }
+    }
+  }
+  if (jpCurrent) {
+    totalWagered += (Number(jpCurrent.totalPool) || 0);
+    if (Array.isArray(jpCurrent.players)) {
+      for (const p of jpCurrent.players) {
+        if (p.address && p.address.startsWith('0x')) playersSet.add(p.address.toLowerCase());
+      }
+    }
+  }
+
+  return {
+    totalWagered,
+    totalPlayers: playersSet.size,
+    largestWin,
+    timestamp: Date.now(),
+  };
+}
+
+function broadcastPlatformStats() {
+  io.emit('platform_stats', getPlatformStats());
+}
+
 // --- REST API Endpoints ---
 app.get('/api/health', (_, res) => res.json({ status: 'ok', ts: Date.now(), system: 'Kofuku Engine' }));
+app.get('/api/platform/stats', (_, res) => res.json(getPlatformStats()));
 
 // CashFlip Game APIs
 app.get('/api/game/current', (_, res) => res.json(cashflipJackpot.getState()));
@@ -279,6 +367,7 @@ app.post('/api/mines/start', (req, res) => {
   );
   if (!result.success) return res.status(400).json(result);
   markTxHashUsed(txHash);
+  broadcastPlatformStats();
   res.json(result);
 });
 
@@ -286,6 +375,9 @@ app.post('/api/mines/reveal', (req, res) => {
   const { gameId, playerAddress, tileIndex } = req.body;
   try {
     const result = mines.revealTile(gameId, playerAddress, Number(tileIndex));
+    if (result.gameOver) {
+      broadcastPlatformStats();
+    }
     res.json(result);
   } catch (err: any) {
     res.status(400).json({ error: err?.message || 'Failed to reveal tile' });
@@ -296,6 +388,7 @@ app.post('/api/mines/cashout', (req, res) => {
   const { gameId, playerAddress } = req.body;
   try {
     const result = mines.cashOut(gameId, playerAddress);
+    broadcastPlatformStats();
     res.json(result);
   } catch (err: any) {
     res.status(400).json({ error: err?.message || 'Failed to cash out' });
@@ -366,6 +459,7 @@ app.post('/api/cups/start', (req, res) => {
   if (!result.success) {
     return res.status(400).json(result);
   }
+  broadcastPlatformStats();
   res.json(result);
 });
 
@@ -375,6 +469,9 @@ app.post('/api/cups/pick', (req, res) => {
     const result = cups.pickCup(gameId, playerAddress, Number(cupIndex));
     if (result.unclaimedGame) {
       io.emit('cups_unclaimed', cups.getUnclaimedByPlayer(playerAddress));
+    }
+    if (result.gameOver || result.hasLogo) {
+      broadcastPlatformStats();
     }
     res.json({ success: true, result });
   } catch (e: any) {
@@ -845,6 +942,7 @@ app.post('/api/claim/sign', handleSignClaim);
 // --- Socket.io ---
 io.on('connection', (socket) => {
   // Send initial states
+  socket.emit('platform_stats', getPlatformStats());
   socket.emit('cashflip_jackpot_state', cashflipJackpot.getState());
   socket.emit('cashflip_jackpot_history', cashflipJackpot.getPastGames());
   socket.emit('coinflip_games', coinflip.getOpenGames());
