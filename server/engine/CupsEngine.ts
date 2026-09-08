@@ -88,7 +88,7 @@ export class CupsEngine {
     const shuffleSequence: [number, number][] = [];
     let currentPos = initialPosition;
 
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 20; i++) {
       const byte = hash.readUInt8(i + 1);
       const swapIndex = byte % possibleSwaps.length;
       const [a, b] = possibleSwaps[swapIndex];

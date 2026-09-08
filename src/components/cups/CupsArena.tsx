@@ -211,7 +211,7 @@ export const CupsArena: React.FC<CupsArenaProps> = ({
         }
 
         stepIndex++;
-        shuffleTimeoutRef.current = setTimeout(runNextSwap, 160);
+        shuffleTimeoutRef.current = setTimeout(runNextSwap, 110);
       };
 
       runNextSwap();
@@ -682,7 +682,7 @@ export const CupsArena: React.FC<CupsArenaProps> = ({
                     rotate: isWonCup ? -8 : 0,
                   }}
                   transition={{
-                    x: { type: 'spring', stiffness: 650, damping: 28, mass: 0.5 },
+                    x: { type: 'spring', stiffness: 1050, damping: 32, mass: 0.35 },
                     y: { type: 'spring', stiffness: 450, damping: 25 },
                   }}
                   onClick={() => canClick && handlePickSlot(currentSlot)}
