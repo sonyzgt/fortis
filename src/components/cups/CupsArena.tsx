@@ -55,6 +55,7 @@ export const CupsArena: React.FC<CupsArenaProps> = ({
 
   const [mounted, setMounted] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [isNarrowMobile, setIsNarrowMobile] = useState(false);
 
   const [betAmount, setBetAmount] = useState<number>(100000);
   const maxPicks = 1; // 1 single pick per round (2.94x)
@@ -89,7 +90,11 @@ export const CupsArena: React.FC<CupsArenaProps> = ({
 
   useEffect(() => {
     setMounted(true);
-    const handleResize = () => setIsMobile(window.innerWidth < 640);
+    const handleResize = () => {
+      const w = window.innerWidth;
+      setIsNarrowMobile(w < 400);
+      setIsMobile(w < 640);
+    };
     handleResize();
     window.addEventListener('resize', handleResize);
     return () => {
@@ -481,12 +486,12 @@ export const CupsArena: React.FC<CupsArenaProps> = ({
   // Horizontal X coordinate for slot (0 = Left, 1 = Center, 2 = Right)
   const getSlotX = useCallback(
     (slotIdx: number) => {
-      const spacing = isMobile ? 104 : 154;
+      const spacing = isNarrowMobile ? 88 : isMobile ? 104 : 154;
       if (slotIdx === 0) return -spacing;
       if (slotIdx === 1) return 0;
       return spacing;
     },
-    [isMobile]
+    [isNarrowMobile, isMobile]
   );
 
   return (
@@ -535,12 +540,12 @@ export const CupsArena: React.FC<CupsArenaProps> = ({
           ───────────────────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
         {/* LEFT: 3 LIQUID GLASS CUPS */}
-        <div className="lg:col-span-7 flex flex-col items-center justify-center p-6 sm:p-10 rounded-3xl glass-capsule relative shadow-2xl min-h-[480px]">
+        <div className="lg:col-span-7 flex flex-col items-center justify-center p-3.5 sm:p-6 lg:p-10 rounded-3xl glass-capsule relative shadow-2xl min-h-[440px] sm:min-h-[480px]">
           {/* Ambient Glow */}
           <div className="absolute inset-8 rounded-full bg-[#CDB486]/[0.03] blur-3xl pointer-events-none" />
 
           {/* Table Header / Status Banner */}
-          <div className="w-full flex items-center justify-between pb-6 mb-8 border-b border-white/10">
+          <div className="w-full flex flex-wrap items-center justify-between gap-2 pb-4 sm:pb-6 mb-6 sm:mb-8 border-b border-white/10">
             <div className="flex items-center gap-2">
               <span className="text-xs font-mono uppercase tracking-widest text-[#8993A4]">
                 3 GLASS CUPS
@@ -578,7 +583,7 @@ export const CupsArena: React.FC<CupsArenaProps> = ({
           </div>
 
           {/* CUPS STAGE: 3 PHYSICAL SLOTS WITH ABSOLUTE ANIMATED CUPS */}
-          <div className="relative w-full max-w-[500px] h-64 sm:h-72 flex items-center justify-center select-none">
+          <div className="relative w-full max-w-[500px] h-56 sm:h-64 md:h-72 flex items-center justify-center select-none overflow-hidden sm:overflow-visible">
             {/* Table Surface Plinth */}
             <div className="absolute bottom-2 w-full h-8 rounded-full bg-black/50 blur-lg pointer-events-none" />
 
@@ -602,7 +607,7 @@ export const CupsArena: React.FC<CupsArenaProps> = ({
                   style={{
                     transform: `translateX(${getSlotX(slotIdx)}px)`,
                   }}
-                  className="absolute bottom-3 w-24 sm:w-32 flex flex-col items-center justify-center transition-transform"
+                  className="absolute bottom-3 w-20 sm:w-24 md:w-32 flex flex-col items-center justify-center transition-transform"
                 >
                   {/* Slot Target Indicator / Label */}
                   <span className="text-[10px] font-mono text-[#8993A4]/60 uppercase tracking-widest mb-1">
@@ -620,7 +625,7 @@ export const CupsArena: React.FC<CupsArenaProps> = ({
                         <img
                           src="/logo.png"
                           alt="KOFUKU Emblem"
-                          className="w-12 h-12 sm:w-16 sm:h-16 object-contain drop-shadow-[0_0_18px_rgba(205,180,134,0.9)] animate-pulse"
+                          className="w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 object-contain drop-shadow-[0_0_18px_rgba(205,180,134,0.9)] animate-pulse"
                         />
                         <span className="text-[9px] font-mono font-extrabold text-[#CDB486] mt-0.5 drop-shadow-sm">
                           KOFUKU
@@ -628,13 +633,13 @@ export const CupsArena: React.FC<CupsArenaProps> = ({
                       </motion.div>
                     ) : isRevealedEmptyInPlay ? (
                       <div className="flex flex-col items-center justify-center text-rose-400 py-1">
-                        <X className="w-6 h-6 mb-0.5" />
+                        <X className="w-5 h-5 sm:w-6 sm:h-6 mb-0.5" />
                         <span className="text-[9px] font-mono uppercase tracking-wider font-bold">
                           EMPTY
                         </span>
                       </div>
                     ) : (
-                      <div className="w-8 h-8 rounded-full border border-white/5 bg-white/[0.02] flex items-center justify-center text-white/20 font-bold text-xs">
+                      <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-white/5 bg-white/[0.02] flex items-center justify-center text-white/20 font-bold text-xs">
                         ?
                       </div>
                     )}
@@ -649,10 +654,6 @@ export const CupsArena: React.FC<CupsArenaProps> = ({
               const isLogoCup = cupId === logoCupId;
 
               // Determine if this cup is currently lifted:
-              // 1) During revealing_start: ALL cups lift up!
-              // 2) During covering / shuffling: ALL cups are closed down!
-              // 3) During playing: only the picked cups are lifted!
-              // 4) During ended: all cups lift up to reveal everything!
               const isSlotPicked =
                 (activeGame?.pickedIndices.includes(currentSlot) ||
                   endedGame?.pickedIndices.includes(currentSlot)) ??
@@ -676,8 +677,8 @@ export const CupsArena: React.FC<CupsArenaProps> = ({
                   key={cupId}
                   animate={{
                     x: getSlotX(currentSlot),
-                    y: isLifted ? (isMobile ? -62 : -76) : 0,
-                    scale: isLifted ? 1.05 : 1,
+                    y: isLifted ? (isNarrowMobile ? -50 : isMobile ? -62 : -76) : 0,
+                    scale: isLifted ? 1.04 : 1,
                     rotate: isWonCup ? -8 : 0,
                   }}
                   transition={{
@@ -685,7 +686,7 @@ export const CupsArena: React.FC<CupsArenaProps> = ({
                     y: { type: 'spring', stiffness: 450, damping: 25 },
                   }}
                   onClick={() => canClick && handlePickSlot(currentSlot)}
-                  className={`absolute bottom-3 w-24 sm:w-32 h-36 sm:h-44 rounded-t-[42px] rounded-b-xl border flex flex-col items-center justify-between p-3 z-20 transition-colors duration-300 backdrop-blur-md shadow-2xl ${
+                  className={`absolute bottom-3 w-20 sm:w-24 md:w-32 h-32 sm:h-38 md:h-44 rounded-t-[36px] sm:rounded-t-[42px] rounded-b-xl border flex flex-col items-center justify-between p-2 sm:p-3 z-20 transition-colors duration-300 backdrop-blur-md shadow-2xl ${
                     canClick ? 'cursor-pointer hover:border-[#CDB486]/70' : 'cursor-default'
                   } ${
                     isWonCup
@@ -703,24 +704,24 @@ export const CupsArena: React.FC<CupsArenaProps> = ({
                   }}
                 >
                   {/* Top Rim Specular */}
-                  <div className="w-12 sm:w-16 h-2 rounded-full border border-white/40 bg-white/20 shadow-sm" />
+                  <div className="w-10 sm:w-16 h-1.5 sm:h-2 rounded-full border border-white/40 bg-white/20 shadow-sm" />
 
                   {/* Center Emblem Glow */}
                   <div className="flex flex-col items-center justify-center opacity-60">
-                    <div className="w-6 h-6 rounded-full border border-[#CDB486]/40 flex items-center justify-center text-[#CDB486]">
-                      <Sparkles className="w-3.5 h-3.5" />
+                    <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full border border-[#CDB486]/40 flex items-center justify-center text-[#CDB486]">
+                      <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                     </div>
                   </div>
 
                   {/* Bottom Champagne Rim */}
-                  <div className="w-full h-1.5 rounded-full bg-gradient-to-r from-transparent via-[#CDB486]/50 to-transparent" />
+                  <div className="w-full h-1 sm:h-1.5 rounded-full bg-gradient-to-r from-transparent via-[#CDB486]/50 to-transparent" />
                 </motion.div>
               );
             })}
           </div>
 
           {/* Action / Selection Buttons Row */}
-          <div className="grid grid-cols-3 gap-3 w-full max-w-[480px] pt-4 select-none">
+          <div className="grid grid-cols-3 gap-2 sm:gap-3 w-full max-w-[480px] pt-3 sm:pt-4 select-none">
             {[0, 1, 2].map((slotIdx) => {
               const isSlotPicked =
                 activeGame?.pickedIndices.includes(slotIdx) ||
@@ -743,7 +744,7 @@ export const CupsArena: React.FC<CupsArenaProps> = ({
                     <button
                       type="button"
                       onClick={() => handlePickSlot(slotIdx)}
-                      className="w-full py-2 rounded-xl border border-[#CDB486]/50 bg-[#CDB486]/10 hover:bg-[#CDB486]/25 text-[#CDB486] font-mono text-xs font-bold uppercase transition-all shadow-md cursor-pointer hover:scale-[1.02]"
+                      className="w-full py-1.5 sm:py-2 rounded-xl border border-[#CDB486]/50 bg-[#CDB486]/10 hover:bg-[#CDB486]/25 text-[#CDB486] font-mono text-[10px] sm:text-xs font-bold uppercase transition-all shadow-md cursor-pointer hover:scale-[1.02]"
                     >
                       PICK #{slotIdx + 1}
                     </button>
@@ -762,7 +763,7 @@ export const CupsArena: React.FC<CupsArenaProps> = ({
           </div>
 
           {/* Minimal Tactile Legend */}
-          <div className="mt-8 pt-4 border-t border-white/10 w-full flex items-center justify-center gap-6 text-xs text-[#8993A4]">
+          <div className="mt-6 sm:mt-8 pt-4 border-t border-white/10 w-full flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-xs text-[#8993A4]">
             <span className="flex items-center gap-2">
               <img src="/logo.png" alt="KOFUKU" className="w-4 h-4 object-contain" />
               Winning Cup = <strong className="text-[#CDB486]">KOFUKU Emblem</strong>
@@ -775,7 +776,7 @@ export const CupsArena: React.FC<CupsArenaProps> = ({
         </div>
 
         {/* RIGHT: LIQUID GLASS CONTROLS */}
-        <div className="lg:col-span-5 p-6 sm:p-8 rounded-3xl glass-capsule space-y-6 shadow-2xl">
+        <div className="lg:col-span-5 p-4 sm:p-6 lg:p-8 rounded-3xl glass-capsule space-y-4 sm:space-y-6 shadow-2xl">
           {/* BET INPUT */}
           <div className="space-y-2 text-left">
             <div className="flex items-center justify-between text-xs">
@@ -797,7 +798,7 @@ export const CupsArena: React.FC<CupsArenaProps> = ({
                 disabled={isGameRunning}
                 value={betAmount}
                 onChange={(e) => setBetAmount(Math.max(100000, parseFloat(e.target.value) || 0))}
-                className="glass-input w-full px-4 py-3.5 font-mono text-lg font-bold text-[#F5F7FA] transition-colors disabled:opacity-50"
+                className="glass-input w-full px-3.5 sm:px-4 py-3 sm:py-3.5 font-mono text-base sm:text-lg font-bold text-[#F5F7FA] transition-colors disabled:opacity-50"
               />
               <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-[#8993A4]">
                 {TOKEN_SYMBOL}
@@ -805,14 +806,14 @@ export const CupsArena: React.FC<CupsArenaProps> = ({
             </div>
 
             {/* Quick Amounts */}
-            <div className="grid grid-cols-5 gap-1.5 pt-1">
+            <div className="grid grid-cols-5 gap-1 sm:gap-1.5 pt-1">
               {QUICK_AMOUNTS.map((amtObj) => (
                 <button
                   key={amtObj.val}
                   type="button"
                   disabled={isGameRunning}
                   onClick={() => setBetAmount(amtObj.val)}
-                  className={`py-2 text-xs font-mono font-medium transition-all cursor-pointer disabled:opacity-40 ${
+                  className={`py-1.5 sm:py-2 px-1 text-[10px] sm:text-xs font-mono font-medium transition-all cursor-pointer disabled:opacity-40 ${
                     betAmount === amtObj.val
                       ? 'glass-btn-chip border-[#CDB486]/60 text-[#CDB486] shadow-[0_0_12px_rgba(205,180,134,0.25)]'
                       : 'glass-btn-chip text-[#8993A4] hover:text-[#F5F7FA]'

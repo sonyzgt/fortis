@@ -476,19 +476,19 @@ export const MinesArena: React.FC<MinesArenaProps> = ({
           ───────────────────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
         {/* LEFT: LIQUID GLASS CAPSULE GRID */}
-        <div className="lg:col-span-7 flex flex-col items-center justify-center p-6 sm:p-8 rounded-3xl glass-capsule relative shadow-2xl">
+        <div className="lg:col-span-7 flex flex-col items-center justify-center p-3.5 sm:p-6 lg:p-8 rounded-3xl glass-capsule relative shadow-2xl">
           {/* Subtle Ambient Glow */}
           <div className="absolute inset-8 rounded-full bg-[#CDB486]/[0.03] blur-3xl pointer-events-none" />
 
           {/* Grid Header */}
-          <div className="w-full flex items-center justify-between pb-5 mb-5 border-b border-white/10">
+          <div className="w-full flex items-center justify-between pb-4 sm:pb-5 mb-4 sm:mb-5 border-b border-white/10">
             <span className="text-xs font-mono uppercase tracking-widest text-[#8993A4]">
               5×5 MATRIX (25 CAPSULES)
             </span>
           </div>
 
           {/* Liquid Glass Capsule Grid (Fixed 5x5) */}
-          <div className="grid grid-cols-5 gap-2 sm:gap-2.5 max-w-[440px] w-full aspect-square select-none">
+          <div className="grid grid-cols-5 gap-1.5 sm:gap-2.5 max-w-[440px] w-full aspect-square select-none">
             {Array.from({ length: totalTiles }).map((_, index) => {
               const isRevealedByPlayer = activeGame?.revealedIndices.includes(index) || false;
               const isEndedGameMine = endedGame?.minePositions?.includes(index) || false;
@@ -497,7 +497,7 @@ export const MinesArena: React.FC<MinesArenaProps> = ({
 
               let tileClass = 'liquid-glass-tile';
               let tileContent: React.ReactNode = (
-                <span className="font-sans font-extrabold text-lg sm:text-2xl text-white/40 group-hover:text-white/80 transition-colors drop-shadow-sm">
+                <span className="font-sans font-extrabold text-base sm:text-xl md:text-2xl text-white/40 group-hover:text-white/80 transition-colors drop-shadow-sm">
                   ?
                 </span>
               );
@@ -511,12 +511,12 @@ export const MinesArena: React.FC<MinesArenaProps> = ({
                       initial={{ scale: 0, rotate: -25 }}
                       animate={{ scale: 1, rotate: 0 }}
                       transition={{ type: 'spring', stiffness: 450, damping: 20 }}
-                      className="flex items-center justify-center p-2"
+                      className="flex items-center justify-center p-1 sm:p-2"
                     >
                       <img
                         src="/image/safe.png"
                         alt="Safe Diamond"
-                        className="w-8 h-8 sm:w-11 sm:h-11 object-contain drop-shadow-[0_0_12px_rgba(205,180,134,0.7)]"
+                        className="w-6 h-6 sm:w-8 sm:h-8 md:w-11 md:h-11 object-contain drop-shadow-[0_0_12px_rgba(205,180,134,0.7)]"
                       />
                     </motion.div>
                   );
@@ -529,12 +529,12 @@ export const MinesArena: React.FC<MinesArenaProps> = ({
                     <motion.div
                       initial={{ scale: 0.8 }}
                       animate={{ scale: 1 }}
-                      className="flex items-center justify-center p-2"
+                      className="flex items-center justify-center p-1 sm:p-2"
                     >
                       <img
                         src="/image/bom.png"
                         alt="Mine Bomb"
-                        className={`w-8 h-8 sm:w-11 sm:h-11 object-contain drop-shadow-[0_0_14px_rgba(244,63,94,0.9)] ${
+                        className={`w-6 h-6 sm:w-8 sm:h-8 md:w-11 md:h-11 object-contain drop-shadow-[0_0_14px_rgba(244,63,94,0.9)] ${
                           wasBustTile ? 'scale-110 animate-bounce' : 'opacity-80'
                         }`}
                       />
@@ -543,11 +543,11 @@ export const MinesArena: React.FC<MinesArenaProps> = ({
                 } else if (isEndedGameRevealed) {
                   tileClass = 'liquid-glass-tile-safe';
                   tileContent = (
-                    <div className="flex items-center justify-center p-2">
+                    <div className="flex items-center justify-center p-1 sm:p-2">
                       <img
                         src="/image/safe.png"
                         alt="Safe Diamond"
-                        className="w-8 h-8 sm:w-11 sm:h-11 object-contain drop-shadow-[0_0_12px_rgba(205,180,134,0.7)]"
+                        className="w-6 h-6 sm:w-8 sm:h-8 md:w-11 md:h-11 object-contain drop-shadow-[0_0_12px_rgba(205,180,134,0.7)]"
                       />
                     </div>
                   );
@@ -596,7 +596,7 @@ export const MinesArena: React.FC<MinesArenaProps> = ({
         </div>
 
         {/* RIGHT: LIQUID GLASS CONTROLS */}
-        <div className="lg:col-span-5 p-6 sm:p-8 rounded-3xl glass-capsule space-y-6 shadow-2xl">
+        <div className="lg:col-span-5 p-4 sm:p-6 lg:p-8 rounded-3xl glass-capsule space-y-4 sm:space-y-6 shadow-2xl">
           {/* BET INPUT */}
           <div className="space-y-2 text-left">
             <div className="flex items-center justify-between text-xs">
@@ -615,7 +615,7 @@ export const MinesArena: React.FC<MinesArenaProps> = ({
                 disabled={isGameRunning}
                 value={betAmount}
                 onChange={(e) => setBetAmount(Math.max(100000, parseFloat(e.target.value) || 0))}
-                className="glass-input w-full px-4 py-3.5 font-mono text-lg font-bold text-[#F5F7FA] transition-colors disabled:opacity-50"
+                className="glass-input w-full px-3.5 sm:px-4 py-3 sm:py-3.5 font-mono text-base sm:text-lg font-bold text-[#F5F7FA] transition-colors disabled:opacity-50"
               />
               <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-[#8993A4]">
                 {TOKEN_SYMBOL}
@@ -623,14 +623,14 @@ export const MinesArena: React.FC<MinesArenaProps> = ({
             </div>
 
             {/* Quick Amounts */}
-            <div className="grid grid-cols-5 gap-1.5 pt-1">
+            <div className="grid grid-cols-5 gap-1 sm:gap-1.5 pt-1">
               {QUICK_AMOUNTS.map((amtObj) => (
                 <button
                   key={amtObj.val}
                   type="button"
                   disabled={isGameRunning}
                   onClick={() => setBetAmount(amtObj.val)}
-                  className={`py-2 text-xs font-mono font-medium transition-all cursor-pointer disabled:opacity-40 ${
+                  className={`py-1.5 sm:py-2 px-1 text-[10px] sm:text-xs font-mono font-medium transition-all cursor-pointer disabled:opacity-40 ${
                     betAmount === amtObj.val
                       ? 'glass-btn-chip border-[#CDB486]/60 text-[#CDB486] shadow-[0_0_12px_rgba(205, 180, 134,0.25)]'
                       : 'glass-btn-chip text-[#8993A4] hover:text-[#F5F7FA]'
@@ -650,14 +650,14 @@ export const MinesArena: React.FC<MinesArenaProps> = ({
             </div>
 
             {/* Quick Presets for 5x5 Matrix */}
-            <div className="grid grid-cols-5 gap-1.5">
+            <div className="grid grid-cols-5 gap-1 sm:gap-1.5">
               {[1, 3, 5, 10, 24].map((num) => (
                 <button
                   key={num}
                   type="button"
                   disabled={isGameRunning}
                   onClick={() => setMineCount(num)}
-                  className={`py-2 font-mono text-xs font-semibold transition-all cursor-pointer disabled:opacity-40 ${
+                  className={`py-1.5 sm:py-2 px-1 font-mono text-[10px] sm:text-xs font-semibold transition-all cursor-pointer disabled:opacity-40 ${
                     mineCount === num
                       ? 'glass-btn-chip border-[#CDB486] text-[#CDB486] shadow-[0_0_14px_rgba(205, 180, 134,0.35)]'
                       : 'glass-btn-chip text-[#8993A4] hover:text-[#F5F7FA]'

@@ -628,24 +628,30 @@ export default function JackpotPage() {
             </h1>
           </div>
 
-          <div className="flex items-center gap-1.5 p-1 rounded-full glass-capsule border-white/10 font-sans text-xs">
+          <div className="flex items-center gap-1 sm:gap-1.5 p-1 rounded-full glass-capsule border-white/10 font-sans text-xs overflow-x-auto max-w-full">
             <Link
               href="/jackpot"
-              className="glass-pill-active text-xs py-1.5"
+              className="glass-pill-active text-xs py-1.5 px-3 sm:px-4 whitespace-nowrap"
             >
               JACKPOT
             </Link>
             <Link
               href="/coinflip"
-              className="glass-pill-inactive text-xs py-1.5"
+              className="glass-pill-inactive text-xs py-1.5 px-3 sm:px-4 whitespace-nowrap"
             >
               COINFLIP
             </Link>
             <Link
               href="/mines"
-              className="glass-pill-inactive text-xs py-1.5"
+              className="glass-pill-inactive text-xs py-1.5 px-3 sm:px-4 whitespace-nowrap"
             >
               MINES
+            </Link>
+            <Link
+              href="/cups"
+              className="glass-pill-inactive text-xs py-1.5 px-3 sm:px-4 whitespace-nowrap"
+            >
+              CUPS
             </Link>
           </div>
         </div>

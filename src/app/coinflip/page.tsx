@@ -145,24 +145,30 @@ export default function CoinflipPage() {
             </h1>
           </div>
 
-          <div className="flex items-center gap-1.5 glass-capsule p-1.5 rounded-full">
+          <div className="flex items-center gap-1 sm:gap-1.5 glass-capsule p-1 sm:p-1.5 rounded-full overflow-x-auto max-w-full">
             <Link
               href="/jackpot"
-              className="glass-pill-inactive text-xs font-semibold px-4 py-1.5"
+              className="glass-pill-inactive text-xs font-semibold px-3 sm:px-4 py-1.5 whitespace-nowrap"
             >
               JACKPOT
             </Link>
             <Link
               href="/coinflip"
-              className="glass-pill-active text-xs font-bold px-4 py-1.5"
+              className="glass-pill-active text-xs font-bold px-3 sm:px-4 py-1.5 whitespace-nowrap"
             >
               COINFLIP
             </Link>
             <Link
               href="/mines"
-              className="glass-pill-inactive text-xs font-semibold px-4 py-1.5"
+              className="glass-pill-inactive text-xs font-semibold px-3 sm:px-4 py-1.5 whitespace-nowrap"
             >
               MINES
+            </Link>
+            <Link
+              href="/cups"
+              className="glass-pill-inactive text-xs font-semibold px-3 sm:px-4 py-1.5 whitespace-nowrap"
+            >
+              CUPS
             </Link>
           </div>
         </div>
