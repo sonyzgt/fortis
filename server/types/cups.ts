@@ -6,6 +6,8 @@ export interface CupsGame {
   betAmount: number;
   cupsCount: number;         // Always 3
   maxPicks: number;          // 2 for standard (1.47x), 1 for high-risk (2.94x)
+  initialPosition?: number;  // Initial position before shuffle (0, 1, or 2)
+  shuffleSequence?: [number, number][]; // Array of slot swaps during shuffle
   logoPosition?: number;     // 0, 1, or 2 (hidden until game over)
   pickedIndices: number[];   // Cups chosen by player
   multiplier: number;

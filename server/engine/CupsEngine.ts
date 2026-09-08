@@ -65,19 +65,49 @@ export class CupsEngine {
   }
 
   /**
-   * Cryptographically generate winning cup position (0, 1, or 2) using HMAC-SHA256
+   * Cryptographically generate initial position and shuffle sequence using HMAC-SHA256
    */
-  public static generateLogoPosition(
+  public static generateShufflePlan(
     serverSeed: string,
     clientSeed: string,
     nonce: number,
     gameId: string
-  ): number {
+  ): { initialPosition: number; shuffleSequence: [number, number][]; finalPosition: number } {
     const hmac = crypto.createHmac('sha256', serverSeed);
-    hmac.update(`${clientSeed}:${nonce}:${gameId}:cups`);
+    hmac.update(`${clientSeed}:${nonce}:${gameId}:cups_shuffle`);
     const hash = hmac.digest();
-    const val = hash.readUInt32BE(0);
-    return val % DEFAULT_CUPS_COUNT;
+
+    // 1. Initial position where logo is revealed before cups close: 0, 1, or 2
+    const initialPosition = hash.readUInt8(0) % DEFAULT_CUPS_COUNT;
+
+    // 2. Possible swap pairs for 3 cups [0, 1, 2]
+    const possibleSwaps: [number, number][] = [
+      [0, 1],
+      [1, 2],
+      [0, 2],
+    ];
+
+    const shuffleSequence: [number, number][] = [];
+    let currentPos = initialPosition;
+
+    for (let i = 0; i < 5; i++) {
+      const byte = hash.readUInt8(i + 1);
+      const swapIndex = byte % possibleSwaps.length;
+      const [a, b] = possibleSwaps[swapIndex];
+      shuffleSequence.push([a, b]);
+
+      if (currentPos === a) {
+        currentPos = b;
+      } else if (currentPos === b) {
+        currentPos = a;
+      }
+    }
+
+    return {
+      initialPosition,
+      shuffleSequence,
+      finalPosition: currentPos,
+    };
   }
 
   /**
@@ -114,7 +144,7 @@ export class CupsEngine {
     const actualClientSeed = clientSeed || Math.random().toString(36).substring(2, 10);
     const nonce = 1;
 
-    const logoPosition = CupsEngine.generateLogoPosition(
+    const plan = CupsEngine.generateShufflePlan(
       serverSeed,
       actualClientSeed,
       nonce,
@@ -132,6 +162,8 @@ export class CupsEngine {
       betAmount,
       cupsCount: DEFAULT_CUPS_COUNT,
       maxPicks: safeMaxPicks,
+      initialPosition: plan.initialPosition,
+      shuffleSequence: plan.shuffleSequence,
       pickedIndices: [],
       multiplier,
       payout,
@@ -145,7 +177,7 @@ export class CupsEngine {
     };
 
     this.activeGames.set(gameId, game);
-    this.secretLogoMap.set(gameId, logoPosition);
+    this.secretLogoMap.set(gameId, plan.finalPosition);
     this.secretSeedsMap.set(gameId, serverSeed);
 
     return { success: true, game: this.sanitizeGame(game) };
@@ -315,20 +347,20 @@ export class CupsEngine {
     const calculatedHash = crypto.createHash('sha256').update(g.serverSeed).digest('hex');
     const hashMatch = calculatedHash.toLowerCase() === g.serverSeedHash.toLowerCase();
 
-    const calculatedLogoPosition = CupsEngine.generateLogoPosition(
+    const calculatedPlan = CupsEngine.generateShufflePlan(
       g.serverSeed,
       g.clientSeed,
       g.nonce,
       g.id
     );
 
-    const posMatch = calculatedLogoPosition === g.logoPosition;
+    const posMatch = calculatedPlan.finalPosition === g.logoPosition;
 
     return {
       serverSeedValid: hashMatch,
       calculatedServerSeedHash: calculatedHash,
       expectedServerSeedHash: g.serverSeedHash,
-      calculatedLogoPosition,
+      calculatedLogoPosition: calculatedPlan.finalPosition,
       actualLogoPosition: g.logoPosition,
       allPassed: hashMatch && posMatch,
     };

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
@@ -11,7 +11,6 @@ import {
   Sparkles,
   Award,
   ShieldCheck,
-  HelpCircle,
 } from 'lucide-react';
 import { useCashFlipWeb3 } from '@/context/CashFlipWeb3Context';
 import { useSound } from '@/context/SoundContext';
@@ -49,10 +48,14 @@ export const CupsArena: React.FC<CupsArenaProps> = ({
     playMineExplosion,
     playCoinToss,
     playCoinClaim,
+    playCardDeal,
+    playChip,
   } = useSound();
   const { placeBet, claimWinnings, refreshBalances } = useCashFlipWeb3();
 
   const [mounted, setMounted] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
   const [betAmount, setBetAmount] = useState<number>(100000);
   const [maxPicks, setMaxPicks] = useState<number>(2); // 2 picks (1.47x) or 1 pick (2.94x)
 
@@ -60,8 +63,20 @@ export const CupsArena: React.FC<CupsArenaProps> = ({
   const [endedGame, setEndedGame] = useState<CupsGame | null>(null);
   const [unclaimedWins, setUnclaimedWins] = useState<CupsGame[]>([]);
 
+  // Animation phase:
+  // 'idle' -> 'revealing_start' -> 'covering' -> 'shuffling' -> 'playing' -> 'ended'
+  const [phase, setPhase] = useState<
+    'idle' | 'revealing_start' | 'covering' | 'shuffling' | 'playing' | 'ended'
+  >('idle');
+
+  // cupSlots[cupId] = current slotIndex (0 = Left, 1 = Center, 2 = Right)
+  const [cupSlots, setCupSlots] = useState<number[]>([0, 1, 2]);
+
+  // Which cup ID holds the emblem throughout the shuffle
+  const [logoCupId, setLogoCupId] = useState<number>(1);
+
   const [isStarting, setIsStarting] = useState(false);
-  const [pickingIndex, setPickingIndex] = useState<number | null>(null);
+  const [pickingSlot, setPickingSlot] = useState<number | null>(null);
   const [claimingGameId, setClaimingGameId] = useState<string | null>(null);
 
   // Provably Fair Modal
@@ -69,11 +84,20 @@ export const CupsArena: React.FC<CupsArenaProps> = ({
   const [verifyReport, setVerifyReport] = useState<CupsVerifyReport | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
 
+  const shuffleTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   useEffect(() => {
     setMounted(true);
+    const handleResize = () => setIsMobile(window.innerWidth < 640);
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      if (shuffleTimeoutRef.current) clearTimeout(shuffleTimeoutRef.current);
+    };
   }, []);
 
-  // Sync active game & unclaimed games with on-chain verification
+  // Sync active game & unclaimed games
   const syncGameState = useCallback(async () => {
     if (!account) return;
     try {
@@ -84,6 +108,7 @@ export const CupsArena: React.FC<CupsArenaProps> = ({
           setActiveGame(actData);
           setBetAmount(actData.betAmount);
           setMaxPicks(actData.maxPicks || 2);
+          setPhase('playing');
         } else {
           setActiveGame(null);
         }
@@ -155,6 +180,42 @@ export const CupsArena: React.FC<CupsArenaProps> = ({
     return Math.round(betAmount * currentMultiplier * 100) / 100;
   }, [betAmount, currentMultiplier]);
 
+  // Execute authentic cup shuffle sequence
+  const executeShuffleSequence = useCallback(
+    (sequence: [number, number][], initialPos: number) => {
+      let currentSlots = [0, 1, 2]; // cupSlots[cupId] = slotIndex
+      let stepIndex = 0;
+
+      const runNextSwap = () => {
+        if (stepIndex >= sequence.length) {
+          // Shuffle finished! Ready for player to pick
+          setPhase('playing');
+          playCoinToss();
+          return;
+        }
+
+        const [slotA, slotB] = sequence[stepIndex];
+        const cupInA = currentSlots.indexOf(slotA);
+        const cupInB = currentSlots.indexOf(slotB);
+
+        if (cupInA !== -1 && cupInB !== -1) {
+          const nextSlots = [...currentSlots];
+          nextSlots[cupInA] = slotB;
+          nextSlots[cupInB] = slotA;
+          currentSlots = nextSlots;
+          setCupSlots(nextSlots);
+          playCardDeal();
+        }
+
+        stepIndex++;
+        shuffleTimeoutRef.current = setTimeout(runNextSwap, 320);
+      };
+
+      runNextSwap();
+    },
+    [playCardDeal, playCoinToss]
+  );
+
   // Start Game with on-chain wager
   const handleStartGame = async () => {
     if (!account) {
@@ -204,9 +265,31 @@ export const CupsArena: React.FC<CupsArenaProps> = ({
         throw new Error(data.message || 'Failed to start game');
       }
 
-      setActiveGame(data.game);
+      const game: CupsGame = data.game;
+      const initialPos = game.initialPosition ?? 1;
+      const sequence = game.shuffleSequence || [];
+
+      setActiveGame(game);
+      setCupSlots([0, 1, 2]);
+      setLogoCupId(initialPos);
       await refreshBalances();
-      onShowToast(`Wager confirmed on Robinhood Chain! Choose a cup to find the KOFUKU emblem.`, true);
+
+      // Step 1: All 3 cups open! (revealing_start)
+      setPhase('revealing_start');
+      playMineGemReveal();
+      onShowToast(`Wager confirmed! Watch where the KOFUKU emblem is placed...`, true);
+
+      // Step 2: After 1.4s, cups close over the emblem (covering)
+      shuffleTimeoutRef.current = setTimeout(() => {
+        setPhase('covering');
+        playChip();
+
+        // Step 3: After 0.6s, cups start shuffling across the table (shuffling)
+        shuffleTimeoutRef.current = setTimeout(() => {
+          setPhase('shuffling');
+          executeShuffleSequence(sequence, initialPos);
+        }, 600);
+      }, 1400);
     } catch (e: any) {
       console.error('Cups start error:', e);
       if (
@@ -224,13 +307,14 @@ export const CupsArena: React.FC<CupsArenaProps> = ({
     }
   };
 
-  // Pick Cup
-  const handlePickCup = async (cupIndex: number) => {
+  // Pick a Cup at Slot Index
+  const handlePickSlot = async (slotIndex: number) => {
     if (!activeGame || activeGame.status !== 'in_progress') return;
-    if (activeGame.pickedIndices.includes(cupIndex)) return;
-    if (pickingIndex !== null) return;
+    if (phase !== 'playing') return;
+    if (activeGame.pickedIndices.includes(slotIndex)) return;
+    if (pickingSlot !== null) return;
 
-    setPickingIndex(cupIndex);
+    setPickingSlot(slotIndex);
     playMineTileClick();
 
     try {
@@ -240,7 +324,7 @@ export const CupsArena: React.FC<CupsArenaProps> = ({
         body: JSON.stringify({
           gameId: activeGame.id,
           playerAddress: account,
-          cupIndex,
+          cupIndex: slotIndex,
         }),
       });
 
@@ -255,8 +339,8 @@ export const CupsArena: React.FC<CupsArenaProps> = ({
         // WON!
         playMineGemReveal();
         confetti({
-          particleCount: 80,
-          spread: 70,
+          particleCount: 90,
+          spread: 80,
           origin: { y: 0.6 },
           colors: ['#CDB486', '#F5E6C8', '#FFFFFF'],
         });
@@ -264,7 +348,7 @@ export const CupsArena: React.FC<CupsArenaProps> = ({
         const updatedGame: CupsGame = {
           ...activeGame,
           status: 'won',
-          pickedIndices: [...activeGame.pickedIndices, cupIndex],
+          pickedIndices: [...activeGame.pickedIndices, slotIndex],
           multiplier: result.multiplier,
           payout: result.payout,
           logoPosition: result.logoPosition,
@@ -274,10 +358,12 @@ export const CupsArena: React.FC<CupsArenaProps> = ({
 
         setActiveGame(null);
         setEndedGame(updatedGame);
+        setPhase('ended');
+
         if (result.unclaimedGame) {
           setUnclaimedWins((prev) => [result.unclaimedGame!, ...prev]);
         }
-        onShowToast(`SUCCESS! You uncovered the KOFUKU emblem! Won ${result.payout.toLocaleString()} ${TOKEN_SYMBOL}!`, true);
+        onShowToast(`SUCCESS! You found the KOFUKU emblem! Won ${result.payout.toLocaleString()} ${TOKEN_SYMBOL}!`, true);
       } else if (result.gameOver) {
         // LOST (all chances exhausted)
         playMineExplosion();
@@ -285,7 +371,7 @@ export const CupsArena: React.FC<CupsArenaProps> = ({
         const updatedGame: CupsGame = {
           ...activeGame,
           status: 'lost',
-          pickedIndices: [...activeGame.pickedIndices, cupIndex],
+          pickedIndices: [...activeGame.pickedIndices, slotIndex],
           multiplier: 0,
           payout: 0,
           logoPosition: result.logoPosition,
@@ -295,6 +381,7 @@ export const CupsArena: React.FC<CupsArenaProps> = ({
 
         setActiveGame(null);
         setEndedGame(updatedGame);
+        setPhase('ended');
         onShowToast(`Empty cup! The emblem was under Cup #${(result.logoPosition ?? 0) + 1}.`, false);
       } else {
         // Safe empty pick, 1 chance remaining
@@ -303,7 +390,7 @@ export const CupsArena: React.FC<CupsArenaProps> = ({
           if (!prev) return null;
           return {
             ...prev,
-            pickedIndices: [...prev.pickedIndices, cupIndex],
+            pickedIndices: [...prev.pickedIndices, slotIndex],
           };
         });
         onShowToast(`Empty cup! 1 pick remaining, choose wisely.`, true);
@@ -311,7 +398,7 @@ export const CupsArena: React.FC<CupsArenaProps> = ({
     } catch (e: any) {
       onShowToast(e?.message || 'Failed to pick cup', false);
     } finally {
-      setPickingIndex(null);
+      setPickingSlot(null);
     }
   };
 
@@ -381,7 +468,18 @@ export const CupsArena: React.FC<CupsArenaProps> = ({
   };
 
   const isGameRunning = Boolean(activeGame && activeGame.status === 'in_progress');
-  const picksLeft = activeGame ? (activeGame.maxPicks - activeGame.pickedIndices.length) : maxPicks;
+  const picksLeft = activeGame ? activeGame.maxPicks - activeGame.pickedIndices.length : maxPicks;
+
+  // Horizontal X coordinate for slot (0 = Left, 1 = Center, 2 = Right)
+  const getSlotX = useCallback(
+    (slotIdx: number) => {
+      const spacing = isMobile ? 104 : 154;
+      if (slotIdx === 0) return -spacing;
+      if (slotIdx === 1) return 0;
+      return spacing;
+    },
+    [isMobile]
+  );
 
   return (
     <div className="w-full space-y-8">
@@ -424,12 +522,12 @@ export const CupsArena: React.FC<CupsArenaProps> = ({
 
       {/* ─────────────────────────────────────────────────────────────
           GAMEPLAY AREA (2 COLUMNS)
-          LEFT: 3 LIQUID GLASS CUPS WITH 3D LIFT ANIMATION
+          LEFT: 3 LIQUID GLASS CUPS WITH AUTHENTIC SHUFFLE ANIMATION
           RIGHT: MINIMAL CONTROLS
           ───────────────────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
         {/* LEFT: 3 LIQUID GLASS CUPS */}
-        <div className="lg:col-span-7 flex flex-col items-center justify-center p-6 sm:p-10 rounded-3xl glass-capsule relative shadow-2xl min-h-[460px]">
+        <div className="lg:col-span-7 flex flex-col items-center justify-center p-6 sm:p-10 rounded-3xl glass-capsule relative shadow-2xl min-h-[480px]">
           {/* Ambient Glow */}
           <div className="absolute inset-8 rounded-full bg-[#CDB486]/[0.03] blur-3xl pointer-events-none" />
 
@@ -444,8 +542,20 @@ export const CupsArena: React.FC<CupsArenaProps> = ({
               </span>
             </div>
 
-            <div className="text-xs font-mono text-[#8993A4]">
-              {isGameRunning ? (
+            <div className="text-xs font-mono">
+              {phase === 'revealing_start' ? (
+                <span className="text-[#CDB486] font-bold animate-pulse">
+                  All 3 cups opened... Observe emblem position!
+                </span>
+              ) : phase === 'covering' ? (
+                <span className="text-[#8993A4] font-bold">
+                  Cups sealed over emblem...
+                </span>
+              ) : phase === 'shuffling' ? (
+                <span className="text-[#CDB486] font-bold animate-bounce">
+                  Shuffling cups... Track the emblem!
+                </span>
+              ) : phase === 'playing' ? (
                 <span className="text-[#CDB486] font-bold">
                   {picksLeft} {picksLeft === 1 ? 'Pick' : 'Picks'} Remaining
                 </span>
@@ -454,155 +564,190 @@ export const CupsArena: React.FC<CupsArenaProps> = ({
                   {endedGame.status === 'won' ? 'ROUND WON' : 'ROUND OVER'}
                 </span>
               ) : (
-                <span>Wager & Start Round</span>
+                <span className="text-[#8993A4]">Wager & Start Round</span>
               )}
             </div>
           </div>
 
-          {/* 3 CUPS ARENA */}
-          <div className="grid grid-cols-3 gap-4 sm:gap-8 w-full max-w-[540px] items-center justify-center py-6 select-none">
-            {[0, 1, 2].map((cupIdx) => {
-              const isPicked = activeGame?.pickedIndices.includes(cupIdx) || endedGame?.pickedIndices.includes(cupIdx);
-              const isLogoCup = endedGame?.logoPosition === cupIdx;
-              const isWonCup = endedGame?.status === 'won' && isLogoCup;
-              const isRevealedEmpty = isPicked && !isLogoCup;
+          {/* CUPS STAGE: 3 PHYSICAL SLOTS WITH ABSOLUTE ANIMATED CUPS */}
+          <div className="relative w-full max-w-[500px] h-64 sm:h-72 flex items-center justify-center select-none">
+            {/* Table Surface Plinth */}
+            <div className="absolute bottom-2 w-full h-8 rounded-full bg-black/50 blur-lg pointer-events-none" />
 
-              // Cup lifted state:
-              // 1) When active game and this cup was already picked (revealed empty)
-              // 2) When game ended (all cups lift to reveal where the logo was!)
-              const isLifted = Boolean(
-                (isGameRunning && isPicked) ||
-                (endedGame)
-              );
+            {/* 3 UNDERLYING SLOTS (Fixed on table) */}
+            {[-1, 0, 1].map((offset, slotIdx) => {
+              // Check which cup currently occupies this slot
+              const occupyingCupId = cupSlots.indexOf(slotIdx);
+              const isOccupyingLogoCup = occupyingCupId === logoCupId;
 
-              const isPickingThis = pickingIndex === cupIdx;
-              const canClick = isGameRunning && !isPicked && pickingIndex === null;
+              // Reveal state for the item under this slot:
+              const isRevealedInStart = phase === 'revealing_start' && isOccupyingLogoCup;
+              const isRevealedEmptyInPlay =
+                (phase === 'playing' || phase === 'ended') &&
+                activeGame?.pickedIndices.includes(slotIdx) &&
+                endedGame?.logoPosition !== slotIdx;
+              const isRevealedWinInEnd = endedGame && endedGame.logoPosition === slotIdx;
 
               return (
-                <div key={cupIdx} className="flex flex-col items-center relative group">
-                  {/* Cup Number Pill */}
-                  <span className="text-[11px] font-mono font-bold text-[#8993A4] mb-3 uppercase tracking-wider">
-                    Cup #{cupIdx + 1}
+                <div
+                  key={slotIdx}
+                  style={{
+                    transform: `translateX(${getSlotX(slotIdx)}px)`,
+                  }}
+                  className="absolute bottom-3 w-24 sm:w-32 flex flex-col items-center justify-center transition-transform"
+                >
+                  {/* Slot Target Indicator / Label */}
+                  <span className="text-[10px] font-mono text-[#8993A4]/60 uppercase tracking-widest mb-1">
+                    Slot #{slotIdx + 1}
                   </span>
 
-                  {/* Cup Interactive Container */}
-                  <div
-                    onClick={() => canClick && handlePickCup(cupIdx)}
-                    className={`relative w-28 sm:w-36 h-40 sm:h-48 flex items-end justify-center cursor-pointer transition-all duration-300 ${
-                      !canClick ? 'cursor-default' : 'hover:scale-[1.02]'
-                    }`}
-                  >
-                    {/* Underlying Pedestal / Table Shadow */}
-                    <div className="absolute bottom-1 w-24 sm:w-32 h-6 rounded-full bg-black/50 blur-md pointer-events-none" />
-
-                    {/* CONTENT UNDER THE CUP (REVEALED WHEN LIFTED) */}
-                    <div className="absolute bottom-3 flex flex-col items-center justify-center z-0">
-                      {isLogoCup || (endedGame?.status === 'won' && isWonCup) ? (
-                        <motion.div
-                          initial={{ scale: 0, opacity: 0 }}
-                          animate={{ scale: 1, opacity: 1 }}
-                          transition={{ type: 'spring', stiffness: 400, damping: 20 }}
-                          className="flex flex-col items-center"
-                        >
-                          <img
-                            src="/logo.png"
-                            alt="KOFUKU Emblem"
-                            className="w-14 h-14 sm:w-18 sm:h-18 object-contain drop-shadow-[0_0_20px_rgba(205,180,134,0.9)] animate-pulse"
-                          />
-                          <span className="text-[10px] font-mono font-extrabold text-[#CDB486] mt-1 drop-shadow-sm">
-                            KOFUKU
-                          </span>
-                        </motion.div>
-                      ) : isRevealedEmpty ? (
-                        <motion.div
-                          initial={{ opacity: 0, scale: 0.8 }}
-                          animate={{ opacity: 0.6, scale: 1 }}
-                          className="flex flex-col items-center justify-center text-[#8993A4] py-2"
-                        >
-                          <X className="w-8 h-8 text-rose-400/80 mb-1" />
-                          <span className="text-[10px] font-mono uppercase tracking-wider text-rose-400/80 font-bold">
-                            EMPTY
-                          </span>
-                        </motion.div>
-                      ) : endedGame && !isLogoCup ? (
-                        <div className="flex flex-col items-center justify-center text-white/20 py-2">
-                          <span className="text-[10px] font-mono uppercase tracking-wider text-[#8993A4]/60 font-semibold">
-                            EMPTY
-                          </span>
-                        </div>
-                      ) : (
-                        /* Mystery Question Mark placeholder under unrevealed cup */
-                        <div className="w-10 h-10 rounded-full border border-white/5 bg-white/[0.02] flex items-center justify-center text-white/20 font-bold">
-                          ?
-                        </div>
-                      )}
-                    </div>
-
-                    {/* LIQUID GLASS CUP OBJECT */}
-                    <motion.div
-                      animate={
-                        isLifted
-                          ? { y: -72, rotate: isWonCup ? -8 : -5, scale: 1.05 }
-                          : isPickingThis
-                          ? { y: -20 }
-                          : { y: 0, rotate: 0, scale: 1 }
-                      }
-                      transition={{ type: 'spring', stiffness: 350, damping: 25 }}
-                      className={`relative w-24 sm:w-32 h-32 sm:h-40 rounded-t-[42px] rounded-b-xl border flex flex-col items-center justify-between p-3 z-10 transition-colors duration-300 backdrop-blur-md shadow-2xl ${
-                        isWonCup
-                          ? 'border-[#CDB486] bg-gradient-to-b from-[#CDB486]/30 via-[#CDB486]/10 to-transparent shadow-[0_0_30px_rgba(205,180,134,0.4)]'
-                          : isLifted
-                          ? 'border-white/20 bg-gradient-to-b from-white/10 via-white/[0.04] to-transparent'
-                          : canClick
-                          ? 'border-white/15 bg-gradient-to-b from-white/15 via-white/[0.05] to-transparent group-hover:border-[#CDB486]/60 group-hover:from-[#CDB486]/20'
-                          : 'border-white/10 bg-gradient-to-b from-white/10 via-white/[0.02] to-transparent opacity-80'
-                      }`}
-                      style={{
-                        boxShadow: isWonCup
-                          ? '0 12px 40px rgba(205, 180, 134, 0.35), inset 0 2px 8px rgba(255, 255, 255, 0.4)'
-                          : '0 10px 30px rgba(0, 0, 0, 0.6), inset 0 2px 6px rgba(255, 255, 255, 0.25)',
-                      }}
-                    >
-                      {/* Top Rim & Specular Highlight */}
-                      <div className="w-12 sm:w-16 h-2 rounded-full border border-white/40 bg-white/20 shadow-sm" />
-
-                      {/* Middle Glass Facet / Branding */}
-                      <div className="flex flex-col items-center justify-center opacity-60 group-hover:opacity-100 transition-opacity">
-                        <div className="w-6 h-6 rounded-full border border-[#CDB486]/40 flex items-center justify-center text-[#CDB486]">
-                          <Sparkles className="w-3.5 h-3.5" />
-                        </div>
-                      </div>
-
-                      {/* Bottom Champagne Rim */}
-                      <div className="w-full h-1.5 rounded-full bg-gradient-to-r from-transparent via-[#CDB486]/50 to-transparent" />
-                    </motion.div>
-                  </div>
-
-                  {/* Action / Status label under cup */}
-                  <div className="mt-4">
-                    {isPickingThis ? (
-                      <span className="flex items-center gap-1 text-xs text-[#CDB486] font-mono">
-                        <RotateCcw className="w-3.5 h-3.5 animate-spin" />
-                        <span>Opening...</span>
-                      </span>
-                    ) : canClick ? (
-                      <button
-                        type="button"
-                        onClick={() => handlePickCup(cupIdx)}
-                        className="text-[11px] font-mono uppercase px-3 py-1 rounded-lg border border-[#CDB486]/40 text-[#CDB486] bg-[#CDB486]/5 hover:bg-[#CDB486]/15 transition-all shadow-sm cursor-pointer"
+                  {/* ITEM UNDER THE CUP */}
+                  <div className="h-18 flex items-center justify-center">
+                    {isRevealedInStart || isRevealedWinInEnd ? (
+                      <motion.div
+                        initial={{ scale: 0.8, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        className="flex flex-col items-center"
                       >
-                        SELECT
-                      </button>
-                    ) : isPicked ? (
-                      <span className="text-[11px] font-mono text-[#8993A4]">
-                        CHOSEN
-                      </span>
+                        <img
+                          src="/logo.png"
+                          alt="KOFUKU Emblem"
+                          className="w-12 h-12 sm:w-16 sm:h-16 object-contain drop-shadow-[0_0_18px_rgba(205,180,134,0.9)] animate-pulse"
+                        />
+                        <span className="text-[9px] font-mono font-extrabold text-[#CDB486] mt-0.5 drop-shadow-sm">
+                          KOFUKU
+                        </span>
+                      </motion.div>
+                    ) : isRevealedEmptyInPlay ? (
+                      <div className="flex flex-col items-center justify-center text-rose-400 py-1">
+                        <X className="w-6 h-6 mb-0.5" />
+                        <span className="text-[9px] font-mono uppercase tracking-wider font-bold">
+                          EMPTY
+                        </span>
+                      </div>
                     ) : (
-                      <span className="text-[11px] font-mono text-white/20">
-                        ---
-                      </span>
+                      <div className="w-8 h-8 rounded-full border border-white/5 bg-white/[0.02] flex items-center justify-center text-white/20 font-bold text-xs">
+                        ?
+                      </div>
                     )}
                   </div>
+                </div>
+              );
+            })}
+
+            {/* 3 ANIMATED CUPS (Gliding smoothly across slots) */}
+            {[0, 1, 2].map((cupId) => {
+              const currentSlot = cupSlots[cupId];
+              const isLogoCup = cupId === logoCupId;
+
+              // Determine if this cup is currently lifted:
+              // 1) During revealing_start: ALL cups lift up!
+              // 2) During covering / shuffling: ALL cups are closed down!
+              // 3) During playing: only the picked cups are lifted!
+              // 4) During ended: all cups lift up to reveal everything!
+              const isSlotPicked =
+                (activeGame?.pickedIndices.includes(currentSlot) ||
+                  endedGame?.pickedIndices.includes(currentSlot)) ??
+                false;
+
+              const isLifted = Boolean(
+                phase === 'revealing_start' ||
+                (phase === 'playing' && isSlotPicked) ||
+                phase === 'ended'
+              );
+
+              const isWonCup = endedGame?.status === 'won' && endedGame.logoPosition === currentSlot;
+              const canClick =
+                phase === 'playing' &&
+                !isSlotPicked &&
+                pickingSlot === null &&
+                activeGame?.status === 'in_progress';
+
+              return (
+                <motion.div
+                  key={cupId}
+                  animate={{
+                    x: getSlotX(currentSlot),
+                    y: isLifted ? (isMobile ? -62 : -76) : 0,
+                    scale: isLifted ? 1.05 : 1,
+                    rotate: isWonCup ? -8 : 0,
+                  }}
+                  transition={{
+                    x: { type: 'spring', stiffness: 280, damping: 22 },
+                    y: { type: 'spring', stiffness: 380, damping: 24 },
+                  }}
+                  onClick={() => canClick && handlePickSlot(currentSlot)}
+                  className={`absolute bottom-3 w-24 sm:w-32 h-36 sm:h-44 rounded-t-[42px] rounded-b-xl border flex flex-col items-center justify-between p-3 z-20 transition-colors duration-300 backdrop-blur-md shadow-2xl ${
+                    canClick ? 'cursor-pointer hover:border-[#CDB486]/70' : 'cursor-default'
+                  } ${
+                    isWonCup
+                      ? 'border-[#CDB486] bg-gradient-to-b from-[#CDB486]/35 via-[#CDB486]/15 to-transparent shadow-[0_0_30px_rgba(205,180,134,0.4)]'
+                      : isLifted
+                      ? 'border-white/25 bg-gradient-to-b from-white/15 via-white/[0.05] to-transparent'
+                      : phase === 'shuffling'
+                      ? 'border-[#CDB486]/50 bg-gradient-to-b from-white/20 via-white/[0.08] to-transparent'
+                      : 'border-white/15 bg-gradient-to-b from-white/15 via-white/[0.05] to-transparent'
+                  }`}
+                  style={{
+                    boxShadow: isWonCup
+                      ? '0 12px 40px rgba(205, 180, 134, 0.35), inset 0 2px 8px rgba(255, 255, 255, 0.4)'
+                      : '0 10px 30px rgba(0, 0, 0, 0.6), inset 0 2px 6px rgba(255, 255, 255, 0.25)',
+                  }}
+                >
+                  {/* Top Rim Specular */}
+                  <div className="w-12 sm:w-16 h-2 rounded-full border border-white/40 bg-white/20 shadow-sm" />
+
+                  {/* Center Emblem Glow */}
+                  <div className="flex flex-col items-center justify-center opacity-60">
+                    <div className="w-6 h-6 rounded-full border border-[#CDB486]/40 flex items-center justify-center text-[#CDB486]">
+                      <Sparkles className="w-3.5 h-3.5" />
+                    </div>
+                  </div>
+
+                  {/* Bottom Champagne Rim */}
+                  <div className="w-full h-1.5 rounded-full bg-gradient-to-r from-transparent via-[#CDB486]/50 to-transparent" />
+                </motion.div>
+              );
+            })}
+          </div>
+
+          {/* Action / Selection Buttons Row */}
+          <div className="grid grid-cols-3 gap-3 w-full max-w-[480px] pt-4 select-none">
+            {[0, 1, 2].map((slotIdx) => {
+              const isSlotPicked =
+                activeGame?.pickedIndices.includes(slotIdx) ||
+                endedGame?.pickedIndices.includes(slotIdx);
+              const isPickingThis = pickingSlot === slotIdx;
+              const canClick =
+                phase === 'playing' &&
+                !isSlotPicked &&
+                pickingSlot === null &&
+                activeGame?.status === 'in_progress';
+
+              return (
+                <div key={slotIdx} className="flex flex-col items-center">
+                  {isPickingThis ? (
+                    <span className="flex items-center gap-1 text-xs text-[#CDB486] font-mono py-1.5">
+                      <RotateCcw className="w-3.5 h-3.5 animate-spin" />
+                      <span>Opening...</span>
+                    </span>
+                  ) : canClick ? (
+                    <button
+                      type="button"
+                      onClick={() => handlePickSlot(slotIdx)}
+                      className="w-full py-2 rounded-xl border border-[#CDB486]/50 bg-[#CDB486]/10 hover:bg-[#CDB486]/25 text-[#CDB486] font-mono text-xs font-bold uppercase transition-all shadow-md cursor-pointer hover:scale-[1.02]"
+                    >
+                      PICK #{slotIdx + 1}
+                    </button>
+                  ) : isSlotPicked ? (
+                    <span className="text-xs font-mono text-[#8993A4] py-1.5 font-semibold">
+                      REVEALED
+                    </span>
+                  ) : (
+                    <span className="text-xs font-mono text-white/20 py-1.5">
+                      CUP #{slotIdx + 1}
+                    </span>
+                  )}
                 </div>
               );
             })}
@@ -736,10 +881,18 @@ export const CupsArena: React.FC<CupsArenaProps> = ({
             {isGameRunning ? (
               <div className="p-4 rounded-2xl bg-[#CDB486]/10 border border-[#CDB486]/30 text-center space-y-1">
                 <p className="text-xs font-mono font-bold text-[#CDB486] uppercase tracking-wider">
-                  ROUND IN PROGRESS
+                  {phase === 'revealing_start'
+                    ? 'ALL CUPS OPENED'
+                    : phase === 'shuffling'
+                    ? 'SHUFFLING CUPS...'
+                    : 'PICK A CUP'}
                 </p>
                 <p className="text-xs text-[#8993A4]">
-                  Touch any cup on the left to lift and uncover the KOFUKU emblem.
+                  {phase === 'revealing_start'
+                    ? 'Notice where the emblem is placed...'
+                    : phase === 'shuffling'
+                    ? 'Track the cup with your eyes!'
+                    : 'Touch any cup on the left to uncover the KOFUKU emblem.'}
                 </p>
               </div>
             ) : (
@@ -831,7 +984,7 @@ export const CupsArena: React.FC<CupsArenaProps> = ({
                         {verifyReport.allPassed ? '100% Cryptographically Verified' : 'Verification Mismatch'}
                       </p>
                       <p className="text-[11px] opacity-80">
-                        The emblem position was pre-determined and unmanipulated.
+                        The emblem position and shuffle path were pre-determined and unmanipulated.
                       </p>
                     </div>
                   </div>
@@ -853,13 +1006,13 @@ export const CupsArena: React.FC<CupsArenaProps> = ({
 
                     <div className="grid grid-cols-2 gap-3 pt-1">
                       <div>
-                        <span className="text-[#8993A4] block text-[10px] uppercase">Calculated Cup</span>
+                        <span className="text-[#8993A4] block text-[10px] uppercase">Calculated Cup Slot</span>
                         <p className="p-2.5 rounded-lg bg-black/40 border border-white/5 text-sm font-bold text-[#F5F7FA]">
                           Cup #{verifyReport.calculatedLogoPosition + 1}
                         </p>
                       </div>
                       <div>
-                        <span className="text-[#8993A4] block text-[10px] uppercase">Actual Revealed Cup</span>
+                        <span className="text-[#8993A4] block text-[10px] uppercase">Actual Revealed Slot</span>
                         <p className="p-2.5 rounded-lg bg-black/40 border border-white/5 text-sm font-bold text-[#CDB486]">
                           Cup #{verifyReport.actualLogoPosition + 1}
                         </p>
