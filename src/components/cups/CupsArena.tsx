@@ -57,7 +57,7 @@ export const CupsArena: React.FC<CupsArenaProps> = ({
   const [isMobile, setIsMobile] = useState(false);
 
   const [betAmount, setBetAmount] = useState<number>(100000);
-  const [maxPicks, setMaxPicks] = useState<number>(2); // 2 picks (1.47x) or 1 pick (2.94x)
+  const maxPicks = 1; // 1 single pick per round (2.94x)
 
   const [activeGame, setActiveGame] = useState<CupsGame | null>(null);
   const [endedGame, setEndedGame] = useState<CupsGame | null>(null);
@@ -107,7 +107,6 @@ export const CupsArena: React.FC<CupsArenaProps> = ({
         if (actData && actData.status === 'in_progress') {
           setActiveGame(actData);
           setBetAmount(actData.betAmount);
-          setMaxPicks(actData.maxPicks || 2);
           setPhase('playing');
         } else {
           setActiveGame(null);
@@ -172,13 +171,11 @@ export const CupsArena: React.FC<CupsArenaProps> = ({
   }, [socket, account]);
 
   // Multiplier & Potential Win
-  const currentMultiplier = useMemo(() => {
-    return maxPicks === 1 ? 2.94 : 1.47;
-  }, [maxPicks]);
+  const currentMultiplier = 2.94;
 
   const potentialWin = useMemo(() => {
     return Math.round(betAmount * currentMultiplier * 100) / 100;
-  }, [betAmount, currentMultiplier]);
+  }, [betAmount]);
 
   // Execute authentic cup shuffle sequence
   const executeShuffleSequence = useCallback(
@@ -557,7 +554,7 @@ export const CupsArena: React.FC<CupsArenaProps> = ({
                 </span>
               ) : phase === 'playing' ? (
                 <span className="text-[#CDB486] font-bold">
-                  {picksLeft} {picksLeft === 1 ? 'Pick' : 'Picks'} Remaining
+                  Choose 1 Cup!
                 </span>
               ) : endedGame ? (
                 <span className={endedGame.status === 'won' ? 'text-emerald-400 font-bold' : 'text-rose-400 font-bold'}>
@@ -816,44 +813,15 @@ export const CupsArena: React.FC<CupsArenaProps> = ({
             </div>
           </div>
 
-          {/* CHANCES CONFIGURATION */}
-          <div className="space-y-2 pt-2 border-t border-white/10 text-left">
+          {/* GAMEPLAY RULES */}
+          <div className="space-y-1.5 pt-2 border-t border-white/10 text-left">
             <div className="flex items-center justify-between text-xs">
-              <span className="font-medium text-[#8993A4] tracking-wide uppercase">GAMEPLAY MODE</span>
-              <span className="text-xs font-mono text-[#CDB486]">
-                {maxPicks === 2 ? '2 Picks (66.7% Win Rate)' : '1 Pick (33.3% Win Rate)'}
-              </span>
+              <span className="font-medium text-[#8993A4] tracking-wide uppercase">RULES</span>
+              <span className="text-xs font-mono text-[#CDB486]">1 Pick (2.94× Payout)</span>
             </div>
-
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                disabled={isGameRunning}
-                onClick={() => setMaxPicks(2)}
-                className={`py-3 px-4 rounded-xl font-mono text-xs font-semibold transition-all cursor-pointer flex flex-col items-center gap-1 disabled:opacity-40 ${
-                  maxPicks === 2
-                    ? 'glass-btn-chip border-[#CDB486] text-[#CDB486] shadow-[0_0_14px_rgba(205,180,134,0.3)]'
-                    : 'glass-btn-chip text-[#8993A4] hover:text-[#F5F7FA]'
-                }`}
-              >
-                <span>2 CHANCES</span>
-                <span className="text-[10px] text-emerald-400">1.47× MULTIPLIER</span>
-              </button>
-
-              <button
-                type="button"
-                disabled={isGameRunning}
-                onClick={() => setMaxPicks(1)}
-                className={`py-3 px-4 rounded-xl font-mono text-xs font-semibold transition-all cursor-pointer flex flex-col items-center gap-1 disabled:opacity-40 ${
-                  maxPicks === 1
-                    ? 'glass-btn-chip border-[#CDB486] text-[#CDB486] shadow-[0_0_14px_rgba(205,180,134,0.3)]'
-                    : 'glass-btn-chip text-[#8993A4] hover:text-[#F5F7FA]'
-                }`}
-              >
-                <span>1 CHANCE (HIGH RISK)</span>
-                <span className="text-[10px] text-amber-400">2.94× MULTIPLIER</span>
-              </button>
-            </div>
+            <p className="text-xs text-[#8993A4] leading-relaxed">
+              Track the cups during the shuffle. Pick the 1 cup concealing the KOFUKU emblem to win 2.94× your wager.
+            </p>
           </div>
 
           {/* MULTIPLIER & POTENTIAL WIN */}

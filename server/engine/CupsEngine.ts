@@ -56,12 +56,10 @@ export class CupsEngine {
 
   /**
    * Deterministic calculation of multiplier with 98% platform RTP (2% house edge)
-   * 2 picks from 3 cups: fair = 3/2 = 1.50 -> 1.50 * 0.98 = 1.47x
    * 1 pick from 3 cups: fair = 3/1 = 3.00 -> 3.00 * 0.98 = 2.94x
    */
-  public static calculateMultiplier(maxPicks: number): number {
-    if (maxPicks === 1) return 2.94;
-    return 1.47;
+  public static calculateMultiplier(): number {
+    return 2.94;
   }
 
   /**
@@ -117,7 +115,7 @@ export class CupsEngine {
     playerAddress: string,
     playerName: string,
     betAmount: number,
-    maxPicks: number = 2,
+    _maxPicks: number = 1,
     playerAvatar?: string,
     clientSeed?: string,
     customGameId?: string,
@@ -129,7 +127,7 @@ export class CupsEngine {
     if (betAmount < 100000 || betAmount > 100000000) {
       return { success: false, message: 'Wager must be between 100,000 and 100,000,000 KOFUKU' };
     }
-    const safeMaxPicks = maxPicks === 1 ? 1 : 2;
+    const safeMaxPicks = 1; // 1 single pick per round
     const normAddress = playerAddress.toLowerCase();
 
     // Check if player already has an active in-progress round
@@ -151,7 +149,7 @@ export class CupsEngine {
       gameId
     );
 
-    const multiplier = CupsEngine.calculateMultiplier(safeMaxPicks);
+    const multiplier = CupsEngine.calculateMultiplier();
     const payout = Math.round(betAmount * multiplier * 100) / 100;
 
     const game: CupsGame = {

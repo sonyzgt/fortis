@@ -318,7 +318,7 @@ export default function KofukuHomePage() {
                     CUPS
                   </h3>
                   <p className="text-xs text-[#8993A4] leading-relaxed">
-                    Uncover the hidden KOFUKU emblem under 3 tactile glass cups with 2 chances to win.
+                    Track the shuffle and uncover the hidden KOFUKU emblem under 3 glass cups.
                   </p>
                 </div>
               </div>

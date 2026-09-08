@@ -133,8 +133,8 @@ export default function CupsPage() {
               CUPS
             </h1>
             <p className="text-sm sm:text-base text-[#8993A4] leading-relaxed">
-              Find the hidden KOFUKU emblem under the 3 glass cups. <br className="hidden sm:inline" />
-              You have 2 chances to uncover the logo.
+              Track the shuffle and uncover the hidden KOFUKU emblem. <br className="hidden sm:inline" />
+              1 pick to claim the 2.94× payout.
             </p>
           </div>
           <div className="w-16 h-16 sm:w-20 sm:h-20 flex-shrink-0 animate-float-natural filter drop-shadow-[0_10px_20px_rgba(205,180,134,0.3)]">

@@ -240,7 +240,7 @@ export default function DocsPage() {
                         <span>Cups Arena</span>
                       </div>
                       <p className="text-[11px] text-[#8993A4] leading-relaxed">
-                        3 glass cups concealing 1 KOFUKU emblem. Players get 2 chances to uncover the logo for a 1.47x multiplier, or 1 chance high-risk for 2.94x. Minimum wager is 100,000 {TOKEN_SYMBOL}.
+                        3 glass cups concealing 1 KOFUKU emblem. Players track the shuffle and get 1 pick to uncover the logo for a 2.94× multiplier. Minimum wager is 100,000 {TOKEN_SYMBOL}.
                       </p>
                     </div>
                   </div>
