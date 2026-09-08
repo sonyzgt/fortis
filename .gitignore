@@ -40,6 +40,7 @@ contracts/build/
 jackpot_history.json
 coinflip_history.json
 mines_history.json
+cups_history.json
 used_tx_hashes.json
 admin_sessions.json
 

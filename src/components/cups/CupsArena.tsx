@@ -61,6 +61,7 @@ export const CupsArena: React.FC<CupsArenaProps> = ({
 
   const [activeGame, setActiveGame] = useState<CupsGame | null>(null);
   const [endedGame, setEndedGame] = useState<CupsGame | null>(null);
+  const [lastFinishedGame, setLastFinishedGame] = useState<CupsGame | null>(null);
   const [unclaimedWins, setUnclaimedWins] = useState<CupsGame[]>([]);
 
   // Animation phase:
@@ -205,7 +206,7 @@ export const CupsArena: React.FC<CupsArenaProps> = ({
         }
 
         stepIndex++;
-        shuffleTimeoutRef.current = setTimeout(runNextSwap, 320);
+        shuffleTimeoutRef.current = setTimeout(runNextSwap, 160);
       };
 
       runNextSwap();
@@ -276,17 +277,17 @@ export const CupsArena: React.FC<CupsArenaProps> = ({
       playMineGemReveal();
       onShowToast(`Wager confirmed! Watch where the KOFUKU emblem is placed...`, true);
 
-      // Step 2: After 1.4s, cups close over the emblem (covering)
+      // Step 2: After 0.75s, cups close over the emblem (covering)
       shuffleTimeoutRef.current = setTimeout(() => {
         setPhase('covering');
         playChip();
 
-        // Step 3: After 0.6s, cups start shuffling across the table (shuffling)
+        // Step 3: After 0.25s, cups start shuffling across the table (shuffling)
         shuffleTimeoutRef.current = setTimeout(() => {
           setPhase('shuffling');
           executeShuffleSequence(sequence, initialPos);
-        }, 600);
-      }, 1400);
+        }, 250);
+      }, 750);
     } catch (e: any) {
       console.error('Cups start error:', e);
       if (
@@ -355,6 +356,7 @@ export const CupsArena: React.FC<CupsArenaProps> = ({
 
         setActiveGame(null);
         setEndedGame(updatedGame);
+        setLastFinishedGame(updatedGame);
         setPhase('ended');
 
         if (result.unclaimedGame) {
@@ -378,6 +380,7 @@ export const CupsArena: React.FC<CupsArenaProps> = ({
 
         setActiveGame(null);
         setEndedGame(updatedGame);
+        setLastFinishedGame(updatedGame);
         setPhase('ended');
         onShowToast(`Empty cup! The emblem was under Cup #${(result.logoPosition ?? 0) + 1}.`, false);
       } else {
@@ -418,7 +421,11 @@ export const CupsArena: React.FC<CupsArenaProps> = ({
 
         setUnclaimedWins((prev) => prev.filter((g) => g.id !== game.id));
         if (endedGame && endedGame.id === game.id) {
-          setEndedGame({ ...endedGame, isClaimed: true, claimTxHash: txHash });
+          // Close cups back down to the table
+          setEndedGame(null);
+          setPhase('idle');
+          setPickingSlot(null);
+          playChip();
         }
         playCoinClaim();
         onShowToast(`Winnings sent to wallet! Tx: ${txHash.slice(0, 8)}...`, true);
@@ -435,7 +442,11 @@ export const CupsArena: React.FC<CupsArenaProps> = ({
         socket?.emit('cups_mark_claimed', { gameId: game.id, claimTxHash: 'already-claimed', address: account });
         setUnclaimedWins((prev) => prev.filter((g) => g.id !== game.id));
         if (endedGame && endedGame.id === game.id) {
-          setEndedGame({ ...endedGame, isClaimed: true });
+          // Close cups back down to the table
+          setEndedGame(null);
+          setPhase('idle');
+          setPickingSlot(null);
+          playChip();
         }
         onShowToast('Prize was already claimed on-chain.', true);
         refreshBalances();
@@ -670,8 +681,8 @@ export const CupsArena: React.FC<CupsArenaProps> = ({
                     rotate: isWonCup ? -8 : 0,
                   }}
                   transition={{
-                    x: { type: 'spring', stiffness: 280, damping: 22 },
-                    y: { type: 'spring', stiffness: 380, damping: 24 },
+                    x: { type: 'spring', stiffness: 650, damping: 28, mass: 0.5 },
+                    y: { type: 'spring', stiffness: 450, damping: 25 },
                   }}
                   onClick={() => canClick && handlePickSlot(currentSlot)}
                   className={`absolute bottom-3 w-24 sm:w-32 h-36 sm:h-44 rounded-t-[42px] rounded-b-xl border flex flex-col items-center justify-between p-3 z-20 transition-colors duration-300 backdrop-blur-md shadow-2xl ${
@@ -863,6 +874,35 @@ export const CupsArena: React.FC<CupsArenaProps> = ({
                     : 'Touch any cup on the left to uncover the KOFUKU emblem.'}
                 </p>
               </div>
+            ) : endedGame && endedGame.status === 'won' && !endedGame.isClaimed ? (
+              <div className="space-y-2.5">
+                <button
+                  type="button"
+                  onClick={() => handleClaimWinnings(endedGame)}
+                  disabled={claimingGameId === endedGame.id}
+                  className="glass-btn-inflated w-full py-4 text-sm font-bold uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 shadow-xl !bg-[#CDB486] !text-black hover:!bg-[#F5E6C8]"
+                >
+                  {claimingGameId === endedGame.id ? (
+                    <>
+                      <RotateCcw className="w-4 h-4 animate-spin" />
+                      <span>CLAIMING REWARD...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Award className="w-4 h-4" />
+                      <span>CLAIM WINNINGS ({endedGame.payout.toLocaleString()} {TOKEN_SYMBOL})</span>
+                    </>
+                  )}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleStartGame}
+                  disabled={isStarting}
+                  className="w-full py-2.5 rounded-xl border border-white/10 hover:border-[#CDB486]/40 text-xs font-mono text-[#8993A4] hover:text-[#F5F7FA] transition-colors cursor-pointer"
+                >
+                  Start New Round (Claim Later)
+                </button>
+              </div>
             ) : (
               <button
                 type="button"
@@ -889,13 +929,13 @@ export const CupsArena: React.FC<CupsArenaProps> = ({
               <span className="text-[11px]">HMAC-SHA256 Provably Fair</span>
             </span>
 
-            {endedGame && (
+            {lastFinishedGame && (
               <button
                 type="button"
-                onClick={() => handleOpenVerify(endedGame.id)}
+                onClick={() => handleOpenVerify(lastFinishedGame.id)}
                 className="text-[11px] font-mono text-[#CDB486] hover:underline cursor-pointer"
               >
-                Verify Round #{endedGame.id.slice(-5)}
+                Verify Round #{lastFinishedGame.id.slice(-5)}
               </button>
             )}
           </div>
