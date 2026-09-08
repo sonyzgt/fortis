@@ -319,6 +319,28 @@ app.get('/api/mines/verify/:gameId', (req, res) => {
   res.json(rep);
 });
 
+app.post('/api/mines/claim', (req, res) => {
+  const { gameId, claimTxHash, address } = req.body;
+  if (!gameId) return res.status(400).json({ error: 'gameId required' });
+  const ok = mines.markGameClaimed(gameId, claimTxHash || 'on-chain');
+  if (address) {
+    const list = mines.getUnclaimedByPlayer(address);
+    io.emit('mines_unclaimed', list);
+  }
+  res.json({ success: ok, gameId, claimTxHash: claimTxHash || 'on-chain' });
+});
+
+app.post('/api/coinflip/claim', (req, res) => {
+  const { gameId, claimTxHash, address } = req.body;
+  if (!gameId) return res.status(400).json({ error: 'gameId required' });
+  const ok = coinflip.markGameClaimed(gameId, claimTxHash || 'on-chain');
+  if (address) {
+    const list = coinflip.getUnclaimedByPlayer(address);
+    io.emit('unclaimed_coinflips', list);
+  }
+  res.json({ success: ok, gameId, claimTxHash: claimTxHash || 'on-chain' });
+});
+
 // --- Admin Authentication Endpoints ---
 app.post('/api/admin/login', (req, res) => {
   const { password } = req.body;

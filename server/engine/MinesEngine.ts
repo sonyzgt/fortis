@@ -355,13 +355,24 @@ export class MinesEngine {
   }
 
   public markGameClaimed(gameId: string, claimTxHash: string): boolean {
-    const g = this.unclaimedGames.get(gameId) || this.completedGames.find((x) => x.id === gameId);
-    if (!g) return false;
-    g.isClaimed = true;
-    g.claimTxHash = claimTxHash;
-    this.unclaimedGames.delete(gameId);
-    this.saveToDisk();
-    return true;
+    let found = false;
+    const gUnclaimed = this.unclaimedGames.get(gameId);
+    if (gUnclaimed) {
+      gUnclaimed.isClaimed = true;
+      gUnclaimed.claimTxHash = claimTxHash;
+      this.unclaimedGames.delete(gameId);
+      found = true;
+    }
+    const gCompleted = this.completedGames.find((x) => x.id === gameId);
+    if (gCompleted) {
+      gCompleted.isClaimed = true;
+      gCompleted.claimTxHash = claimTxHash;
+      found = true;
+    }
+    if (found) {
+      this.saveToDisk();
+    }
+    return found;
   }
 
   public getHistory(): MinesGame[] {

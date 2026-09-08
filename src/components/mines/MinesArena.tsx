@@ -16,7 +16,7 @@ import { useCashFlipWeb3 } from '@/context/CashFlipWeb3Context';
 import { useSound } from '@/context/SoundContext';
 import { useSocket } from '@/context/SocketContext';
 import { MinesGame, MinesTileResult, MinesCashoutResult, MinesVerifyReport } from '@/types/mines';
-import { TOKEN_SYMBOL } from '@/lib/web3/contracts';
+import { TOKEN_SYMBOL, isGameClaimedOnChain } from '@/lib/web3/contracts';
 
 interface MinesArenaProps {
   account: string | null;
@@ -97,13 +97,27 @@ export const MinesArena: React.FC<MinesArenaProps> = ({
       if (uncRes.ok) {
         const uncData = await uncRes.json();
         if (Array.isArray(uncData)) {
-          setUnclaimedWins(uncData);
+          const verified: MinesGame[] = [];
+          for (const g of uncData) {
+            const alreadyClaimed = await isGameClaimedOnChain(g.id);
+            if (alreadyClaimed) {
+              fetch('/api/mines/claim', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ gameId: g.id, claimTxHash: 'already-claimed', address: account }),
+              }).catch(() => {});
+              socket?.emit('mines_mark_claimed', { gameId: g.id, claimTxHash: 'already-claimed', address: account });
+            } else {
+              verified.push(g);
+            }
+          }
+          setUnclaimedWins(verified);
         }
       }
     } catch (e) {
       console.warn('Could not sync mines game state:', e);
     }
-  }, [account]);
+  }, [account, socket]);
 
   useEffect(() => {
     syncGameState();
@@ -112,14 +126,28 @@ export const MinesArena: React.FC<MinesArenaProps> = ({
   // Handle Socket Events
   useEffect(() => {
     if (!socket) return;
-    const handleUnclaimed = (list: MinesGame[]) => {
-      if (Array.isArray(list)) setUnclaimedWins(list);
+    const handleUnclaimed = async (list: MinesGame[]) => {
+      if (!Array.isArray(list)) return;
+      const verified: MinesGame[] = [];
+      for (const g of list) {
+        const alreadyClaimed = await isGameClaimedOnChain(g.id);
+        if (alreadyClaimed) {
+          fetch('/api/mines/claim', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ gameId: g.id, claimTxHash: 'already-claimed', address: account }),
+          }).catch(() => {});
+        } else {
+          verified.push(g);
+        }
+      }
+      setUnclaimedWins(verified);
     };
     socket.on('mines_unclaimed', handleUnclaimed);
     return () => {
       socket.off('mines_unclaimed', handleUnclaimed);
     };
-  }, [socket]);
+  }, [socket, account]);
 
   // Prospective multiplier calculation
   const prospectiveMultiplier = useMemo(() => {
@@ -338,11 +366,15 @@ export const MinesArena: React.FC<MinesArenaProps> = ({
       const prizeAmount = game.currentPayout;
       const txHash = await claimWinnings(game.id, prizeAmount);
       if (txHash) {
+        // 1. Inform backend via REST
         await fetch('/api/mines/claim', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ gameId: game.id, claimTxHash: txHash, address: account }),
         }).catch(() => {});
+
+        // 2. Inform backend via Socket
+        socket?.emit('mines_mark_claimed', { gameId: game.id, claimTxHash: txHash, address: account });
 
         setUnclaimedWins((prev) => prev.filter((g) => g.id !== game.id));
         if (endedGame && endedGame.id === game.id) {
@@ -352,7 +384,24 @@ export const MinesArena: React.FC<MinesArenaProps> = ({
         refreshBalances();
       }
     } catch (e: any) {
-      onShowToast(e?.message || 'Disbursement failed', false);
+      // Check if prize was already claimed on-chain
+      const alreadyClaimed = await isGameClaimedOnChain(game.id);
+      if (alreadyClaimed) {
+        await fetch('/api/mines/claim', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ gameId: game.id, claimTxHash: 'already-claimed', address: account }),
+        }).catch(() => {});
+        socket?.emit('mines_mark_claimed', { gameId: game.id, claimTxHash: 'already-claimed', address: account });
+        setUnclaimedWins((prev) => prev.filter((g) => g.id !== game.id));
+        if (endedGame && endedGame.id === game.id) {
+          setEndedGame({ ...endedGame, isClaimed: true });
+        }
+        onShowToast('Prize was already claimed on-chain.', true);
+        refreshBalances();
+      } else {
+        onShowToast(e?.message || 'Disbursement failed', false);
+      }
     } finally {
       setClaimingGameId(null);
     }
