@@ -17,6 +17,7 @@ import {
   Bomb,
   Layers,
   Flame,
+  Trophy,
 } from 'lucide-react';
 import { ProtocolHeader } from '@/components/protocol/ProtocolHeader';
 import { ProtocolFooter } from '@/components/protocol/ProtocolFooter';
@@ -198,7 +199,7 @@ export default function DocsPage() {
                     <h3>II. Game Modes & Rules of Engagement</h3>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
                     {/* Coinflip */}
                     <div className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.05] space-y-2">
                       <div className="flex items-center gap-2 font-bold text-[#F5F0E6]">
@@ -229,6 +230,17 @@ export default function DocsPage() {
                       </div>
                       <p className="text-[11px] text-[#8993A4] leading-relaxed">
                         5×5 grid with 25 tiles. Uncover safe diamond tiles to compound your multiplier. Players can cash out accumulated yields at any point before detonating a mine. Minimum wager is 100,000 {TOKEN_SYMBOL}.
+                      </p>
+                    </div>
+
+                    {/* Cups */}
+                    <div className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.05] space-y-2">
+                      <div className="flex items-center gap-2 font-bold text-[#F5F0E6]">
+                        <Trophy className="w-4 h-4 text-[#CDB486]" />
+                        <span>Cups Arena</span>
+                      </div>
+                      <p className="text-[11px] text-[#8993A4] leading-relaxed">
+                        3 glass cups concealing 1 KOFUKU emblem. Players get 2 chances to uncover the logo for a 1.47x multiplier, or 1 chance high-risk for 2.94x. Minimum wager is 100,000 {TOKEN_SYMBOL}.
                       </p>
                     </div>
                   </div>

@@ -30,6 +30,9 @@ export function ProtocolFooter() {
           <Link href="/mines" className="hover:text-[#F5F0E6] transition-colors">
             MINES
           </Link>
+          <Link href="/cups" className="hover:text-[#F5F0E6] transition-colors">
+            CUPS
+          </Link>
           <Link
             href="/docs"
             className="text-[#CDB486] hover:text-[#F5F0E6] font-bold transition-colors inline-flex items-center gap-1"

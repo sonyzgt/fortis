@@ -10,6 +10,7 @@ import { JackpotEngine } from './engine/JackpotEngine';
 import { CoinFlipEngine } from './engine/CoinFlipEngine';
 import { CashFlipJackpotEngine } from './engine/CashFlipJackpotEngine';
 import { MinesEngine } from './engine/MinesEngine';
+import { CupsEngine } from './engine/CupsEngine';
 import { ChatMessage, LeaderboardEntry, WinnerInfo } from './types/jackpot';
 
 // Load .env and .env.local variables
@@ -141,6 +142,7 @@ const cashflipJackpot = new CashFlipJackpotEngine();
 const jackpot = new JackpotEngine();
 const coinflip = new CoinFlipEngine();
 const mines = new MinesEngine();
+const cups = new CupsEngine();
 
 // Global state
 const chatMessages: ChatMessage[] = [];
@@ -339,6 +341,75 @@ app.post('/api/coinflip/claim', (req, res) => {
     io.emit('unclaimed_coinflips', list);
   }
   res.json({ success: ok, gameId, claimTxHash: claimTxHash || 'on-chain' });
+});
+
+// --- Cups Endpoints ---
+app.post('/api/cups/start', (req, res) => {
+  const { playerAddress, playerName, betAmount, maxPicks, playerAvatar, clientSeed, gameId, txHash } = req.body;
+  if (!isValidTxHash(txHash)) {
+    return res.status(400).json({ success: false, message: 'Valid on-chain transaction hash is required to start a Cups game.' });
+  }
+  if (!markTxHashUsed(txHash)) {
+    return res.status(400).json({ success: false, message: 'Transaction hash has already been used.' });
+  }
+
+  const result = cups.startGame(
+    playerAddress,
+    playerName,
+    Number(betAmount),
+    Number(maxPicks || 2),
+    playerAvatar,
+    clientSeed,
+    gameId,
+    txHash
+  );
+  if (!result.success) {
+    return res.status(400).json(result);
+  }
+  res.json(result);
+});
+
+app.post('/api/cups/pick', (req, res) => {
+  const { gameId, playerAddress, cupIndex } = req.body;
+  try {
+    const result = cups.pickCup(gameId, playerAddress, Number(cupIndex));
+    if (result.unclaimedGame) {
+      io.emit('cups_unclaimed', cups.getUnclaimedByPlayer(playerAddress));
+    }
+    res.json({ success: true, result });
+  } catch (e: any) {
+    res.status(400).json({ success: false, error: e?.message });
+  }
+});
+
+app.get('/api/cups/active/:address', (req, res) => {
+  const g = cups.getActiveGame(req.params.address);
+  res.json(g ? cups.sanitizeGame(g) : null);
+});
+
+app.get('/api/cups/unclaimed/:address', (req, res) => {
+  res.json(cups.getUnclaimedByPlayer(req.params.address));
+});
+
+app.post('/api/cups/claim', (req, res) => {
+  const { gameId, claimTxHash, address } = req.body;
+  if (!gameId) return res.status(400).json({ error: 'gameId required' });
+  const ok = cups.markGameClaimed(gameId, claimTxHash || 'on-chain');
+  if (address) {
+    const list = cups.getUnclaimedByPlayer(address);
+    io.emit('cups_unclaimed', list);
+  }
+  res.json({ success: ok, gameId, claimTxHash: claimTxHash || 'on-chain' });
+});
+
+app.get('/api/cups/history', (_, res) => {
+  res.json(cups.getHistory());
+});
+
+app.get('/api/cups/verify/:gameId', (req, res) => {
+  const rep = cups.verifyGame(req.params.gameId);
+  if (!rep) return res.status(404).json({ error: 'Game not found or round still ongoing' });
+  res.json(rep);
 });
 
 // --- Admin Authentication Endpoints ---
@@ -617,10 +688,11 @@ const handleSignClaim = async (req: express.Request, res: express.Response) => {
     const normWinner = winner.toLowerCase();
 
     // 1. Try finding in Coinflip engine
-    let matchedType: 'coinflip' | 'jackpot' | 'mines' | null = null;
+    let matchedType: 'coinflip' | 'jackpot' | 'mines' | 'cups' | null = null;
     const cfGame = coinflip.getGameById(gameId);
     let jpGame: any = null;
     let minesGame: any = null;
+    let cupsGame: any = null;
 
     if (cfGame) {
       matchedType = 'coinflip';
@@ -655,6 +727,21 @@ const handleSignClaim = async (req: express.Request, res: express.Response) => {
           if (minesGame.status !== 'cashed_out') {
             return res.status(400).json({ error: 'Mines round did not complete with successful cashout' });
           }
+        } else {
+          // 4. Try finding in Cups engine
+          cupsGame = cups.getGameById(gameId);
+          if (cupsGame) {
+            matchedType = 'cups';
+            if (cupsGame.isClaimed) {
+              return res.status(400).json({ error: `Cups round #${cupsGame.id} winnings have already been claimed.` });
+            }
+            if (cupsGame.playerAddress.toLowerCase() !== normWinner) {
+              return res.status(403).json({ error: 'Address is not the verified player of this cups round' });
+            }
+            if (cupsGame.status !== 'won') {
+              return res.status(400).json({ error: 'Cups round did not complete with win' });
+            }
+          }
         }
       }
     }
@@ -681,7 +768,7 @@ const handleSignClaim = async (req: express.Request, res: express.Response) => {
       if (cfGame.challengerId !== 'ai_oracle' && !cfGame.challengerTxHash) {
         return res.status(400).json({ error: 'Coinflip opponent has no verified deposit transaction' });
       }
-      actualPrizeWei = toWei(cfGame.winAmount);
+      actualPrizeWei = toWei(cfGame.winAmount || 0);
       if (requestedPrizeWei > actualPrizeWei) {
         return res.status(400).json({ error: 'Requested prize amount exceeds calculated duel winnings' });
       }
@@ -698,6 +785,14 @@ const handleSignClaim = async (req: express.Request, res: express.Response) => {
       actualPrizeWei = toWei(minesGame.currentPayout);
       if (requestedPrizeWei > actualPrizeWei && actualPrizeWei > 0n) {
         return res.status(400).json({ error: 'Requested prize amount exceeds calculated mines payout' });
+      }
+    } else if (matchedType === 'cups' && cupsGame) {
+      if (!cupsGame.txHash) {
+        return res.status(400).json({ error: 'Cups game has no verified wager transaction' });
+      }
+      actualPrizeWei = toWei(cupsGame.payout);
+      if (requestedPrizeWei > actualPrizeWei && actualPrizeWei > 0n) {
+        return res.status(400).json({ error: 'Requested prize amount exceeds calculated cups payout' });
       }
     }
 
@@ -943,6 +1038,72 @@ io.on('connection', (socket) => {
     if (address) {
       const list = mines.getUnclaimedByPlayer(address);
       socket.emit('mines_unclaimed', list);
+    }
+  });
+
+  // --- Cups Events ---
+  socket.on('cups_start', ({ playerAddress, playerName, betAmount, maxPicks, playerAvatar, clientSeed, gameId, txHash }, callback) => {
+    if (!isValidTxHash(txHash)) {
+      const err = { success: false, message: 'Valid on-chain transaction hash is required to start a Cups game.' };
+      if (typeof callback === 'function') callback(err);
+      socket.emit('cups_start_result', err);
+      return;
+    }
+    if (!markTxHashUsed(txHash)) {
+      const err = { success: false, message: 'Transaction hash has already been used.' };
+      if (typeof callback === 'function') callback(err);
+      socket.emit('cups_start_result', err);
+      return;
+    }
+
+    const result = cups.startGame(
+      playerAddress,
+      playerName,
+      Number(betAmount),
+      Number(maxPicks || 2),
+      playerAvatar,
+      clientSeed,
+      gameId,
+      txHash
+    );
+    if (typeof callback === 'function') callback(result);
+    socket.emit('cups_start_result', result);
+  });
+
+  socket.on('cups_pick', ({ gameId, playerAddress, cupIndex }, callback) => {
+    try {
+      const result = cups.pickCup(gameId, playerAddress, Number(cupIndex));
+      if (typeof callback === 'function') callback({ success: true, result });
+      socket.emit('cups_pick_result', { success: true, result });
+      if (result.unclaimedGame) {
+        socket.emit('cups_unclaimed', cups.getUnclaimedByPlayer(playerAddress));
+      }
+    } catch (err: any) {
+      if (typeof callback === 'function') callback({ success: false, error: err?.message });
+      socket.emit('cups_pick_result', { success: false, error: err?.message });
+    }
+  });
+
+  socket.on('cups_get_active', ({ address }: { address: string }, callback) => {
+    if (!address) return;
+    const g = cups.getActiveGame(address);
+    const sanitized = g ? cups.sanitizeGame(g) : null;
+    if (typeof callback === 'function') callback(sanitized);
+    socket.emit('cups_active_game', sanitized);
+  });
+
+  socket.on('cups_get_unclaimed', ({ address }: { address: string }) => {
+    if (!address) return;
+    const list = cups.getUnclaimedByPlayer(address);
+    socket.emit('cups_unclaimed', list);
+  });
+
+  socket.on('cups_mark_claimed', ({ gameId, claimTxHash, address }: any) => {
+    const ok = cups.markGameClaimed(gameId, claimTxHash);
+    socket.emit('cups_claim_confirmed', { success: ok, gameId, claimTxHash });
+    if (address) {
+      const list = cups.getUnclaimedByPlayer(address);
+      socket.emit('cups_unclaimed', list);
     }
   });
 

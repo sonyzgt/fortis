@@ -189,17 +189,17 @@ export default function KofukuHomePage() {
               CHOOSE YOUR GAME
             </h2>
             <p className="text-sm sm:text-base text-[#8993A4] max-w-xl">
-              Three autonomous gaming experiences designed for transparency and instant on-chain settlement.
+              Four autonomous gaming experiences designed for transparency and instant on-chain settlement.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {/* CARD 1: JACKPOT */}
-            <div className="glass-capsule flex flex-col justify-between p-8 group">
-              <div className="space-y-6">
+            <div className="glass-capsule flex flex-col justify-between p-7 group">
+              <div className="space-y-5">
                 {/* 3D Origami Artwork */}
-                <div className="w-full h-48 rounded-2xl bg-white/[0.01] border border-white/[0.05] flex items-center justify-center relative overflow-hidden group-hover:border-[#CDB486]/35 transition-colors">
-                  <div className="w-36 h-36 flex items-center justify-center group-hover:scale-105 transition-transform duration-500 filter drop-shadow-[0_15px_30px_rgba(205,180,134,0.25)] animate-float-natural">
+                <div className="w-full h-44 rounded-2xl bg-white/[0.01] border border-white/[0.05] flex items-center justify-center relative overflow-hidden group-hover:border-[#CDB486]/35 transition-colors">
+                  <div className="w-32 h-32 flex items-center justify-center group-hover:scale-105 transition-transform duration-500 filter drop-shadow-[0_15px_30px_rgba(205,180,134,0.25)] animate-float-natural">
                     <img
                       src="/image/jackpot.png"
                       alt="Jackpot Origami"
@@ -208,33 +208,33 @@ export default function KofukuHomePage() {
                   </div>
                 </div>
 
-                <div className="space-y-2 text-left">
-                  <h3 className="font-heading text-2xl font-bold text-[#F5F0E6]">
+                <div className="space-y-1.5 text-left">
+                  <h3 className="font-heading text-xl font-bold text-[#F5F0E6]">
                     JACKPOT
                   </h3>
-                  <p className="text-sm text-[#8993A4] leading-relaxed">
+                  <p className="text-xs text-[#8993A4] leading-relaxed">
                     Multiplayer pool of capital where probability converges to a single victor.
                   </p>
                 </div>
               </div>
 
-              <div className="pt-6">
+              <div className="pt-5">
                 <Link
                   href="/jackpot"
-                  className="glass-btn-inflated w-full py-3.5 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg"
+                  className="glass-btn-inflated w-full py-3 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg"
                 >
                   <span>PLAY</span>
-                  <ArrowRight className="w-4 h-4" />
+                  <ArrowRight className="w-3.5 h-3.5" />
                 </Link>
               </div>
             </div>
 
             {/* CARD 2: COINFLIP */}
-            <div className="glass-capsule flex flex-col justify-between p-8 group">
-              <div className="space-y-6">
+            <div className="glass-capsule flex flex-col justify-between p-7 group">
+              <div className="space-y-5">
                 {/* 3D Origami Artwork */}
-                <div className="w-full h-48 rounded-2xl bg-white/[0.01] border border-white/[0.05] flex items-center justify-center relative overflow-hidden group-hover:border-[#CDB486]/35 transition-colors">
-                  <div className="w-36 h-36 flex items-center justify-center group-hover:scale-105 transition-transform duration-500 filter drop-shadow-[0_15px_30px_rgba(205,180,134,0.25)] animate-float-natural">
+                <div className="w-full h-44 rounded-2xl bg-white/[0.01] border border-white/[0.05] flex items-center justify-center relative overflow-hidden group-hover:border-[#CDB486]/35 transition-colors">
+                  <div className="w-32 h-32 flex items-center justify-center group-hover:scale-105 transition-transform duration-500 filter drop-shadow-[0_15px_30px_rgba(205,180,134,0.25)] animate-float-natural">
                     <img
                       src="/image/flipcoin.png"
                       alt="Coinflip Origami"
@@ -243,33 +243,33 @@ export default function KofukuHomePage() {
                   </div>
                 </div>
 
-                <div className="space-y-2 text-left">
-                  <h3 className="font-heading text-2xl font-bold text-[#F5F0E6]">
+                <div className="space-y-1.5 text-left">
+                  <h3 className="font-heading text-xl font-bold text-[#F5F0E6]">
                     COINFLIP
                   </h3>
-                  <p className="text-sm text-[#8993A4] leading-relaxed">
+                  <p className="text-xs text-[#8993A4] leading-relaxed">
                     Head-to-head 1v1 binary duels with instant cryptographic settlement.
                   </p>
                 </div>
               </div>
 
-              <div className="pt-6">
+              <div className="pt-5">
                 <Link
                   href="/coinflip"
-                  className="glass-btn-inflated w-full py-3.5 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg"
+                  className="glass-btn-inflated w-full py-3 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg"
                 >
                   <span>PLAY</span>
-                  <ArrowRight className="w-4 h-4" />
+                  <ArrowRight className="w-3.5 h-3.5" />
                 </Link>
               </div>
             </div>
 
             {/* CARD 3: MINES */}
-            <div className="glass-capsule flex flex-col justify-between p-8 group">
-              <div className="space-y-6">
+            <div className="glass-capsule flex flex-col justify-between p-7 group">
+              <div className="space-y-5">
                 {/* 3D Origami Artwork */}
-                <div className="w-full h-48 rounded-2xl bg-white/[0.01] border border-white/[0.05] flex items-center justify-center relative overflow-hidden group-hover:border-[#CDB486]/35 transition-colors">
-                  <div className="w-36 h-36 flex items-center justify-center group-hover:scale-105 transition-transform duration-500 filter drop-shadow-[0_15px_30px_rgba(205,180,134,0.25)] animate-float-natural">
+                <div className="w-full h-44 rounded-2xl bg-white/[0.01] border border-white/[0.05] flex items-center justify-center relative overflow-hidden group-hover:border-[#CDB486]/35 transition-colors">
+                  <div className="w-32 h-32 flex items-center justify-center group-hover:scale-105 transition-transform duration-500 filter drop-shadow-[0_15px_30px_rgba(205,180,134,0.25)] animate-float-natural">
                     <img
                       src="/image/mine.png"
                       alt="Mines Origami"
@@ -278,23 +278,58 @@ export default function KofukuHomePage() {
                   </div>
                 </div>
 
-                <div className="space-y-2 text-left">
-                  <h3 className="font-heading text-2xl font-bold text-[#F5F0E6]">
+                <div className="space-y-1.5 text-left">
+                  <h3 className="font-heading text-xl font-bold text-[#F5F0E6]">
                     MINES
                   </h3>
-                  <p className="text-sm text-[#8993A4] leading-relaxed">
+                  <p className="text-xs text-[#8993A4] leading-relaxed">
                     Uncover safe refractive gemstones, avoid demolition bombs, and cash out anytime.
                   </p>
                 </div>
               </div>
 
-              <div className="pt-6">
+              <div className="pt-5">
                 <Link
                   href="/mines"
-                  className="glass-btn-inflated w-full py-3.5 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg"
+                  className="glass-btn-inflated w-full py-3 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg"
                 >
                   <span>PLAY</span>
-                  <ArrowRight className="w-4 h-4" />
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+              </div>
+            </div>
+
+            {/* CARD 4: CUPS */}
+            <div className="glass-capsule flex flex-col justify-between p-7 group">
+              <div className="space-y-5">
+                {/* 3D Artwork */}
+                <div className="w-full h-44 rounded-2xl bg-white/[0.01] border border-white/[0.05] flex items-center justify-center relative overflow-hidden group-hover:border-[#CDB486]/35 transition-colors">
+                  <div className="w-28 h-28 flex items-center justify-center group-hover:scale-105 transition-transform duration-500 filter drop-shadow-[0_15px_30px_rgba(205,180,134,0.25)] animate-float-natural">
+                    <img
+                      src="/logo.png"
+                      alt="Cups Emblem"
+                      className="w-full h-full object-contain"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1.5 text-left">
+                  <h3 className="font-heading text-xl font-bold text-[#F5F0E6]">
+                    CUPS
+                  </h3>
+                  <p className="text-xs text-[#8993A4] leading-relaxed">
+                    Uncover the hidden KOFUKU emblem under 3 tactile glass cups with 2 chances to win.
+                  </p>
+                </div>
+              </div>
+
+              <div className="pt-5">
+                <Link
+                  href="/cups"
+                  className="glass-btn-inflated w-full py-3 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg"
+                >
+                  <span>PLAY</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
                 </Link>
               </div>
             </div>

@@ -18,7 +18,7 @@ import { useSound } from '@/context/SoundContext';
 import { ROBINHOOD_CHAIN_CONFIG, getCashFlipTokenAddress, TOKEN_SYMBOL } from '@/lib/web3/contracts';
 
 interface ProtocolHeaderProps {
-  currentRoute: 'home' | 'jackpot' | 'coinflip' | 'mines' | 'account' | 'docs';
+  currentRoute: 'home' | 'jackpot' | 'coinflip' | 'mines' | 'cups' | 'account' | 'docs';
   onOpenDispatch?: () => void;
   dispatchCount?: number;
   onOpenWalletModal?: () => void;
@@ -104,6 +104,12 @@ export const ProtocolHeader: React.FC<ProtocolHeaderProps> = ({
           className={currentRoute === 'mines' ? 'glass-pill-active' : 'glass-pill-inactive'}
         >
           MINES
+        </Link>
+        <Link
+          href="/cups"
+          className={currentRoute === 'cups' ? 'glass-pill-active' : 'glass-pill-inactive'}
+        >
+          CUPS
         </Link>
       </nav>
 
