@@ -53,91 +53,22 @@ const SoundContext = createContext<SoundContextType>({
 
 export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
-  const bgmRef = useRef<HTMLAudioElement | null>(null);
-  const activeGamesCountRef = useRef<number>(0);
 
-  // Initialize and manage backsound.mp3
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    const audio = new Audio('/backsound.mp3');
-    audio.loop = true;
-    audio.volume = 0.35;
-    bgmRef.current = audio;
-
-    const tryPlayBgm = () => {
-      if (sounds.enabled && activeGamesCountRef.current === 0 && bgmRef.current) {
-        bgmRef.current.play().catch(() => {
-          // Blocked by browser autoplay policy until user gesture
-        });
-      }
-    };
-
-    // Attempt to start on mount
-    tryPlayBgm();
-
-    // Unlock audio upon first user gesture anywhere on the window
-    const handleGesture = () => {
-      tryPlayBgm();
-      window.removeEventListener('pointerdown', handleGesture);
-      window.removeEventListener('click', handleGesture);
-      window.removeEventListener('keydown', handleGesture);
-    };
-
-    window.addEventListener('pointerdown', handleGesture, { passive: true });
-    window.addEventListener('click', handleGesture, { passive: true });
-    window.addEventListener('keydown', handleGesture, { passive: true });
-
-    return () => {
-      window.removeEventListener('pointerdown', handleGesture);
-      window.removeEventListener('click', handleGesture);
-      window.removeEventListener('keydown', handleGesture);
-      if (bgmRef.current) {
-        bgmRef.current.pause();
-        bgmRef.current = null;
-      }
-    };
-  }, []);
-
-  // Update sound effects and BGM when soundEnabled changes
+  // Update sound effects enabled state
   useEffect(() => {
     sounds.enabled = soundEnabled;
-    if (!soundEnabled) {
-      if (bgmRef.current) {
-        bgmRef.current.pause();
-      }
-    } else {
-      if (activeGamesCountRef.current === 0 && bgmRef.current) {
-        bgmRef.current.play().catch(() => {});
-      }
-    }
   }, [soundEnabled]);
 
   const toggleSound = useCallback(() => {
     setSoundEnabled((prev) => {
       const next = !prev;
-      if (next && activeGamesCountRef.current === 0 && bgmRef.current) {
-        bgmRef.current.play().catch(() => {});
-      } else if (!next && bgmRef.current) {
-        bgmRef.current.pause();
-      }
+      sounds.enabled = next;
       return next;
     });
   }, []);
 
-  const pauseBgm = useCallback(() => {
-    activeGamesCountRef.current = Math.max(1, activeGamesCountRef.current + 1);
-    if (bgmRef.current) {
-      bgmRef.current.pause();
-    }
-  }, []);
-
-  const resumeBgm = useCallback(() => {
-    activeGamesCountRef.current = Math.max(0, activeGamesCountRef.current - 1);
-    if (activeGamesCountRef.current === 0 && sounds.enabled && bgmRef.current) {
-      bgmRef.current.play().catch(() => {});
-    }
-  }, []);
+  const pauseBgm = useCallback(() => {}, []);
+  const resumeBgm = useCallback(() => {}, []);
 
   const playChip = useCallback(() => sounds.playChip(), []);
   const playCardDeal = useCallback(() => sounds.playCardDeal(), []);
