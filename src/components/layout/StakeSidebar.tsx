@@ -66,7 +66,7 @@ export function StakeSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }:
             href="/"
             className="flex items-center min-w-0 flex-1 py-1"
             onClick={onMobileClose}
-            title="FORTIS Stake Web3"
+            title="FORTIS"
           >
             {!collapsed ? (
               <div className="h-11 w-full flex items-center">

@@ -9,8 +9,8 @@ import { SidebarProvider } from '@/context/SidebarContext';
 import { StakeLayoutWrapper } from '@/components/layout/StakeLayoutWrapper';
 
 export const metadata: Metadata = {
-  title: 'FORTIS Web3 — Provably Fair Crypto Games on Robinhood Chain',
-  description: 'FORTIS Stake style casino on Robinhood Chain. Non-custodial, high-stakes Jackpot, 50/50 Coinflip, Mines, and Cups with instant on-chain settlements.',
+  title: 'FORTIS — Leading Provably Fair Crypto Casino',
+  description: 'FORTIS Casino on Robinhood Chain. Non-custodial, high-stakes Jackpot, 50/50 Coinflip, Mines, and Cups with instant on-chain settlements.',
   icons: {
     icon: '/favicon.ico?v=ico_fortis_now',
     shortcut: '/favicon.ico?v=ico_fortis_now',
