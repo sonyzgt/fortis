@@ -44,7 +44,7 @@ export default function CupsPage() {
   // Load user profile
   useEffect(() => {
     try {
-      const saved = localStorage.getItem('kofuku_user_profile') || localStorage.getItem('cashflip_user_profile');
+      const saved = localStorage.getItem('fortis_user_profile') || localStorage.getItem('cashflip_user_profile');
       if (saved) {
         setUserProfile(JSON.parse(saved));
       }
@@ -58,8 +58,8 @@ export default function CupsPage() {
     const updated = { name, avatar: finalAvatar };
     setUserProfile(updated);
     try {
-      localStorage.setItem('kofuku_user_profile', JSON.stringify(updated));
-      localStorage.setItem('kofuku_profile_configured', 'true');
+      localStorage.setItem('fortis_user_profile', JSON.stringify(updated));
+      localStorage.setItem('fortis_profile_configured', 'true');
     } catch (e) {
       console.error('Failed to save profile', e);
     }
@@ -112,7 +112,7 @@ export default function CupsPage() {
   );
 
   return (
-    <div className="min-h-screen bg-[#030508] text-[#F5F7FA] font-sans flex flex-col selection:bg-[#CDB486] selection:text-[#030508] relative overflow-x-hidden">
+    <div className="min-h-screen bg-[#071824] text-white font-sans flex flex-col selection:bg-[#00E701] selection:text-[#071824] relative overflow-x-hidden">
       {/* Ambient Atmospheric Liquid Glass Bubbles */}
       <AmbientLiquidBackground />
 
@@ -133,12 +133,9 @@ export default function CupsPage() {
               CUPS
             </h1>
             <p className="text-sm sm:text-base text-[#8993A4] leading-relaxed">
-              Track the shuffle and uncover the hidden KOFUKU emblem. <br className="hidden sm:inline" />
+              Track the shuffle and uncover the hidden FORTIS emblem. <br className="hidden sm:inline" />
               1 pick to claim the 2.94× payout.
             </p>
-          </div>
-          <div className="w-16 h-16 sm:w-20 sm:h-20 flex-shrink-0 animate-float-natural filter drop-shadow-[0_10px_20px_rgba(205,180,134,0.3)]">
-            <img src="/logo.png" alt="KOFUKU Emblem" className="w-full h-full object-contain" />
           </div>
         </div>
 
@@ -198,17 +195,17 @@ export default function CupsPage() {
             exit={{ opacity: 0, y: 10 }}
             className={`fixed bottom-6 right-6 z-50 p-4 rounded-xl border max-w-sm backdrop-blur-md shadow-2xl ${
               toastMsg.ok
-                ? 'bg-[#0a0d14]/95 border-[#CDB486]/50 text-[#F5F7FA]'
+                ? 'bg-[#0a0d14]/95 border-[#00E701]/50 text-[#F5F7FA]'
                 : 'bg-[#0a0d14]/95 border-rose-500/50 text-[#F5F7FA]'
             }`}
           >
             <div className="text-xs font-semibold uppercase tracking-wider mb-1 flex items-center gap-2">
               <span
                 className={`w-2 h-2 rounded-full ${
-                  toastMsg.ok ? 'bg-[#CDB486]' : 'bg-rose-500'
+                  toastMsg.ok ? 'bg-[#00E701]' : 'bg-rose-500'
                 }`}
               />
-              <span className={toastMsg.ok ? 'text-[#CDB486]' : 'text-rose-400'}>
+              <span className={toastMsg.ok ? 'text-[#00E701]' : 'text-rose-400'}>
                 {toastMsg.title}
               </span>
             </div>

@@ -105,11 +105,11 @@ export const CashFlipWeb3Provider: React.FC<{ children: React.ReactNode }> = ({ 
     setShowTermsModal(false);
   }, []);
 
-  // Load saved Kofuku session
+  // Load saved Fortis session
   useEffect(() => {
     if (typeof window === 'undefined') return;
     try {
-      const saved = localStorage.getItem('kofuku_user_session') || localStorage.getItem('cashflip_user_session');
+      const saved = localStorage.getItem('fortis_user_session') || localStorage.getItem('cashflip_user_session');
       if (saved) {
         const parsed = JSON.parse(saved);
         setAccount(parsed.account);
@@ -117,25 +117,25 @@ export const CashFlipWeb3Provider: React.FC<{ children: React.ReactNode }> = ({ 
         if (parsed.usdgBalance !== undefined) setUsdgBalance(parsed.usdgBalance);
         if (parsed.usdgAllowance !== undefined) setUsdgAllowance(parsed.usdgAllowance);
 
-        const hasAgreed = localStorage.getItem('kofuku_terms_agreed') === 'true' ||
+        const hasAgreed = localStorage.getItem('fortis_terms_agreed') === 'true' ||
           localStorage.getItem('cashflip_terms_agreed') === 'true';
         if (!hasAgreed) {
           setShowTermsModal(true);
         }
       }
     } catch (e) {
-      console.error('Failed to load kofuku session', e);
+      console.error('Failed to load fortis session', e);
     }
   }, []);
 
   const saveSession = useCallback((acc: string | null, type: any, bal: number, allow: number) => {
     if (!acc) {
-      localStorage.removeItem('kofuku_user_session');
+      localStorage.removeItem('fortis_user_session');
       localStorage.removeItem('cashflip_user_session');
       return;
     }
     const sessionData = JSON.stringify({ account: acc, walletType: type, usdgBalance: bal, usdgAllowance: allow });
-    localStorage.setItem('kofuku_user_session', sessionData);
+    localStorage.setItem('fortis_user_session', sessionData);
     localStorage.setItem('cashflip_user_session', sessionData);
   }, []);
 
@@ -269,7 +269,7 @@ export const CashFlipWeb3Provider: React.FC<{ children: React.ReactNode }> = ({ 
 
       // Trigger terms modal if user hasn't agreed in this session
       const hasAgreed = typeof window !== 'undefined' && (
-        localStorage.getItem('kofuku_terms_agreed') === 'true' ||
+        localStorage.getItem('fortis_terms_agreed') === 'true' ||
         localStorage.getItem('cashflip_terms_agreed') === 'true'
       );
       if (!hasAgreed) {
@@ -289,10 +289,10 @@ export const CashFlipWeb3Provider: React.FC<{ children: React.ReactNode }> = ({ 
     setUsdgAllowance(0);
     setLastTxHash(null);
     if (typeof window !== 'undefined') {
-      localStorage.removeItem('kofuku_user_session');
+      localStorage.removeItem('fortis_user_session');
       localStorage.removeItem('cashflip_user_session');
       // Clear terms agreement so when connecting again, the popup centang appears!
-      localStorage.removeItem('kofuku_terms_agreed');
+      localStorage.removeItem('fortis_terms_agreed');
       localStorage.removeItem('cashflip_terms_agreed');
     }
     setShowTermsModal(false);
@@ -300,7 +300,7 @@ export const CashFlipWeb3Provider: React.FC<{ children: React.ReactNode }> = ({ 
 
   const handleAcceptTerms = useCallback(() => {
     if (typeof window !== 'undefined') {
-      localStorage.setItem('kofuku_terms_agreed', 'true');
+      localStorage.setItem('fortis_terms_agreed', 'true');
       localStorage.setItem('cashflip_terms_agreed', 'true');
     }
     setShowTermsModal(false);
@@ -528,7 +528,7 @@ export const CashFlipWeb3Provider: React.FC<{ children: React.ReactNode }> = ({ 
   );
 };
 
-export const useKofukuWeb3 = useCashFlipWeb3;
-export const KofukuWeb3Provider = CashFlipWeb3Provider;
+export const useFortisWeb3 = useCashFlipWeb3;
+export const FortisWeb3Provider = CashFlipWeb3Provider;
 
 

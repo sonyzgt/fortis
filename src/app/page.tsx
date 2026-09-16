@@ -2,52 +2,54 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
-import { motion, AnimatePresence } from 'framer-motion';
 import { useSocket } from '@/context/SocketContext';
 import { useCashFlipWeb3 } from '@/context/CashFlipWeb3Context';
-import { useSound } from '@/context/SoundContext';
 import { ProtocolHeader } from '@/components/protocol/ProtocolHeader';
 import { ProtocolFooter } from '@/components/protocol/ProtocolFooter';
 import { LiveDispatchDrawer } from '@/components/jackpot/LiveDispatchDrawer';
 import { WalletSelectModal } from '@/components/cashflip/WalletSelectModal';
 import { ProfileModal } from '@/components/cashflip/ProfileModal';
+import { StakeBanner } from '@/components/stake/StakeBanner';
+import { StakeGameCard } from '@/components/stake/StakeGameCard';
+import { StakeLiveBets } from '@/components/stake/StakeLiveBets';
 import {
   ShieldCheck,
   Zap,
   Lock,
-  ArrowRight,
+  Flame,
   Sparkles,
   Trophy,
   Coins,
-  Gem,
-  CheckCircle2,
-  ExternalLink,
+  Layers,
+  Award,
+  ChevronRight,
 } from 'lucide-react';
-import { ROBINHOOD_CHAIN_CONFIG, CASHFLIP_TOKEN_ADDRESS, getCashFlipTokenAddress, TOKEN_SYMBOL } from '@/lib/web3/contracts';
-import { AmbientLiquidBackground } from '@/components/ui/AmbientLiquidBackground';
+import { TOKEN_SYMBOL } from '@/lib/web3/contracts';
 
-export default function KofukuHomePage() {
+const CATEGORIES = [
+  { id: 'originals', label: 'Stake Originals', icon: Flame, active: true },
+  { id: 'slots', label: 'All Games', icon: Layers, active: false },
+  { id: 'live', label: 'Live Events', icon: Sparkles, active: false },
+];
+
+export default function StakeHomePage() {
   const { socket } = useSocket();
-  const {
-    account,
-    isConnected,
-    usdgBalance,
-    connectWallet,
-  } = useCashFlipWeb3();
+  const { account, connectWallet } = useCashFlipWeb3();
 
   // Modals state
   const [showWalletModal, setShowWalletModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [isDispatchOpen, setIsDispatchOpen] = useState(false);
   const [messages, setMessages] = useState<any[]>([]);
+  const [activeCategory, setActiveCategory] = useState('originals');
 
-  // Profile customization state
+  // User Profile
   const [userProfile, setUserProfile] = useState<{ name: string; avatar: string }>({
     name: '',
     avatar: '',
   });
 
-  // Live Platform Telemetry Stats
+  // Platform Telemetry
   const [stats, setStats] = useState<{
     totalWagered: number;
     totalPlayers: number;
@@ -70,7 +72,7 @@ export default function KofukuHomePage() {
           });
         }
       })
-      .catch((err) => console.warn('Failed to load platform stats', err));
+      .catch((err) => console.warn('Failed to load stats', err));
   }, []);
 
   useEffect(() => {
@@ -92,13 +94,9 @@ export default function KofukuHomePage() {
 
   useEffect(() => {
     try {
-      const saved = localStorage.getItem('kofuku_user_profile') || localStorage.getItem('cashflip_user_profile');
-      if (saved) {
-        setUserProfile(JSON.parse(saved));
-      }
-    } catch (e) {
-      console.error('Failed to load user profile', e);
-    }
+      const saved = localStorage.getItem('fortis_user_profile') || localStorage.getItem('cashflip_user_profile');
+      if (saved) setUserProfile(JSON.parse(saved));
+    } catch (e) {}
   }, []);
 
   const handleSaveProfile = useCallback((name: string, avatar: string) => {
@@ -106,14 +104,11 @@ export default function KofukuHomePage() {
     const updated = { name, avatar: finalAvatar };
     setUserProfile(updated);
     try {
-      localStorage.setItem('kofuku_user_profile', JSON.stringify(updated));
-      localStorage.setItem('kofuku_profile_configured', 'true');
-    } catch (e) {
-      console.error('Failed to save profile', e);
-    }
+      localStorage.setItem('fortis_user_profile', JSON.stringify(updated));
+    } catch (e) {}
   }, []);
 
-  // Listen to chat
+  // Chat listener
   useEffect(() => {
     if (!socket) return;
     socket.on('chat_message', (msg: any) => {
@@ -145,16 +140,9 @@ export default function KofukuHomePage() {
     [socket, account, userProfile]
   );
 
-  const tokenContractAddress = getCashFlipTokenAddress() || CASHFLIP_TOKEN_ADDRESS;
-
   return (
-    <div className="min-h-screen bg-[#030508] text-[#E8DFCF] font-sans selection:bg-[#CDB486] selection:text-[#030508] flex flex-col relative overflow-x-hidden">
-      {/* Ambient Liquid Glass Atmospheric Bubbles Background */}
-      <AmbientLiquidBackground />
-
-      {/* ─────────────────────────────────────────────────────────────
-          NAVBAR (MINIMAL & MODERN)
-          ───────────────────────────────────────────────────────────── */}
+    <div className="min-h-screen bg-[#071824] text-white flex flex-col">
+      {/* Stake Top Bar Header */}
       <ProtocolHeader
         currentRoute="home"
         onOpenDispatch={() => setIsDispatchOpen(true)}
@@ -162,325 +150,198 @@ export default function KofukuHomePage() {
         onOpenWalletModal={() => setShowWalletModal(true)}
       />
 
-      {/* ─────────────────────────────────────────────────────────────
-          1. HERO SECTION (2-COLUMN LAYOUT)
-          ───────────────────────────────────────────────────────────── */}
-      <section className="relative overflow-hidden py-16 sm:py-24 lg:py-32 px-4 sm:px-8 lg:px-12 border-b border-white/[0.05] relative z-10">
-        <div className="max-w-6xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
-          {/* LEFT COLUMN */}
-          <div className="lg:col-span-7 space-y-6 sm:space-y-8 text-left">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full glass-capsule border-white/10 text-xs font-mono text-[#CDB486] tracking-wider uppercase">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#CDB486] animate-pulse" />
-              ROBINHOOD CHAIN
-            </div>
+      {/* Main Container */}
+      <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8">
+        {/* 1. Hero Promotional Banner Slider */}
+        <StakeBanner />
 
-            <h1 className="font-heading text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight text-[#F5F0E6] leading-[1.04]">
-              THE HOUSE <br />
-              <span className="text-[#8993A4]">DOES NOT</span> <br />
-              <span className="text-[#CDB486]">PLAY.</span>
-            </h1>
-
-            <p className="text-base sm:text-lg text-[#8993A4] leading-relaxed max-w-lg font-normal">
-              A provably fair Web3 gaming platform on Robinhood Chain. Non-custodial, transparent, instant settlement.
-            </p>
-
-            <div className="pt-2 flex flex-wrap items-center gap-4">
-              <Link
-                href="/jackpot"
-                className="glass-btn-inflated px-8 py-3.5 text-sm font-bold uppercase tracking-wider flex items-center gap-2 shadow-xl"
-              >
-                <span>PLAY NOW</span>
-                <ArrowRight className="w-4 h-4" />
-              </Link>
-
-              <a
-                href="#features"
-                className="px-8 py-3.5 text-sm font-semibold uppercase tracking-wider glass-capsule border-white/15 text-[#F5F0E6] hover:text-[#CDB486] hover:border-[#CDB486]/40 transition-all cursor-pointer inline-flex items-center justify-center"
-              >
-                HOW IT WORKS
-              </a>
-            </div>
+        {/* 2. Stake Lobby Navigation Tabs / Category Pills */}
+        <div className="flex items-center justify-between border-b border-[#213743] pb-3 gap-4 overflow-x-auto no-scrollbar">
+          <div className="flex items-center gap-2">
+            {CATEGORIES.map((cat) => {
+              const Icon = cat.icon;
+              const isSelected = activeCategory === cat.id;
+              return (
+                <button
+                  key={cat.id}
+                  onClick={() => setActiveCategory(cat.id)}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all whitespace-nowrap ${
+                    isSelected
+                      ? 'bg-[#1A2C38] text-white border border-[#213743] shadow-sm'
+                      : 'text-[#B1BAD3] hover:text-white hover:bg-[#1A2C38]/50'
+                  }`}
+                >
+                  <Icon className={`w-4 h-4 ${isSelected ? 'text-[#00E701]' : 'text-[#557086]'}`} />
+                  <span>{cat.label}</span>
+                </button>
+              );
+            })}
           </div>
 
-          {/* RIGHT COLUMN: FLOATING 3D CASHFLIP LIQUID GLASS ARTIFACT */}
-          <div className="lg:col-span-5 flex items-center justify-center">
-            <div className="relative w-64 h-64 sm:w-80 sm:h-80 flex items-center justify-center">
-              {/* Soft Ambient Refractive Halo */}
-              <div className="absolute inset-2 rounded-full bg-[#CDB486]/[0.08] blur-3xl pointer-events-none" />
-
-              {/* Free-Floating 3D Liquid Glass Artifact (No bounding box) */}
-              <div className="relative w-56 h-56 sm:w-72 sm:h-72 flex items-center justify-center animate-float-natural filter drop-shadow-[0_25px_45px_rgba(205,180,134,0.3)]">
-                <img
-                  src="/image/logo.png"
-                  alt="KOFUKU Origami Mascot"
-                  className="w-full h-full object-contain"
-                />
-              </div>
-            </div>
+          <div className="hidden sm:flex items-center gap-2 text-xs font-semibold text-[#557086]">
+            <span>ROBINHOOD CHAIN</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-[#00E701]" />
           </div>
         </div>
-      </section>
 
-      {/* ─────────────────────────────────────────────────────────────
-          2. GAME SECTION (3 LARGE LIQUID GLASS EXPERIENCES)
-          Title: CHOOSE YOUR GAME
-          ───────────────────────────────────────────────────────────── */}
-      <section className="py-20 sm:py-28 px-4 sm:px-8 lg:px-12 border-b border-white/[0.04] relative z-10">
-        <div className="max-w-6xl mx-auto space-y-12">
-          <div className="text-left space-y-2">
-            <h2 className="font-heading text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-[#F5F7FA]">
-              CHOOSE YOUR GAME
-            </h2>
-            <p className="text-sm sm:text-base text-[#8993A4] max-w-xl">
-              Four autonomous gaming experiences designed for transparency and instant on-chain settlement.
-            </p>
+        {/* 3. Stake Originals Game Section */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <span className="p-1 rounded-md bg-[#00E701]/10 text-[#00E701]">
+                <Flame className="w-5 h-5" />
+              </span>
+              <h2 className="text-white font-extrabold text-lg sm:text-xl tracking-tight">
+                Stake Originals
+              </h2>
+            </div>
+            <Link
+              href="/jackpot"
+              className="text-xs font-semibold text-[#B1BAD3] hover:text-[#00E701] flex items-center gap-1 transition-colors"
+            >
+              <span>View all</span>
+              <ChevronRight className="w-3.5 h-3.5" />
+            </Link>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {/* CARD 1: JACKPOT */}
-            <div className="glass-capsule flex flex-col justify-between p-7 group">
-              <div className="space-y-5">
-                {/* 3D Origami Artwork */}
-                <div className="w-full h-44 rounded-2xl bg-white/[0.01] border border-white/[0.05] flex items-center justify-center relative overflow-hidden group-hover:border-[#CDB486]/35 transition-colors">
-                  <div className="w-32 h-32 flex items-center justify-center group-hover:scale-105 transition-transform duration-500 filter drop-shadow-[0_15px_30px_rgba(205,180,134,0.25)] animate-float-natural">
-                    <img
-                      src="/image/jackpot.png"
-                      alt="Jackpot Origami"
-                      className="w-full h-full object-contain"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-1.5 text-left">
-                  <h3 className="font-heading text-xl font-bold text-[#F5F0E6]">
-                    JACKPOT
-                  </h3>
-                  <p className="text-xs text-[#8993A4] leading-relaxed">
-                    Multiplayer pool of capital where probability converges to a single victor.
-                  </p>
-                </div>
-              </div>
-
-              <div className="pt-5">
-                <Link
-                  href="/jackpot"
-                  className="glass-btn-inflated w-full py-3 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg"
-                >
-                  <span>PLAY</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </Link>
-              </div>
-            </div>
-
-            {/* CARD 2: COINFLIP */}
-            <div className="glass-capsule flex flex-col justify-between p-7 group">
-              <div className="space-y-5">
-                {/* 3D Origami Artwork */}
-                <div className="w-full h-44 rounded-2xl bg-white/[0.01] border border-white/[0.05] flex items-center justify-center relative overflow-hidden group-hover:border-[#CDB486]/35 transition-colors">
-                  <div className="w-32 h-32 flex items-center justify-center group-hover:scale-105 transition-transform duration-500 filter drop-shadow-[0_15px_30px_rgba(205,180,134,0.25)] animate-float-natural">
-                    <img
-                      src="/image/flipcoin.png"
-                      alt="Coinflip Origami"
-                      className="w-full h-full object-contain"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-1.5 text-left">
-                  <h3 className="font-heading text-xl font-bold text-[#F5F0E6]">
-                    COINFLIP
-                  </h3>
-                  <p className="text-xs text-[#8993A4] leading-relaxed">
-                    Head-to-head 1v1 binary duels with instant cryptographic settlement.
-                  </p>
-                </div>
-              </div>
-
-              <div className="pt-5">
-                <Link
-                  href="/coinflip"
-                  className="glass-btn-inflated w-full py-3 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg"
-                >
-                  <span>PLAY</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </Link>
-              </div>
-            </div>
-
-            {/* CARD 3: MINES */}
-            <div className="glass-capsule flex flex-col justify-between p-7 group">
-              <div className="space-y-5">
-                {/* 3D Origami Artwork */}
-                <div className="w-full h-44 rounded-2xl bg-white/[0.01] border border-white/[0.05] flex items-center justify-center relative overflow-hidden group-hover:border-[#CDB486]/35 transition-colors">
-                  <div className="w-32 h-32 flex items-center justify-center group-hover:scale-105 transition-transform duration-500 filter drop-shadow-[0_15px_30px_rgba(205,180,134,0.25)] animate-float-natural">
-                    <img
-                      src="/image/mine.png"
-                      alt="Mines Origami"
-                      className="w-full h-full object-contain"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-1.5 text-left">
-                  <h3 className="font-heading text-xl font-bold text-[#F5F0E6]">
-                    MINES
-                  </h3>
-                  <p className="text-xs text-[#8993A4] leading-relaxed">
-                    Uncover safe refractive gemstones, avoid demolition bombs, and cash out anytime.
-                  </p>
-                </div>
-              </div>
-
-              <div className="pt-5">
-                <Link
-                  href="/mines"
-                  className="glass-btn-inflated w-full py-3 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg"
-                >
-                  <span>PLAY</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </Link>
-              </div>
-            </div>
-
-            {/* CARD 4: CUPS */}
-            <div className="glass-capsule flex flex-col justify-between p-7 group">
-              <div className="space-y-5">
-                {/* 3D Artwork */}
-                <div className="w-full h-44 rounded-2xl bg-white/[0.01] border border-white/[0.05] flex items-center justify-center relative overflow-hidden group-hover:border-[#CDB486]/35 transition-colors">
-                  <div className="w-28 h-28 flex items-center justify-center group-hover:scale-105 transition-transform duration-500 filter drop-shadow-[0_15px_30px_rgba(205,180,134,0.25)] animate-float-natural">
-                    <img
-                      src="/logo.png"
-                      alt="Cups Emblem"
-                      className="w-full h-full object-contain"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-1.5 text-left">
-                  <h3 className="font-heading text-xl font-bold text-[#F5F0E6]">
-                    CUPS
-                  </h3>
-                  <p className="text-xs text-[#8993A4] leading-relaxed">
-                    Track the shuffle and uncover the hidden KOFUKU emblem under 3 glass cups.
-                  </p>
-                </div>
-              </div>
-
-              <div className="pt-5">
-                <Link
-                  href="/cups"
-                  className="glass-btn-inflated w-full py-3 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg"
-                >
-                  <span>PLAY</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </Link>
-              </div>
-            </div>
+          {/* Grid of 4 Games with Stake Card Styling */}
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-4 sm:gap-5">
+            <StakeGameCard
+              title="JACKPOT"
+              description="Multiplayer pool. Winner takes all."
+              href="/jackpot"
+              imageSrc="/image/jackpot.png?v=fresh"
+              badge="HOT"
+              accentColor="#FFC432"
+            />
+            <StakeGameCard
+              title="COINFLIP"
+              description="1v1 Binary duels with instant payout."
+              href="/coinflip"
+              imageSrc="/image/flipcoin.png?v=fresh"
+              badge={null}
+              accentColor="#00E701"
+            />
+            <StakeGameCard
+              title="MINES"
+              description="Uncover gems, dodge bombs & cash out."
+              href="/mines"
+              imageSrc="/image/mine.png?v=fresh"
+              badge="NEW"
+              accentColor="#3498DB"
+            />
+            <StakeGameCard
+              title="CUPS"
+              description="Track the shuffle & pick the right cup."
+              href="/cups"
+              imageSrc="/image/cups.png?v=fresh"
+              badge={null}
+              accentColor="#E74C3C"
+            />
           </div>
         </div>
-      </section>
 
-      {/* ─────────────────────────────────────────────────────────────
-          3. LIVE STATS SECTION (FLOATING GLASS CAPSULES)
-          ───────────────────────────────────────────────────────────── */}
-      <section className="py-16 sm:py-20 px-4 sm:px-8 lg:px-12 border-b border-white/[0.05] relative z-10">
-        <div className="max-w-6xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
-            <div className="glass-capsule p-6 sm:p-8 space-y-2 text-left">
-              <span className="text-xs font-medium uppercase tracking-wider text-[#8993A4] block">
-                TOTAL WAGERED
+        {/* 4. Telemetry Stats Bar */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="bg-[#1A2C38] border border-[#213743] rounded-xl p-4 flex items-center justify-between shadow-sm">
+            <div>
+              <span className="text-[11px] font-bold text-[#557086] uppercase tracking-wider block mb-1">
+                Total Wagered
               </span>
-              <div className="font-mono text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#F5F0E6]">
-                {stats.totalWagered.toLocaleString()} <span className="text-lg text-[#CDB486]">{TOKEN_SYMBOL}</span>
+              <div className="text-xl sm:text-2xl font-extrabold text-white font-mono">
+                {stats.totalWagered.toLocaleString()}{' '}
+                <span className="text-sm text-[#00E701] font-semibold">{TOKEN_SYMBOL}</span>
               </div>
             </div>
+            <div className="w-10 h-10 rounded-lg bg-[#071824] border border-[#213743] flex items-center justify-center text-[#00E701]">
+              <Coins className="w-5 h-5" />
+            </div>
+          </div>
 
-            <div className="glass-capsule p-6 sm:p-8 space-y-2 text-left">
-              <span className="text-xs font-medium uppercase tracking-wider text-[#8993A4] block">
-                PLAYERS
+          <div className="bg-[#1A2C38] border border-[#213743] rounded-xl p-4 flex items-center justify-between shadow-sm">
+            <div>
+              <span className="text-[11px] font-bold text-[#557086] uppercase tracking-wider block mb-1">
+                Total Players
               </span>
-              <div className="font-mono text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#F5F0E6]">
+              <div className="text-xl sm:text-2xl font-extrabold text-white font-mono">
                 {stats.totalPlayers.toLocaleString()}
               </div>
             </div>
+            <div className="w-10 h-10 rounded-lg bg-[#071824] border border-[#213743] flex items-center justify-center text-[#3498DB]">
+              <Award className="w-5 h-5" />
+            </div>
+          </div>
 
-            <div className="glass-capsule p-6 sm:p-8 space-y-2 text-left">
-              <span className="text-xs font-medium uppercase tracking-wider text-[#8993A4] block">
-                LARGEST WIN
+          <div className="bg-[#1A2C38] border border-[#213743] rounded-xl p-4 flex items-center justify-between shadow-sm">
+            <div>
+              <span className="text-[11px] font-bold text-[#557086] uppercase tracking-wider block mb-1">
+                Largest Win
               </span>
-              <div className="font-mono text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#CDB486]">
-                {stats.largestWin.toLocaleString()} <span className="text-lg text-[#CDB486]">{TOKEN_SYMBOL}</span>
+              <div className="text-xl sm:text-2xl font-extrabold text-[#FFC432] font-mono">
+                {stats.largestWin.toLocaleString()}{' '}
+                <span className="text-sm font-semibold">{TOKEN_SYMBOL}</span>
               </div>
+            </div>
+            <div className="w-10 h-10 rounded-lg bg-[#071824] border border-[#213743] flex items-center justify-center text-[#FFC432]">
+              <Trophy className="w-5 h-5" />
             </div>
           </div>
         </div>
-      </section>
 
-      {/* ─────────────────────────────────────────────────────────────
-          4. FEATURES SECTION (TRUST & INTEGRITY)
-          ───────────────────────────────────────────────────────────── */}
-      <section id="features" className="py-20 sm:py-28 px-4 sm:px-8 lg:px-12 border-b border-white/[0.05] relative z-10">
-        <div className="max-w-6xl mx-auto space-y-12">
-          <div className="text-left space-y-2">
-            <h2 className="font-heading text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-[#F5F0E6]">
-              PLAY WITH CONFIDENCE.
-            </h2>
-            <p className="text-sm sm:text-base text-[#8993A4] max-w-lg">
-              Built for transparency and fairness. Every outcome is verifiable on-chain with zero hidden algorithms.
+        {/* 5. Stake Live Bets Ticker Table */}
+        <div className="space-y-3">
+          <StakeLiveBets />
+        </div>
+
+        {/* 6. Provably Fair & Trust Guarantee */}
+        <div className="bg-[#0F212E] border border-[#213743] rounded-2xl p-6 sm:p-8 shadow-sm">
+          <div className="max-w-3xl mb-6">
+            <h3 className="text-white font-extrabold text-xl sm:text-2xl tracking-tight mb-2">
+              Leading Web3 Provably Fair Casino
+            </h3>
+            <p className="text-[#B1BAD3] text-sm leading-relaxed">
+              Every bet on our platform is executed through autonomous smart contracts deployed on Robinhood Chain. Wagers are non-custodial and payouts are disbursed instantly.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
-            {/* Feature 1: NON-CUSTODIAL */}
-            <div className="glass-capsule p-8 space-y-4 text-left">
-              <div className="w-10 h-10 rounded-xl bg-[#CDB486]/10 border border-[#CDB486]/25 flex items-center justify-center text-[#CDB486] shadow-inner">
-                <Lock className="w-5 h-5" />
-              </div>
-              <h3 className="font-heading text-lg font-bold text-[#F5F0E6] uppercase tracking-wide">
-                NON-CUSTODIAL
-              </h3>
-              <p className="text-sm text-[#8993A4] leading-relaxed">
-                Your funds remain under your control. Wagers interact directly with verified smart contracts, and winnings are disbursed straight to your wallet.
-              </p>
-            </div>
-
-            {/* Feature 2: SMART CONTRACTS */}
-            <div className="glass-capsule p-8 space-y-4 text-left">
-              <div className="w-10 h-10 rounded-xl bg-[#CDB486]/10 border border-[#CDB486]/25 flex items-center justify-center text-[#CDB486] shadow-inner">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            <div className="bg-[#1A2C38] border border-[#213743] rounded-xl p-5 space-y-2.5">
+              <div className="w-9 h-9 rounded-lg bg-[#00E701]/10 border border-[#00E701]/30 flex items-center justify-center text-[#00E701]">
                 <ShieldCheck className="w-5 h-5" />
               </div>
-              <h3 className="font-heading text-lg font-bold text-[#F5F0E6] uppercase tracking-wide">
-                SMART CONTRACTS
-              </h3>
-              <p className="text-sm text-[#8993A4] leading-relaxed">
-                Autonomous and immutable logic ensures that no house, team, or intermediary can alter round outcomes or restrict withdrawals.
+              <h4 className="text-white font-bold text-sm">Provably Fair</h4>
+              <p className="text-[#B1BAD3] text-xs leading-relaxed">
+                Cryptographic seed verification ensures each outcome is pre-determined and unmanipulatable.
               </p>
             </div>
 
-            {/* Feature 3: ROBINHOOD CHAIN */}
-            <div className="glass-capsule p-8 space-y-4 text-left">
-              <div className="w-10 h-10 rounded-xl bg-[#CDB486]/10 border border-[#CDB486]/25 flex items-center justify-center text-[#CDB486] shadow-inner">
+            <div className="bg-[#1A2C38] border border-[#213743] rounded-xl p-5 space-y-2.5">
+              <div className="w-9 h-9 rounded-lg bg-[#3498DB]/10 border border-[#3498DB]/30 flex items-center justify-center text-[#3498DB]">
+                <Lock className="w-5 h-5" />
+              </div>
+              <h4 className="text-white font-bold text-sm">Non-Custodial</h4>
+              <p className="text-[#B1BAD3] text-xs leading-relaxed">
+                You retain full custody of your funds. Winnings transfer directly into your connected wallet.
+              </p>
+            </div>
+
+            <div className="bg-[#1A2C38] border border-[#213743] rounded-xl p-5 space-y-2.5">
+              <div className="w-9 h-9 rounded-lg bg-[#FFC432]/10 border border-[#FFC432]/30 flex items-center justify-center text-[#FFC432]">
                 <Zap className="w-5 h-5" />
               </div>
-              <h3 className="font-heading text-lg font-bold text-[#F5F0E6] uppercase tracking-wide">
-                ROBINHOOD CHAIN
-              </h3>
-              <p className="text-sm text-[#8993A4] leading-relaxed">
-                Powered by Chain ID 4663. Ultra-fast sub-second finality, minimal transaction fees, and native settlement in {TOKEN_SYMBOL}.
+              <h4 className="text-white font-bold text-sm">Sub-Second Finality</h4>
+              <p className="text-[#B1BAD3] text-xs leading-relaxed">
+                Powered by Robinhood Chain with ultra-low gas fees and lightning-fast block times.
               </p>
             </div>
           </div>
         </div>
-      </section>
+      </main>
 
-      {/* ─────────────────────────────────────────────────────────────
-          5. FOOTER (CLEAN & MINIMAL WITH DOCS)
-          ───────────────────────────────────────────────────────────── */}
+      {/* Footer */}
       <ProtocolFooter />
 
-      {/* ─────────────────────────────────────────────────────────────
-          GLOBAL MODALS & DRAWER
-          ───────────────────────────────────────────────────────────── */}
+      {/* Global Modals */}
       <LiveDispatchDrawer
         isOpen={isDispatchOpen}
         onClose={() => setIsDispatchOpen(false)}

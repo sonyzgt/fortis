@@ -143,7 +143,7 @@ export class CashFlipJackpotEngine {
     for (let i = 0; i < 6; i++) {
       code += chars[Math.floor(Math.random() * chars.length)];
     }
-    return `KOFUKU-${code}`;
+    return `FORTIS-${code}`;
   }
 
   public startNewGame(): void {
@@ -167,7 +167,7 @@ export class CashFlipJackpotEngine {
     this.currentCommitment = ProvablyFairEngine.createCommitment(
       this.gameId,
       this.currentNonce,
-      'kofuku-2026'
+      'fortis-2026'
     );
 
     this.startTime = Date.now();
@@ -232,10 +232,10 @@ export class CashFlipJackpotEngine {
     }
 
     if (amountPons < 100000) {
-      return { success: false, message: 'Minimum bet is 100,000 KOFUKU.' };
+      return { success: false, message: 'Minimum bet is 100,000 FORTIS.' };
     }
 
-    const ticketCount = Math.max(1, Math.floor(amountPons)); // 1 KOFUKU = 1 Ticket
+    const ticketCount = Math.max(1, Math.floor(amountPons)); // 1 FORTIS = 1 Ticket
     const startTicket = this.totalTickets;
     const endTicket = startTicket + ticketCount - 1;
 
@@ -492,7 +492,7 @@ export class CashFlipJackpotEngine {
       gameId: this.gameId,
       gameHash: this.currentCommitment?.gameHash || '',
       serverSeedHash: this.currentCommitment?.serverSeedHash || '',
-      publicSeed: this.currentCommitment?.publicSeed || 'kofuku-2026',
+      publicSeed: this.currentCommitment?.publicSeed || 'fortis-2026',
       nonce: this.currentNonce,
       status: this.status,
       startTime: this.startTime,

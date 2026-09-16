@@ -114,7 +114,7 @@ export class MinesEngine {
       return { success: false, message: 'Player address is required' };
     }
     if (betAmount < 100000 || betAmount > 100000000) {
-      return { success: false, message: 'Wager must be between 100,000 and 100,000,000 KOFUKU' };
+      return { success: false, message: 'Wager must be between 100,000 and 100,000,000 FORTIS' };
     }
     const maxMines = gridSize - 1;
     if (mineCount < 1 || mineCount > maxMines) {

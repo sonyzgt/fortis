@@ -36,7 +36,7 @@ export const DeployModal: React.FC<DeployModalProps> = ({ isOpen, onClose, onSuc
     }
 
     try {
-      localStorage.setItem('kofuku_deployed_game_contract', trimmed);
+      localStorage.setItem('fortis_deployed_game_contract', trimmed);
       localStorage.setItem('cashflip_deployed_game_contract', trimmed);
       const apiBase = getApiBaseUrl();
       const token = typeof window !== 'undefined' ? sessionStorage.getItem('cashflip_admin_token') || '' : '';
@@ -106,7 +106,7 @@ export const DeployModal: React.FC<DeployModalProps> = ({ isOpen, onClose, onSuc
           {/* Header */}
           <div className="flex items-center justify-between pb-4 border-b border-white/[0.06]">
             <div className="space-y-0.5">
-              <span className="font-mono text-[10px] tracking-[0.2em] uppercase text-[#CDB486] block font-bold">
+              <span className="font-mono text-[10px] tracking-[0.2em] uppercase text-[#00E701] block font-bold">
                 INFRASTRUCTURE // ADMIN
               </span>
               <h3 className="font-heading text-lg font-bold uppercase text-[#F5F7FA] tracking-wide">
@@ -123,7 +123,7 @@ export const DeployModal: React.FC<DeployModalProps> = ({ isOpen, onClose, onSuc
 
           <div className="space-y-3.5 pt-1 text-xs">
             <div className="p-4 glass-capsule rounded-2xl space-y-2">
-              <p className="font-bold text-[#CDB486] flex items-center gap-2">
+              <p className="font-bold text-[#00E701] flex items-center gap-2">
                 <ShieldCheck className="w-4 h-4" />
                 <span className="uppercase text-[10px] font-mono tracking-wider">CONTRACT ROLE SPECIFICATION</span>
               </p>
@@ -141,7 +141,7 @@ export const DeployModal: React.FC<DeployModalProps> = ({ isOpen, onClose, onSuc
               </div>
               <div className="flex justify-between items-center py-1 border-b border-white/[0.05]">
                 <span className="text-[#8993A4]">DEFLATIONARY BURN:</span>
-                <span className="text-[#CDB486] font-bold">2.0% (to 0x...dEaD)</span>
+                <span className="text-[#00E701] font-bold">2.0% (to 0x...dEaD)</span>
               </div>
               <div className="flex justify-between items-center py-1">
                 <span className="text-[#8993A4]">ESTIMATED GAS:</span>
@@ -164,7 +164,7 @@ export const DeployModal: React.FC<DeployModalProps> = ({ isOpen, onClose, onSuc
                 />
                 <button
                   onClick={() => handleSaveContract(manualAddress)}
-                  className="glass-btn-chip px-4 py-2 text-[#CDB486] text-[10px] font-mono tracking-wider uppercase font-bold cursor-pointer"
+                  className="glass-btn-chip px-4 py-2 text-[#00E701] text-[10px] font-mono tracking-wider uppercase font-bold cursor-pointer"
                 >
                   BIND
                 </button>
@@ -179,8 +179,8 @@ export const DeployModal: React.FC<DeployModalProps> = ({ isOpen, onClose, onSuc
             )}
 
             {deployedAddress && (
-              <div className="p-4 glass-capsule rounded-2xl border border-[#CDB486]/40 space-y-1.5 text-xs font-mono">
-                <div className="flex items-center gap-1.5 font-bold text-[#CDB486]">
+              <div className="p-4 glass-capsule rounded-2xl border border-[#00E701]/40 space-y-1.5 text-xs font-mono">
+                <div className="flex items-center gap-1.5 font-bold text-[#00E701]">
                   <Check className="w-4 h-4" />
                   <span>CONTRACT DEPLOYED SUCCESSFULLY!</span>
                 </div>
@@ -189,7 +189,7 @@ export const DeployModal: React.FC<DeployModalProps> = ({ isOpen, onClose, onSuc
                   href={`${ROBINHOOD_CHAIN_CONFIG.blockExplorer}/address/${deployedAddress}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex items-center gap-1.5 text-[11px] text-[#CDB486] hover:underline pt-1"
+                  className="inline-flex items-center gap-1.5 text-[11px] text-[#00E701] hover:underline pt-1"
                 >
                   <span>View in Robinhood Explorer</span>
                   <ExternalLink className="w-3.5 h-3.5" />

@@ -54,7 +54,7 @@ export function TermsModal({ isOpen, onAccept, onDecline }: TermsModalProps) {
           {/* Header */}
           <div className="flex items-start justify-between pb-4 border-b border-white/[0.06]">
             <div className="space-y-0.5">
-              <span className="font-mono text-[10px] tracking-[0.2em] uppercase text-[#CDB486] block font-bold">
+              <span className="font-mono text-[10px] tracking-[0.2em] uppercase text-[#00E701] block font-bold">
                 TERMS & CONDITIONS
               </span>
               <h2 className="font-heading text-lg font-bold text-[#F5F7FA] tracking-wide uppercase">
@@ -75,25 +75,25 @@ export function TermsModal({ isOpen, onAccept, onDecline }: TermsModalProps) {
 
           {/* Protocol Principles */}
           <div className="p-4 glass-capsule rounded-2xl space-y-3 text-xs text-[#8993A4]">
-            <div className="flex items-center gap-2 text-xs font-bold tracking-wider text-[#CDB486] uppercase">
-              <ShieldCheck className="w-4 h-4 text-[#CDB486]" />
+            <div className="flex items-center gap-2 text-xs font-bold tracking-wider text-[#00E701] uppercase">
+              <ShieldCheck className="w-4 h-4 text-[#00E701]" />
               <span className="text-[10px] font-mono tracking-widest">DECENTRALIZED EXECUTION CHARTER</span>
             </div>
             <ul className="space-y-2.5 text-[11px] leading-relaxed">
               <li className="flex items-start gap-2.5">
-                <span className="text-[#CDB486] font-mono font-bold">01</span>
+                <span className="text-[#00E701] font-mono font-bold">01</span>
                 <span>
                   <strong className="text-[#F5F7FA]">Non-Custodial Settlement:</strong> Capital is deposited directly into smart contract vaults on Robinhood Chain with automated settlement.
                 </span>
               </li>
               <li className="flex items-start gap-2.5">
-                <span className="text-[#CDB486] font-mono font-bold">02</span>
+                <span className="text-[#00E701] font-mono font-bold">02</span>
                 <span>
                   <strong className="text-[#F5F7FA]">Cryptographic Determinism:</strong> Outcomes are dictated by HMAC-SHA256 seeds and mathematical modulo.
                 </span>
               </li>
               <li className="flex items-start gap-2.5">
-                <span className="text-[#CDB486] font-mono font-bold">03</span>
+                <span className="text-[#00E701] font-mono font-bold">03</span>
                 <span>
                   <strong className="text-[#F5F7FA]">Platform Fee:</strong> A standard 2.0% platform fee is retained by the smart contract vault upon payout execution.
                 </span>
@@ -108,13 +108,13 @@ export function TermsModal({ isOpen, onAccept, onDecline }: TermsModalProps) {
               onClick={() => setAgeChecked(!ageChecked)}
               className={`flex items-start gap-3 p-3.5 glass-capsule rounded-2xl cursor-pointer select-none transition-all ${
                 ageChecked
-                  ? 'border-[#CDB486]/40 bg-[#CDB486]/[0.05] shadow-[0_0_15px_rgba(205, 180, 134,0.1)]'
+                  ? 'border-[#00E701]/40 bg-[#00E701]/[0.05] shadow-[0_0_15px_rgba(205, 180, 134,0.1)]'
                   : 'hover:border-white/20'
               }`}
             >
               <div className="pt-0.5 flex-shrink-0">
                 {ageChecked ? (
-                  <CheckSquare className="w-4 h-4 text-[#CDB486]" />
+                  <CheckSquare className="w-4 h-4 text-[#00E701]" />
                 ) : (
                   <Square className="w-4 h-4 text-[#8993A4]/60" />
                 )}
@@ -129,13 +129,13 @@ export function TermsModal({ isOpen, onAccept, onDecline }: TermsModalProps) {
               onClick={() => setTermsChecked(!termsChecked)}
               className={`flex items-start gap-3 p-3.5 glass-capsule rounded-2xl cursor-pointer select-none transition-all ${
                 termsChecked
-                  ? 'border-[#CDB486]/40 bg-[#CDB486]/[0.05] shadow-[0_0_15px_rgba(205, 180, 134,0.1)]'
+                  ? 'border-[#00E701]/40 bg-[#00E701]/[0.05] shadow-[0_0_15px_rgba(205, 180, 134,0.1)]'
                   : 'hover:border-white/20'
               }`}
             >
               <div className="pt-0.5 flex-shrink-0">
                 {termsChecked ? (
-                  <CheckSquare className="w-4 h-4 text-[#CDB486]" />
+                  <CheckSquare className="w-4 h-4 text-[#00E701]" />
                 ) : (
                   <Square className="w-4 h-4 text-[#8993A4]/60" />
                 )}
@@ -146,7 +146,7 @@ export function TermsModal({ isOpen, onAccept, onDecline }: TermsModalProps) {
                   href="/docs?tab=terms"
                   target="_blank"
                   onClick={(e) => e.stopPropagation()}
-                  className="font-bold text-[#CDB486] hover:underline inline-flex items-center gap-0.5"
+                  className="font-bold text-[#00E701] hover:underline inline-flex items-center gap-0.5"
                 >
                   Terms of Service <ExternalLink className="w-3 h-3 inline" />
                 </Link>{' '}
@@ -155,7 +155,7 @@ export function TermsModal({ isOpen, onAccept, onDecline }: TermsModalProps) {
                   href="/docs?tab=privacy"
                   target="_blank"
                   onClick={(e) => e.stopPropagation()}
-                  className="font-bold text-[#CDB486] hover:underline inline-flex items-center gap-0.5"
+                  className="font-bold text-[#00E701] hover:underline inline-flex items-center gap-0.5"
                 >
                   Privacy Policy <ExternalLink className="w-3 h-3 inline" />
                 </Link>.

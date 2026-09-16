@@ -295,7 +295,7 @@ export default function AdminPanelPage() {
       });
       const data = await res.json();
       if (data.success || res.ok) {
-        localStorage.setItem('kofuku_token_contract', trimmed);
+        localStorage.setItem('fortis_token_contract', trimmed);
         localStorage.setItem('cashflip_token_contract', trimmed);
         setActiveTokenContract(trimmed);
         setStatusMsg({ ok: true, text: `Active betting token updated to: ${trimmed}` });
@@ -304,7 +304,7 @@ export default function AdminPanelPage() {
         throw new Error(data.error || 'Failed to update token on server');
       }
     } catch (e: any) {
-      localStorage.setItem('kofuku_token_contract', trimmed);
+      localStorage.setItem('fortis_token_contract', trimmed);
       localStorage.setItem('cashflip_token_contract', trimmed);
       setActiveTokenContract(trimmed);
       setStatusMsg({ ok: true, text: `Betting token updated locally: ${trimmed}` });
@@ -326,7 +326,7 @@ export default function AdminPanelPage() {
       });
       const data = await res.json();
       if (data.success || res.ok) {
-        localStorage.setItem('kofuku_deployed_game_contract', trimmed);
+        localStorage.setItem('fortis_deployed_game_contract', trimmed);
         localStorage.setItem('cashflip_deployed_game_contract', trimmed);
         setActiveContract(trimmed);
         setStatusMsg({ ok: true, text: `Active smart contract successfully bound to: ${trimmed}` });
@@ -335,7 +335,7 @@ export default function AdminPanelPage() {
         throw new Error(data.error || 'Failed to update contract on server');
       }
     } catch (e: any) {
-      localStorage.setItem('kofuku_deployed_game_contract', trimmed);
+      localStorage.setItem('fortis_deployed_game_contract', trimmed);
       localStorage.setItem('cashflip_deployed_game_contract', trimmed);
       setActiveContract(trimmed);
       setStatusMsg({ ok: true, text: `Smart contract bound locally: ${trimmed}` });
@@ -665,7 +665,7 @@ export default function AdminPanelPage() {
           <BookplateCorner />
 
           <div className="mx-auto w-14 h-14 border border-[#9E8055] bg-[#E8DFD1] p-1.5 flex items-center justify-center shadow-inner">
-            <img src="/image/logo.png" alt="Kofuku Logo" className="w-full h-full object-contain" />
+            <img src="/image/logo.png" alt="Fortis Logo" className="w-full h-full object-contain" />
           </div>
 
           <div>
@@ -759,7 +759,7 @@ export default function AdminPanelPage() {
 
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 border border-[#9E8055] p-1 bg-[#E8DFD1] flex items-center justify-center flex-shrink-0 shadow-inner">
-              <img src="/image/logo.png" alt="Kofuku" className="w-full h-full object-contain" />
+              <img src="/image/logo.png" alt="Fortis" className="w-full h-full object-contain" />
             </div>
             <Link
               href="/"

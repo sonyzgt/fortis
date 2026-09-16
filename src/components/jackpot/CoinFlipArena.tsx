@@ -556,12 +556,12 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
       {/* ═══════════════════════════════════════════════════════════
           1. TOP CONTROL BAR (CYBER OBSIDIAN & NEON CYAN)
           ═══════════════════════════════════════════════════════════ */}
-      <div className="p-4 sm:p-5 border border-[#CDB486]/25 bg-[#080C14] rounded-xl relative shadow-[0_0_25px_rgba(205, 180, 134,0.05)] backdrop-blur-md">
+      <div className="p-4 sm:p-5 border border-[#00E701]/25 bg-[#080C14] rounded-xl relative shadow-[0_0_25px_rgba(205, 180, 134,0.05)] backdrop-blur-md">
         <div className="flex flex-col lg:flex-row items-center justify-between gap-4">
           {/* Left Title */}
           <div className="flex items-center gap-3 w-full lg:w-auto">
-            <div className="w-10 h-10 rounded-lg border border-[#CDB486]/40 bg-[#05070B] p-1 flex items-center justify-center flex-shrink-0 shadow-[0_0_10px_rgba(205, 180, 134,0.2)]">
-              <Coins className="w-6 h-6 text-[#CDB486]" />
+            <div className="w-10 h-10 rounded-lg border border-[#00E701]/40 bg-[#05070B] p-1 flex items-center justify-center flex-shrink-0 shadow-[0_0_10px_rgba(205, 180, 134,0.2)]">
+              <Coins className="w-6 h-6 text-[#00E701]" />
             </div>
             <div>
               <h2 className="text-base sm:text-lg font-architectural font-bold tracking-wider text-[#E2E8F0] uppercase">
@@ -576,9 +576,9 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
           {/* Right Inputs: Bet Amount + Additive Chips + Side Toggle + Buttons */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-start lg:justify-end gap-2 sm:gap-3 w-full lg:w-auto">
             {/* Bet Input & Additive Buttons */}
-            <div className="flex items-center justify-between sm:justify-start gap-1.5 bg-[#05070B] border border-[#CDB486]/20 rounded-lg p-1.5 w-full sm:w-auto shadow-inner">
+            <div className="flex items-center justify-between sm:justify-start gap-1.5 bg-[#05070B] border border-[#00E701]/20 rounded-lg p-1.5 w-full sm:w-auto shadow-inner">
               <div className="flex items-center min-w-0">
-                <span className="text-xs font-mono font-bold text-[#CDB486] px-2 flex-shrink-0">{TOKEN_SYMBOL}</span>
+                <span className="text-xs font-mono font-bold text-[#00E701] px-2 flex-shrink-0">{TOKEN_SYMBOL}</span>
                 <input
                   type="number"
                   min="100000"
@@ -590,7 +590,7 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
                 />
               </div>
               {/* Quick Add Chips */}
-              <div className="flex items-center gap-1 pl-1.5 border-l border-[#CDB486]/20 overflow-x-auto">
+              <div className="flex items-center gap-1 pl-1.5 border-l border-[#00E701]/20 overflow-x-auto">
                 {[
                   { label: '+100k', val: 100000 },
                   { label: '+250k', val: 250000 },
@@ -604,7 +604,7 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
                       setBetAmount((prev) => Number((prev + chip.val).toFixed(0)));
                       playTick();
                     }}
-                    className="px-2 py-1 text-[10px] font-mono font-bold rounded bg-[#0D1322] text-[#E2E8F0] hover:bg-[#CDB486] hover:text-[#05070B] transition-all flex-shrink-0 shadow-sm cursor-pointer"
+                    className="px-2 py-1 text-[10px] font-mono font-bold rounded bg-[#0D1322] text-[#E2E8F0] hover:bg-[#00E701] hover:text-[#05070B] transition-all flex-shrink-0 shadow-sm cursor-pointer"
                   >
                     {chip.label}
                   </button>
@@ -614,7 +614,7 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
 
             {/* Coin Side Selector (Head / Tail) & Create Button grouped on mobile */}
             <div className="flex items-center justify-between sm:justify-start gap-2 w-full sm:w-auto">
-              <div className="flex items-center gap-1.5 p-1 bg-[#05070B] rounded-lg border border-[#CDB486]/20">
+              <div className="flex items-center gap-1.5 p-1 bg-[#05070B] rounded-lg border border-[#00E701]/20">
                 {/* Head Button */}
                 <button
                   type="button"
@@ -624,7 +624,7 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
                   }}
                   className={`w-8 h-8 rounded-full border-2 transition-all p-0.5 flex items-center justify-center ${
                     selectedSide === 'heads'
-                      ? 'border-[#CDB486] shadow-[0_0_15px_rgba(205, 180, 134,0.7)] scale-105 bg-[#CDB486]/20'
+                      ? 'border-[#00E701] shadow-[0_0_15px_rgba(205, 180, 134,0.7)] scale-105 bg-[#00E701]/20'
                       : 'border-transparent opacity-40 hover:opacity-100'
                   }`}
                   title="Select Head"
@@ -641,7 +641,7 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
                   }}
                   className={`w-8 h-8 rounded-full border-2 transition-all p-0.5 flex items-center justify-center ${
                     selectedSide === 'tails'
-                      ? 'border-[#E8DFCF] shadow-[0_0_15px_rgba(232,223,207,0.7)] scale-105 bg-[#E8DFCF]/20'
+                      ? 'border-[#FFFFFF] shadow-[0_0_15px_rgba(232,223,207,0.7)] scale-105 bg-[#FFFFFF]/20'
                       : 'border-transparent opacity-40 hover:opacity-100'
                   }`}
                   title="Select Tail"
@@ -655,7 +655,7 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
                 type="button"
                 disabled={isSubmitting || isPayingCreate || usdgBalance < betAmount}
                 onClick={handleInitiateCreate}
-                className="flex-1 sm:flex-initial px-5 py-2.5 rounded-lg bg-[#CDB486] hover:bg-[#D8C6A5] text-[#05070B] font-mono text-xs font-bold tracking-wider uppercase flex items-center justify-center gap-1.5 transition-all cursor-pointer disabled:opacity-50 shadow-[0_0_18px_rgba(205, 180, 134,0.35)]"
+                className="flex-1 sm:flex-initial px-5 py-2.5 rounded-lg bg-[#00E701] hover:bg-[#213743] text-[#05070B] font-mono text-xs font-bold tracking-wider uppercase flex items-center justify-center gap-1.5 transition-all cursor-pointer disabled:opacity-50 shadow-[0_0_18px_rgba(205, 180, 134,0.35)]"
               >
                 {isPayingCreate ? (
                   <>
@@ -677,17 +677,17 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
       {/* ═══════════════════════════════════════════════════════════
           2. FILTER & SORT HEADER (CYBER BLUE & BLACK)
           ═══════════════════════════════════════════════════════════ */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs border-b border-[#CDB486]/15 pb-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs border-b border-[#00E701]/15 pb-3">
         <div className="flex items-center gap-2.5 flex-wrap">
           <span className="font-architectural font-bold uppercase tracking-wider text-[#E2E8F0]">
             ALL DUELS
           </span>
-          <span className="px-2 py-0.5 bg-[#080C14] border border-[#CDB486]/30 rounded font-mono text-[11px] text-[#CDB486] font-bold">
+          <span className="px-2 py-0.5 bg-[#080C14] border border-[#00E701]/30 rounded font-mono text-[11px] text-[#00E701] font-bold">
             {games.length}
           </span>
-          <span className="text-[#CDB486]">•</span>
-          <div className="flex items-center gap-1.5 px-2.5 py-1 bg-[#0D1322] border border-[#CDB486]/20 rounded text-[11px] font-mono text-[#94A3B8]">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#CDB486] animate-pulse" />
+          <span className="text-[#00E701]">•</span>
+          <div className="flex items-center gap-1.5 px-2.5 py-1 bg-[#0D1322] border border-[#00E701]/20 rounded text-[11px] font-mono text-[#94A3B8]">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#00E701] animate-pulse" />
             <span>Settled in {TOKEN_SYMBOL}</span>
           </div>
         </div>
@@ -699,7 +699,7 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
             <select
               value={sortBy}
               onChange={(e: any) => setSortBy(e.target.value)}
-              className="bg-[#080C14] border border-[#CDB486]/20 rounded px-2 py-1 font-mono text-xs text-[#E2E8F0] focus:outline-none focus:border-[#CDB486]"
+              className="bg-[#080C14] border border-[#00E701]/20 rounded px-2 py-1 font-mono text-xs text-[#E2E8F0] focus:outline-none focus:border-[#00E701]"
             >
               <option value="newest">Newest</option>
               <option value="high">High to Low</option>
@@ -712,7 +712,7 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
             <select
               value={filterAmount}
               onChange={(e: any) => setFilterAmount(e.target.value)}
-              className="bg-[#080C14] border border-[#CDB486]/20 rounded px-2 py-1 font-mono text-xs text-[#E2E8F0] focus:outline-none focus:border-[#CDB486]"
+              className="bg-[#080C14] border border-[#00E701]/20 rounded px-2 py-1 font-mono text-xs text-[#E2E8F0] focus:outline-none focus:border-[#00E701]"
             >
               <option value="all">All</option>
               <option value="small">≤ 250k {TOKEN_SYMBOL}</option>
@@ -724,10 +724,10 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
           <button
             type="button"
             onClick={fetchOpenGames}
-            className="p-1.5 rounded border border-[#CDB486]/20 hover:border-[#CDB486] bg-[#080C14] text-[#CDB486] transition-all flex-shrink-0"
+            className="p-1.5 rounded border border-[#00E701]/20 hover:border-[#00E701] bg-[#080C14] text-[#00E701] transition-all flex-shrink-0"
             title="Refresh Chamber"
           >
-            <RefreshCw className="w-3.5 h-3.5 text-[#CDB486]" />
+            <RefreshCw className="w-3.5 h-3.5 text-[#00E701]" />
           </button>
         </div>
       </div>
@@ -736,18 +736,18 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
           2.5. UNCLAIMED REWARDS RECOVERY BANNER
           ═══════════════════════════════════════════════════════════ */}
       {unclaimedWins.length > 0 && (
-        <div className="rounded-xl border border-[#CDB486]/40 bg-[#080C14] text-[#E2E8F0] p-5 shadow-[0_0_25px_rgba(205, 180, 134,0.12)]">
+        <div className="rounded-xl border border-[#00E701]/40 bg-[#080C14] text-[#E2E8F0] p-5 shadow-[0_0_25px_rgba(205, 180, 134,0.12)]">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
             <div className="flex items-start gap-3">
-              <div className="w-11 h-11 rounded-lg bg-[#CDB486]/15 border border-[#CDB486]/40 flex items-center justify-center text-[#CDB486] flex-shrink-0 shadow-[0_0_12px_rgba(205, 180, 134,0.25)]">
-                <Trophy className="w-6 h-6 text-[#CDB486] animate-bounce" />
+              <div className="w-11 h-11 rounded-lg bg-[#00E701]/15 border border-[#00E701]/40 flex items-center justify-center text-[#00E701] flex-shrink-0 shadow-[0_0_12px_rgba(205, 180, 134,0.25)]">
+                <Trophy className="w-6 h-6 text-[#00E701] animate-bounce" />
               </div>
               <div>
                 <div className="flex items-center gap-2 flex-wrap">
                   <h3 className="font-bold text-base sm:text-lg text-[#E2E8F0] tracking-wide font-architectural uppercase">
                     Unclaimed Victory Allotments
                   </h3>
-                  <span className="px-2 py-0.5 text-[11px] font-mono font-bold bg-[#CDB486]/15 text-[#CDB486] border border-[#CDB486]/30 rounded">
+                  <span className="px-2 py-0.5 text-[11px] font-mono font-bold bg-[#00E701]/15 text-[#00E701] border border-[#00E701]/30 rounded">
                     {unclaimedWins.length} Chambers Awaiting Settlement
                   </span>
                 </div>
@@ -766,13 +766,13 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
               return (
                 <div
                   key={uw.id}
-                  className="p-3.5 rounded-lg border border-[#CDB486]/20 bg-[#0D1322] flex flex-col justify-between gap-2.5 shadow-lg hover:border-[#CDB486]/50 transition-all"
+                  className="p-3.5 rounded-lg border border-[#00E701]/20 bg-[#0D1322] flex flex-col justify-between gap-2.5 shadow-lg hover:border-[#00E701]/50 transition-all"
                 >
                   <div className="flex items-center justify-between">
-                    <span className="font-mono text-xs font-bold text-[#CDB486] bg-[#CDB486]/10 px-2.5 py-0.5 rounded border border-[#CDB486]/30">
+                    <span className="font-mono text-xs font-bold text-[#00E701] bg-[#00E701]/10 px-2.5 py-0.5 rounded border border-[#00E701]/30">
                       ROOM #CF-{uw.roomNumber || uw.id.replace('cf_', '').slice(0, 6)}
                     </span>
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#CDB486]/15 text-[#CDB486] border border-[#CDB486]/30 font-bold animate-pulse">
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#00E701]/15 text-[#00E701] border border-[#00E701]/30 font-bold animate-pulse">
                       ● Unclaimed
                     </span>
                   </div>
@@ -780,7 +780,7 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
                   <div className="flex items-baseline justify-between py-1">
                     <span className="text-xs text-[#94A3B8] font-sans">Prize Pot:</span>
                     <div className="text-right">
-                      <span className="text-base font-mono font-extrabold text-[#CDB486]">
+                      <span className="text-base font-mono font-extrabold text-[#00E701]">
                         +{(uw.winAmount || uw.betAmount * 2).toLocaleString()} {TOKEN_SYMBOL}
                       </span>
                       <span className="block text-[10px] font-mono text-[#64748B]">
@@ -789,12 +789,12 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 pt-2 border-t border-[#CDB486]/15">
+                  <div className="flex items-center gap-2 pt-2 border-t border-[#00E701]/15">
                     <button
                       type="button"
                       disabled={isClaimingPvp}
                       onClick={() => handleClaimPvp(uw)}
-                      className="flex-1 py-2 rounded-lg bg-[#CDB486] hover:bg-[#D8C6A5] text-[#05070B] font-mono font-bold text-xs uppercase tracking-wider shadow-[0_0_15px_rgba(205, 180, 134,0.3)] flex items-center justify-center gap-1.5 transition-all disabled:opacity-50 cursor-pointer"
+                      className="flex-1 py-2 rounded-lg bg-[#00E701] hover:bg-[#213743] text-[#05070B] font-mono font-bold text-xs uppercase tracking-wider shadow-[0_0_15px_rgba(205, 180, 134,0.3)] flex items-center justify-center gap-1.5 transition-all disabled:opacity-50 cursor-pointer"
                     >
                       {isThisClaiming ? (
                         <>
@@ -811,7 +811,7 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
                     <button
                       type="button"
                       onClick={() => handleOpenSpectateModal(uw)}
-                      className="p-2 rounded-lg border border-[#CDB486]/20 hover:border-[#CDB486] text-[#94A3B8] hover:text-[#CDB486] transition-colors bg-[#080C14]"
+                      className="p-2 rounded-lg border border-[#00E701]/20 hover:border-[#00E701] text-[#94A3B8] hover:text-[#00E701] transition-colors bg-[#080C14]"
                       title="View Duel Chamber"
                     >
                       <Eye className="w-4 h-4" />
@@ -829,13 +829,13 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
           ═══════════════════════════════════════════════════════════ */}
       <div className="space-y-3">
         {displayGames.length === 0 ? (
-          <div className="p-12 rounded-xl text-center border border-[#CDB486]/15 bg-[#080C14] space-y-3 shadow-[0_0_20px_rgba(205, 180, 134,0.03)]">
-            <Coins className="w-10 h-10 text-[#CDB486]/50 mx-auto" />
+          <div className="p-12 rounded-xl text-center border border-[#00E701]/15 bg-[#080C14] space-y-3 shadow-[0_0_20px_rgba(205, 180, 134,0.03)]">
+            <Coins className="w-10 h-10 text-[#00E701]/50 mx-auto" />
             <p className="text-sm font-architectural text-[#E2E8F0] font-bold">
               No active coinflip duels in the chamber.
             </p>
             <p className="text-xs font-sans text-[#94A3B8] max-w-sm mx-auto">
-              Create a challenge using the controls above or challenge the AI Oracle directly via the <strong className="text-[#CDB486]">VS AI</strong> button!
+              Create a challenge using the controls above or challenge the AI Oracle directly via the <strong className="text-[#00E701]">VS AI</strong> button!
             </p>
           </div>
         ) : (
@@ -849,7 +849,7 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
             return (
               <div
                 key={g.id}
-                className="p-3.5 sm:p-4 rounded-xl border border-[#CDB486]/15 hover:border-[#CDB486]/40 bg-[#080C14] transition-all flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 relative shadow-md hover:shadow-[0_0_15px_rgba(205, 180, 134,0.08)]"
+                className="p-3.5 sm:p-4 rounded-xl border border-[#00E701]/15 hover:border-[#00E701]/40 bg-[#080C14] transition-all flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 relative shadow-md hover:shadow-[0_0_15px_rgba(205, 180, 134,0.08)]"
               >
                 {/* Players Section (Face-to-Face on Mobile, Inline on Desktop) */}
                 <div className="flex items-center justify-between sm:justify-start gap-2 sm:gap-4 flex-1 min-w-0">
@@ -859,17 +859,17 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
                       <img
                         src={g.creatorAvatar || '/image/logo.png'}
                         alt=""
-                        className="w-10 h-10 sm:w-11 sm:h-11 rounded-lg border border-[#CDB486]/40 object-cover bg-[#05070B]"
+                        className="w-10 h-10 sm:w-11 sm:h-11 rounded-lg border border-[#00E701]/40 object-cover bg-[#05070B]"
                       />
                       {/* Coin Badge Overlay on Avatar */}
-                      <div className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full border border-[#CDB486] bg-[#080C14] shadow p-0.5">
+                      <div className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full border border-[#00E701] bg-[#080C14] shadow p-0.5">
                         <img src={creatorSideImg} alt="" className="w-full h-full object-contain" />
                       </div>
                     </div>
 
                     <div className="min-w-0">
                       <div className="flex items-center gap-1.5 mb-0.5">
-                        <span className="px-1.5 py-0.2 text-[9px] font-mono bg-[#CDB486]/10 border border-[#CDB486]/30 text-[#CDB486] font-bold rounded">
+                        <span className="px-1.5 py-0.2 text-[9px] font-mono bg-[#00E701]/10 border border-[#00E701]/30 text-[#00E701] font-bold rounded">
                           #CF-{g.roomNumber || g.id.replace('cf_', '').slice(0, 6)}
                         </span>
                         {g.isClaimed && (
@@ -879,7 +879,7 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
                         )}
                       </div>
                       <div className="flex items-center gap-1.5">
-                        <span className="px-1 py-0.2 text-[8px] sm:text-[9px] font-mono bg-[#CDB486]/20 border border-[#CDB486]/40 text-[#CDB486] font-bold rounded">
+                        <span className="px-1 py-0.2 text-[8px] sm:text-[9px] font-mono bg-[#00E701]/20 border border-[#00E701]/40 text-[#00E701] font-bold rounded">
                           OPERATOR
                         </span>
                         <p className="text-xs sm:text-sm font-mono font-bold text-[#E2E8F0] truncate max-w-[85px] sm:max-w-none">
@@ -893,7 +893,7 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
                   </div>
 
                   {/* Center: Swords Duel Icon */}
-                  <div className="flex items-center justify-center text-[#CDB486] px-1 flex-shrink-0 opacity-80">
+                  <div className="flex items-center justify-center text-[#00E701] px-1 flex-shrink-0 opacity-80">
                     <Swords className="w-4 h-4" />
                   </div>
 
@@ -905,7 +905,7 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
                           {g.challengerName || 'Waiting...'}
                         </p>
                       </div>
-                      <span className="text-[10px] font-mono text-[#CDB486] block truncate">
+                      <span className="text-[10px] font-mono text-[#00E701] block truncate">
                         {g.creatorSide === 'heads' ? 'Tail' : 'Head'}
                       </span>
                     </div>
@@ -915,15 +915,15 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
                         <img
                           src={g.challengerAvatar}
                           alt=""
-                          className="w-10 h-10 sm:w-11 sm:h-11 rounded-lg border border-[#CDB486]/40 object-cover bg-[#05070B]"
+                          className="w-10 h-10 sm:w-11 sm:h-11 rounded-lg border border-[#00E701]/40 object-cover bg-[#05070B]"
                         />
                       ) : (
-                        <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-lg border border-dashed border-[#CDB486]/25 bg-[#05070B] flex items-center justify-center text-xs font-mono font-bold text-[#64748B]">
+                        <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-lg border border-dashed border-[#00E701]/25 bg-[#05070B] flex items-center justify-center text-xs font-mono font-bold text-[#64748B]">
                           ?
                         </div>
                       )}
                       {/* Opponent Coin Badge */}
-                      <div className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full border border-[#CDB486] bg-[#080C14] shadow p-0.5">
+                      <div className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full border border-[#00E701] bg-[#080C14] shadow p-0.5">
                         <img src={opponentSideImg} alt="" className="w-full h-full object-contain" />
                       </div>
                     </div>
@@ -931,16 +931,16 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
                 </div>
 
                 {/* Right: Bet Amount Pill + Action Button + Spectate Eye */}
-                <div className="flex items-center justify-between sm:justify-end gap-2 sm:gap-2.5 w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-t-0 border-[#CDB486]/10">
+                <div className="flex items-center justify-between sm:justify-end gap-2 sm:gap-2.5 w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-t-0 border-[#00E701]/10">
                   {/* Stake Pill */}
-                  <div className="px-3 py-1.5 rounded-lg bg-[#05070B] border border-[#CDB486]/30 font-mono text-xs font-bold text-[#CDB486] flex items-center gap-1.5 flex-shrink-0">
+                  <div className="px-3 py-1.5 rounded-lg bg-[#05070B] border border-[#00E701]/30 font-mono text-xs font-bold text-[#00E701] flex items-center gap-1.5 flex-shrink-0">
                     <span>{g.betAmount.toLocaleString()} {TOKEN_SYMBOL}</span>
                   </div>
 
                   <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
                     {/* Join, Claim or Cancel Button */}
                     {isFlipping ? (
-                      <span className="px-3 sm:px-4 py-1.5 rounded-lg bg-[#CDB486]/10 border border-[#CDB486]/40 text-[#CDB486] text-xs font-mono flex items-center gap-1.5 animate-pulse">
+                      <span className="px-3 sm:px-4 py-1.5 rounded-lg bg-[#00E701]/10 border border-[#00E701]/40 text-[#00E701] text-xs font-mono flex items-center gap-1.5 animate-pulse">
                         <Clock className="w-3.5 h-3.5 animate-spin" /> Flipping...
                       </span>
                     ) : isComplete ? (
@@ -949,7 +949,7 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
                           type="button"
                           disabled={isClaimingPvp}
                           onClick={() => handleClaimPvp(g)}
-                          className="px-3 sm:px-3.5 py-1.5 rounded-lg bg-[#CDB486] hover:bg-[#D8C6A5] text-[#05070B] text-xs font-mono font-bold uppercase tracking-wider shadow-[0_0_15px_rgba(205, 180, 134,0.3)] flex items-center gap-1.5 animate-pulse cursor-pointer"
+                          className="px-3 sm:px-3.5 py-1.5 rounded-lg bg-[#00E701] hover:bg-[#213743] text-[#05070B] text-xs font-mono font-bold uppercase tracking-wider shadow-[0_0_15px_rgba(205, 180, 134,0.3)] flex items-center gap-1.5 animate-pulse cursor-pointer"
                         >
                           {isClaimingPvp && claimingGameId === g.id ? (
                             <>
@@ -964,7 +964,7 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
                           )}
                         </button>
                       ) : (
-                        <span className="px-2.5 sm:px-3 py-1.5 rounded-lg bg-[#0D1322] border border-[#CDB486]/25 text-[#CDB486] text-xs font-mono font-bold">
+                        <span className="px-2.5 sm:px-3 py-1.5 rounded-lg bg-[#0D1322] border border-[#00E701]/25 text-[#00E701] text-xs font-mono font-bold">
                           Victor: {g.winnerName} {g.isClaimed ? '(Claimed)' : ''}
                         </span>
                       )
@@ -972,7 +972,7 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
                       <button
                         type="button"
                         onClick={() => handleOpenSpectateModal(g)}
-                        className="px-3 sm:px-3.5 py-1.5 rounded-lg bg-[#0D1322] hover:bg-[#CDB486] hover:text-[#05070B] text-[#CDB486] text-xs font-mono font-bold tracking-wider uppercase border border-[#CDB486]/40 flex items-center gap-1.5 transition-all shadow-sm cursor-pointer"
+                        className="px-3 sm:px-3.5 py-1.5 rounded-lg bg-[#0D1322] hover:bg-[#00E701] hover:text-[#05070B] text-[#00E701] text-xs font-mono font-bold tracking-wider uppercase border border-[#00E701]/40 flex items-center gap-1.5 transition-all shadow-sm cursor-pointer"
                       >
                         <Bot className="w-3.5 h-3.5" />
                         <span>My Room / VS AI</span>
@@ -982,7 +982,7 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
                         type="button"
                         disabled={isSubmitting}
                         onClick={() => handleOpenJoinModal(g)}
-                        className="px-4 sm:px-5 py-1.5 rounded-lg bg-[#CDB486] hover:bg-[#D8C6A5] text-[#05070B] text-xs font-mono font-bold tracking-widest uppercase transition-all shadow-[0_0_15px_rgba(205, 180, 134,0.3)] cursor-pointer"
+                        className="px-4 sm:px-5 py-1.5 rounded-lg bg-[#00E701] hover:bg-[#213743] text-[#05070B] text-xs font-mono font-bold tracking-widest uppercase transition-all shadow-[0_0_15px_rgba(205, 180, 134,0.3)] cursor-pointer"
                       >
                         Join Duel
                       </button>
@@ -992,7 +992,7 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
                     <button
                       type="button"
                       onClick={() => handleOpenSpectateModal(g)}
-                      className="p-1.5 sm:p-2 rounded-lg border border-[#CDB486]/20 hover:border-[#CDB486] bg-[#05070B] text-[#94A3B8] hover:text-[#CDB486] transition-colors"
+                      className="p-1.5 sm:p-2 rounded-lg border border-[#00E701]/20 hover:border-[#00E701] bg-[#05070B] text-[#94A3B8] hover:text-[#00E701] transition-colors"
                       title="Spectate Duel"
                     >
                       <Eye className="w-3.5 h-3.5" />
@@ -1022,14 +1022,14 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
                 {/* Header */}
                 <div className="flex items-center justify-between pb-4 border-b border-white/[0.06]">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-2xl bg-[#CDB486]/10 border border-[#CDB486]/25 flex items-center justify-center text-[#CDB486] shadow-inner">
-                      <Coins className="w-5 h-5 text-[#CDB486]" />
+                    <div className="w-10 h-10 rounded-2xl bg-[#00E701]/10 border border-[#00E701]/25 flex items-center justify-center text-[#00E701] shadow-inner">
+                      <Coins className="w-5 h-5 text-[#00E701]" />
                     </div>
                     <div>
                       <h3 className="font-heading font-bold text-base tracking-wide uppercase text-[#F5F7FA]">
                         CONFIRM DUEL STAKE
                       </h3>
-                      <span className="text-[10px] font-mono tracking-wider uppercase text-[#CDB486]">Robinhood Smart Contract</span>
+                      <span className="text-[10px] font-mono tracking-wider uppercase text-[#00E701]">Robinhood Smart Contract</span>
                     </div>
                   </div>
                   <button
@@ -1045,14 +1045,14 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
                 {/* Content */}
                 <div className="space-y-4">
                   <p className="text-xs text-[#8993A4] leading-relaxed">
-                    You are creating a new Coinflip duel room. Confirm your stake deposit of <strong className="text-[#CDB486] font-mono font-bold">{betAmount} {TOKEN_SYMBOL}</strong> to open the chamber to the public:
+                    You are creating a new Coinflip duel room. Confirm your stake deposit of <strong className="text-[#00E701] font-mono font-bold">{betAmount} {TOKEN_SYMBOL}</strong> to open the chamber to the public:
                   </p>
 
                   {/* Details Card */}
                   <div className="p-4 glass-capsule rounded-2xl space-y-2.5 text-xs font-mono">
                     <div className="flex justify-between items-center">
                       <span className="text-[#8993A4]">Stake Amount:</span>
-                      <span className="font-bold text-[#CDB486] text-sm">{betAmount} {TOKEN_SYMBOL}</span>
+                      <span className="font-bold text-[#00E701] text-sm">{betAmount} {TOKEN_SYMBOL}</span>
                     </div>
 
                     <div className="flex justify-between items-center">
@@ -1069,7 +1069,7 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
 
                     <div className="flex justify-between items-center">
                       <span className="text-[#8993A4]">Target Prize Pot:</span>
-                      <span className="font-bold text-[#CDB486] text-sm">
+                      <span className="font-bold text-[#00E701] text-sm">
                         {(betAmount * 2).toLocaleString()} {TOKEN_SYMBOL} (2.0×)
                       </span>
                     </div>
@@ -1080,14 +1080,14 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
                     </div>
                     <div className="flex justify-between items-center text-[11px]">
                       <span className="text-[#8993A4]">Balance After Deposit:</span>
-                      <span className="text-[#CDB486] font-semibold">
+                      <span className="text-[#00E701] font-semibold">
                         {Math.max(0, usdgBalance - betAmount).toFixed(2)} {TOKEN_SYMBOL}
                       </span>
                     </div>
                   </div>
 
-                  <div className="p-3.5 glass-capsule rounded-2xl border border-[#CDB486]/30 bg-[#CDB486]/[0.04] text-[11px] text-[#8993A4] leading-snug">
-                    ✦ <strong className="text-[#CDB486]">Refund Guarantee</strong>: If you cancel the chamber before an opponent joins, your stake of {betAmount} {TOKEN_SYMBOL} will be returned to your wallet immediately.
+                  <div className="p-3.5 glass-capsule rounded-2xl border border-[#00E701]/30 bg-[#00E701]/[0.04] text-[11px] text-[#8993A4] leading-snug">
+                    ✦ <strong className="text-[#00E701]">Refund Guarantee</strong>: If you cancel the chamber before an opponent joins, your stake of {betAmount} {TOKEN_SYMBOL} will be returned to your wallet immediately.
                   </div>
 
                   {/* Action Buttons */}
@@ -1144,8 +1144,8 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
               {/* ── MODAL HEADER ── */}
               <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-white/[0.06] sticky top-0 z-20 backdrop-blur-xl bg-[#030508]/85">
                 <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-                  <div className="w-9 h-9 rounded-2xl border border-[#CDB486]/30 bg-[#CDB486]/10 flex items-center justify-center text-[#CDB486] flex-shrink-0 shadow-inner">
-                    <Swords className="w-4 h-4 text-[#CDB486]" />
+                  <div className="w-9 h-9 rounded-2xl border border-[#00E701]/30 bg-[#00E701]/10 flex items-center justify-center text-[#00E701] flex-shrink-0 shadow-inner">
+                    <Swords className="w-4 h-4 text-[#00E701]" />
                   </div>
                   <div className="flex items-center gap-2 flex-wrap min-w-0">
                     <span className="font-heading font-bold text-sm sm:text-base tracking-wide uppercase text-[#F5F7FA]">
@@ -1182,19 +1182,19 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
               </div>
 
               {/* ── MAIN DUEL STAGE ── */}
-              <div className="relative p-4 sm:p-8 bg-[#05070B] border-b border-[#CDB486]/20 overflow-hidden">
+              <div className="relative p-4 sm:p-8 bg-[#05070B] border-b border-[#00E701]/20 overflow-hidden">
                 {/* Subtle Grid Matrix Pattern */}
-                <div className="absolute inset-0 opacity-10 pointer-events-none bg-[radial-gradient(#CDB486_1.2px,transparent_1.2px)] [background-size:20px_20px]" />
+                <div className="absolute inset-0 opacity-10 pointer-events-none bg-[radial-gradient(#00E701_1.2px,transparent_1.2px)] [background-size:20px_20px]" />
                 
                 {/* Cyber Cyan Glow */}
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-[#CDB486]/10 rounded-full blur-3xl pointer-events-none" />
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-[#00E701]/10 rounded-full blur-3xl pointer-events-none" />
 
                 {/* 3 Columns: Creator ── Centerpiece Coin ── Opponent */}
                 <div className="relative z-10 grid grid-cols-3 items-center gap-2 sm:gap-4">
                   {/* ── LEFT: CREATOR ── */}
                   <div className="flex flex-col items-center space-y-2 text-center min-w-0">
                     <div className="relative group">
-                      <div className="w-14 h-14 xs:w-16 xs:h-16 sm:w-24 sm:h-24 rounded-xl overflow-hidden border-2 border-[#CDB486]/40 bg-[#080C14] p-1 shadow-[0_4px_16px_rgba(0,0,0,0.6)]">
+                      <div className="w-14 h-14 xs:w-16 xs:h-16 sm:w-24 sm:h-24 rounded-xl overflow-hidden border-2 border-[#00E701]/40 bg-[#080C14] p-1 shadow-[0_4px_16px_rgba(0,0,0,0.6)]">
                         <img
                           src={spectateGame.creatorAvatar || '/image/logo.png'}
                           alt={spectateGame.creatorName}
@@ -1202,7 +1202,7 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
                         />
                       </div>
                       {/* Chosen Coin Badge Overlay */}
-                      <div className="absolute -top-1.5 -right-1.5 sm:-top-2 sm:-right-2 w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-[#080C14] border border-[#CDB486] shadow-md p-0.5 transform group-hover:scale-110 transition-transform">
+                      <div className="absolute -top-1.5 -right-1.5 sm:-top-2 sm:-right-2 w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-[#080C14] border border-[#00E701] shadow-md p-0.5 transform group-hover:scale-110 transition-transform">
                         <img
                           src={spectateGame.creatorSide === 'heads' ? '/head.png' : '/tail.png'}
                           alt={spectateGame.creatorSide}
@@ -1213,7 +1213,7 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
 
                     {/* Level Badge + Name */}
                     <div className="flex items-center gap-1 mt-1 max-w-full">
-                      <span className="px-1.5 py-0.2 text-[8px] sm:text-[9px] font-mono bg-[#CDB486]/10 border border-[#CDB486]/30 text-[#CDB486] rounded font-bold">
+                      <span className="px-1.5 py-0.2 text-[8px] sm:text-[9px] font-mono bg-[#00E701]/10 border border-[#00E701]/30 text-[#00E701] rounded font-bold">
                         NODE
                       </span>
                       <span className="text-[11px] sm:text-sm font-bold text-[#E2E8F0] truncate max-w-[70px] xs:max-w-[85px] sm:max-w-[120px]">
@@ -1222,8 +1222,8 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
                     </div>
 
                     {/* Bet Amount Pill */}
-                    <div className="px-2.5 sm:px-3 py-1 bg-[#0D1322] border border-[#CDB486]/30 rounded-lg text-[10px] sm:text-xs font-mono font-bold text-[#E2E8F0] flex items-center gap-1 shadow-sm">
-                      <span className="text-[#CDB486] font-bold">≡</span>
+                    <div className="px-2.5 sm:px-3 py-1 bg-[#0D1322] border border-[#00E701]/30 rounded-lg text-[10px] sm:text-xs font-mono font-bold text-[#E2E8F0] flex items-center gap-1 shadow-sm">
+                      <span className="text-[#00E701] font-bold">≡</span>
                       <span>{spectateGame.betAmount} {TOKEN_SYMBOL}</span>
                     </div>
                   </div>
@@ -1232,7 +1232,7 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
                   <div className="flex flex-col items-center justify-center">
                     {/* Metallic Orb Container */}
                     <div
-                      className="relative w-22 h-22 xs:w-26 xs:h-26 sm:w-40 sm:h-40 rounded-full border-2 border-[#CDB486]/60 bg-[#080C14] shadow-[0_0_35px_rgba(205, 180, 134,0.3)] flex items-center justify-center overflow-hidden"
+                      className="relative w-22 h-22 xs:w-26 xs:h-26 sm:w-40 sm:h-40 rounded-full border-2 border-[#00E701]/60 bg-[#080C14] shadow-[0_0_35px_rgba(205, 180, 134,0.3)] flex items-center justify-center overflow-hidden"
                       style={{ perspective: 1200 }}
                     >
                       <style>{`
@@ -1247,7 +1247,7 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
                         }
                       `}</style>
                       {/* Ambient Inner Glow */}
-                      <div className="absolute inset-0 bg-radial from-[#CDB486]/25 via-transparent to-transparent pointer-events-none" />
+                      <div className="absolute inset-0 bg-radial from-[#00E701]/25 via-transparent to-transparent pointer-events-none" />
 
                       {/* 3D Animated Coin */}
                       {spectateGame.status === 'waiting' && !isFlippingAnim ? (
@@ -1367,7 +1367,7 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
                   <div className="flex flex-col items-center space-y-2 text-center min-w-0">
                     <div className="relative group">
                       {spectateGame.challengerAvatar || spectateGame.challengerId ? (
-                        <div className="w-14 h-14 xs:w-16 xs:h-16 sm:w-24 sm:h-24 rounded-xl overflow-hidden border-2 border-[#CDB486]/40 bg-[#080C14] p-1 shadow-[0_4px_16px_rgba(0,0,0,0.6)]">
+                        <div className="w-14 h-14 xs:w-16 xs:h-16 sm:w-24 sm:h-24 rounded-xl overflow-hidden border-2 border-[#00E701]/40 bg-[#080C14] p-1 shadow-[0_4px_16px_rgba(0,0,0,0.6)]">
                           <img
                             src={spectateGame.challengerAvatar || '/image/logo.png'}
                             alt={spectateGame.challengerName || 'Challenger'}
@@ -1375,12 +1375,12 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
                           />
                         </div>
                       ) : (
-                        <div className="w-14 h-14 xs:w-16 xs:h-16 sm:w-24 sm:h-24 rounded-xl border-2 border-dashed border-[#CDB486]/20 bg-[#080C14]/50 flex items-center justify-center">
+                        <div className="w-14 h-14 xs:w-16 xs:h-16 sm:w-24 sm:h-24 rounded-xl border-2 border-dashed border-[#00E701]/20 bg-[#080C14]/50 flex items-center justify-center">
                           <span className="text-2xl sm:text-4xl text-[#64748B] font-bold">?</span>
                         </div>
                       )}
                       {/* Opposing Coin Badge Overlay */}
-                      <div className="absolute -top-1.5 -right-1.5 sm:-top-2 sm:-right-2 w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-[#080C14] border border-[#CDB486] shadow-md p-0.5 transform group-hover:scale-110 transition-transform">
+                      <div className="absolute -top-1.5 -right-1.5 sm:-top-2 sm:-right-2 w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-[#080C14] border border-[#00E701] shadow-md p-0.5 transform group-hover:scale-110 transition-transform">
                         <img
                           src={spectateGame.creatorSide === 'heads' ? '/tail.png' : '/head.png'}
                           alt="Opponent side"
@@ -1392,7 +1392,7 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
                     {/* Name & Level Badge */}
                     <div className="flex items-center gap-1 mt-1 max-w-full">
                       {spectateGame.challengerId && (
-                        <span className="px-1.5 py-0.2 text-[8px] sm:text-[9px] font-mono bg-[#CDB486]/10 border border-[#CDB486]/30 text-[#CDB486] rounded font-bold">
+                        <span className="px-1.5 py-0.2 text-[8px] sm:text-[9px] font-mono bg-[#00E701]/10 border border-[#00E701]/30 text-[#00E701] rounded font-bold">
                           NODE
                         </span>
                       )}
@@ -1402,8 +1402,8 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
                     </div>
 
                     {/* Bet Pill */}
-                    <div className="px-2.5 sm:px-3 py-1 bg-[#0D1322] border border-[#CDB486]/30 rounded-lg text-[10px] sm:text-xs font-mono font-bold text-[#E2E8F0] flex items-center gap-1 shadow-sm">
-                      <span className="text-[#CDB486] font-bold">≡</span>
+                    <div className="px-2.5 sm:px-3 py-1 bg-[#0D1322] border border-[#00E701]/30 rounded-lg text-[10px] sm:text-xs font-mono font-bold text-[#E2E8F0] flex items-center gap-1 shadow-sm">
+                      <span className="text-[#00E701] font-bold">≡</span>
                       <span>{spectateGame.challengerId ? spectateGame.betAmount : 0} {TOKEN_SYMBOL}</span>
                     </div>
                   </div>
@@ -1415,7 +1415,7 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
                     <>
                       {spectateGame.creatorId?.toLowerCase() === account?.toLowerCase() ? (
                         <div className="flex flex-col items-center gap-2 sm:gap-2.5 w-full max-w-xs text-center">
-                          <span className="text-[11px] text-[#CDB486] font-semibold animate-pulse">
+                          <span className="text-[11px] text-[#00E701] font-semibold animate-pulse">
                             Stake confirmed on-chain • Awaiting challenger...
                           </span>
 
@@ -1438,10 +1438,10 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
                       ) : isConfirmingBet ? (
                         <div className="flex flex-col items-center gap-3 glass-capsule rounded-2xl p-4 shadow-xl w-full max-w-xs text-center animate-in fade-in zoom-in-95 duration-200 border border-white/10">
                           <p className="text-xs text-[#F5F7FA] leading-tight">
-                            Confirm matching stake of <strong className="text-[#CDB486] font-mono font-bold">{spectateGame.betAmount} {TOKEN_SYMBOL}</strong> to duel?
+                            Confirm matching stake of <strong className="text-[#00E701] font-mono font-bold">{spectateGame.betAmount} {TOKEN_SYMBOL}</strong> to duel?
                           </p>
                           <div className="text-[11px] font-mono text-[#8993A4]">
-                            Balance: <span className="text-[#CDB486] font-bold">{usdgBalance.toFixed(2)} {TOKEN_SYMBOL}</span>
+                            Balance: <span className="text-[#00E701] font-bold">{usdgBalance.toFixed(2)} {TOKEN_SYMBOL}</span>
                           </div>
                           <div className="flex items-center gap-2 w-full pt-1">
                             <button
@@ -1485,8 +1485,8 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
                   )}
 
                   {spectateGame.status === 'flipping' && (
-                    <div className="px-6 py-2.5 glass-capsule rounded-full text-[#CDB486] text-xs font-semibold flex items-center gap-2.5 animate-pulse text-center">
-                      <Clock className="w-4 h-4 animate-spin text-[#CDB486] flex-shrink-0" />
+                    <div className="px-6 py-2.5 glass-capsule rounded-full text-[#00E701] text-xs font-semibold flex items-center gap-2.5 animate-pulse text-center">
+                      <Clock className="w-4 h-4 animate-spin text-[#00E701] flex-shrink-0" />
                       <span className="tracking-wide text-xs">Resolving Coin Duel...</span>
                     </div>
                   )}
@@ -1494,8 +1494,8 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
                   {spectateGame.status === 'complete' && (
                     <div className="flex flex-col items-center gap-2.5 text-center animate-in fade-in zoom-in-95 duration-300 w-full max-w-sm">
                       {spectateGame.winnerId?.toLowerCase() === account?.toLowerCase() ? (
-                        <div className="px-5 py-2.5 glass-capsule rounded-2xl border border-[#CDB486]/40 text-[#CDB486] text-xs font-bold flex items-center gap-2">
-                          <Trophy className="w-4 h-4 text-[#CDB486] flex-shrink-0" />
+                        <div className="px-5 py-2.5 glass-capsule rounded-2xl border border-[#00E701]/40 text-[#00E701] text-xs font-bold flex items-center gap-2">
+                          <Trophy className="w-4 h-4 text-[#00E701] flex-shrink-0" />
                           <span>Victor: {spectateGame.winnerName} (You Won!)</span>
                         </div>
                       ) : (
@@ -1512,8 +1512,8 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
 
                       {spectateGame.winnerId?.toLowerCase() === account?.toLowerCase() && (
                         spectateGame.isClaimed ? (
-                          <div className="px-5 py-2.5 glass-capsule rounded-2xl border border-[#CDB486]/30 text-[#CDB486] font-bold text-xs flex items-center justify-center gap-2 w-full">
-                            <CheckCircle2 className="w-4 h-4 text-[#CDB486] flex-shrink-0" />
+                          <div className="px-5 py-2.5 glass-capsule rounded-2xl border border-[#00E701]/30 text-[#00E701] font-bold text-xs flex items-center justify-center gap-2 w-full">
+                            <CheckCircle2 className="w-4 h-4 text-[#00E701] flex-shrink-0" />
                             <span>Prize Successfully Claimed (+{(spectateGame.winAmount || spectateGame.betAmount * 2).toLocaleString()} {TOKEN_SYMBOL})</span>
                           </div>
                         ) : (
@@ -1543,7 +1543,7 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
                           href={`${ROBINHOOD_CHAIN_CONFIG.blockExplorer}/tx/${pvpClaimTx}`}
                           target="_blank"
                           rel="noreferrer"
-                          className="inline-flex items-center gap-1.5 text-[11px] font-mono text-[#CDB486] hover:underline"
+                          className="inline-flex items-center gap-1.5 text-[11px] font-mono text-[#00E701] hover:underline"
                         >
                           <span>View Tx on Explorer</span>
                           <ExternalLink className="w-3 h-3" />
@@ -1568,7 +1568,7 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
                         navigator.clipboard.writeText(seedHash);
                         onShowToast('Hashed seed copied to clipboard!', true);
                       }}
-                      className="truncate max-w-[150px] xs:max-w-[200px] sm:max-w-[340px] cursor-pointer hover:text-[#CDB486] transition-colors"
+                      className="truncate max-w-[150px] xs:max-w-[200px] sm:max-w-[340px] cursor-pointer hover:text-[#00E701] transition-colors"
                       title="Click to copy hash"
                     >
                       {spectateGame.serverSeedHash ||
@@ -1592,7 +1592,7 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
                     onClick={() =>
                       onShowToast('Provably fair SHA-256 seed commitment verified on Robinhood Chain.', true)
                     }
-                    className="p-2.5 rounded-xl border border-white/[0.08] hover:border-[#CDB486]/40 text-[#8993A4] hover:text-[#CDB486] transition-colors bg-white/[0.02] cursor-pointer"
+                    className="p-2.5 rounded-xl border border-white/[0.08] hover:border-[#00E701]/40 text-[#8993A4] hover:text-[#00E701] transition-colors bg-white/[0.02] cursor-pointer"
                     title="Provably Fair Verification"
                   >
                     <Shield className="w-4 h-4" />
@@ -1605,7 +1605,7 @@ export const CoinFlipArena: React.FC<CoinFlipArenaProps> = ({
                       playChip();
                       onShowToast('Duel link copied to clipboard!', true);
                     }}
-                    className="glass-btn-chip px-3.5 py-2 text-[#CDB486] text-xs font-bold flex items-center gap-1.5 cursor-pointer"
+                    className="glass-btn-chip px-3.5 py-2 text-[#00E701] text-xs font-bold flex items-center gap-1.5 cursor-pointer"
                   >
                     <span>Share</span>
                     <Share2 className="w-3.5 h-3.5" />

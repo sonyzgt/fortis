@@ -49,7 +49,7 @@ export default function CoinflipPage() {
   // Load user profile
   useEffect(() => {
     try {
-      const saved = localStorage.getItem('kofuku_user_profile') || localStorage.getItem('cashflip_user_profile');
+      const saved = localStorage.getItem('fortis_user_profile') || localStorage.getItem('cashflip_user_profile');
       if (saved) {
         setUserProfile(JSON.parse(saved));
       }
@@ -63,8 +63,8 @@ export default function CoinflipPage() {
     const updated = { name, avatar: finalAvatar };
     setUserProfile(updated);
     try {
-      localStorage.setItem('kofuku_user_profile', JSON.stringify(updated));
-      localStorage.setItem('kofuku_profile_configured', 'true');
+      localStorage.setItem('fortis_user_profile', JSON.stringify(updated));
+      localStorage.setItem('fortis_profile_configured', 'true');
     } catch (e) {
       console.error('Failed to save profile', e);
     }
@@ -117,7 +117,7 @@ export default function CoinflipPage() {
   );
 
   return (
-    <div className="min-h-screen bg-[#030508] text-[#E8DFCF] font-sans selection:bg-[#CDB486] selection:text-[#030508] flex flex-col relative overflow-x-hidden">
+    <div className="min-h-screen bg-[#071824] text-white font-sans selection:bg-[#00E701] selection:text-[#071824] flex flex-col relative overflow-x-hidden">
       {/* Ambient Liquid Glass Atmospheric Bubbles Background */}
       <AmbientLiquidBackground />
 
@@ -134,14 +134,13 @@ export default function CoinflipPage() {
         {/* Section Title & Navigation Chamber Switcher */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-white/[0.06]">
           <div className="space-y-1">
-            <div className="flex items-center gap-2 font-mono text-[10px] text-[#CDB486] uppercase tracking-[0.25em] font-bold">
+            <div className="flex items-center gap-2 font-mono text-[10px] text-[#00E701] uppercase tracking-[0.25em] font-bold">
               <span>50/50 ODDS</span>
               <span>//</span>
               <span>PVP DUELS</span>
             </div>
-            <h1 className="font-heading text-2xl sm:text-3xl font-bold uppercase tracking-wider text-[#F5F0E6] flex items-center gap-2.5">
+            <h1 className="font-heading text-2xl sm:text-3xl font-bold uppercase tracking-wider text-white">
               COINFLIP ARENA
-              <img src="/image/flipcoin.png" alt="Coinflip Shiba" className="w-8 h-8 sm:w-9 sm:h-9 object-contain inline-block drop-shadow-[0_4px_12px_rgba(205,180,134,0.3)]" />
             </h1>
           </div>
 
@@ -231,7 +230,7 @@ export default function CoinflipPage() {
             exit={{ opacity: 0, y: 20 }}
             className={`fixed bottom-6 right-6 z-50 p-4 border max-w-sm w-full font-mono text-xs shadow-2xl ${
               toastMsg.ok
-                ? 'bg-[#080C14] border-[#CDB486] text-[#F5F0E6] shadow-[0_0_25px_rgba(205,180,134,0.25)]'
+                ? 'bg-[#080C14] border-[#00E701] text-[#FFFFFF] shadow-[0_0_25px_rgba(205,180,134,0.25)]'
                 : 'bg-[#080C14] border-red-500/60 text-red-300 shadow-[0_0_25px_rgba(239,68,68,0.2)]'
             }`}
           >
@@ -247,7 +246,7 @@ export default function CoinflipPage() {
                 href={`${ROBINHOOD_CHAIN_CONFIG.blockExplorer}/tx/${toastMsg.txHash}`}
                 target="_blank"
                 rel="noreferrer"
-                className="mt-2 inline-flex items-center gap-1 text-[10px] text-[#CDB486] hover:underline"
+                className="mt-2 inline-flex items-center gap-1 text-[10px] text-[#00E701] hover:underline"
               >
                 <span>Inspect in Block Explorer</span>
                 <ExternalLink className="w-2.5 h-2.5" />

@@ -18,7 +18,7 @@ export const CelestialEmblem: React.FC<CelestialEmblemProps> = ({
   return (
     <img
       src="/image/logo.png"
-      alt="Kofuku Logo"
+      alt="Fortis Logo"
       width={size}
       height={size}
       className={`object-contain select-none transition-all ${className}`}

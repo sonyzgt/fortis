@@ -6,53 +6,64 @@ import { TOKEN_SYMBOL } from '@/lib/web3/contracts';
 
 export function ProtocolFooter() {
   return (
-    <footer className="w-full border-t border-white/[0.06] bg-[#050608] py-8 px-4 sm:px-8 mt-auto relative z-10">
-      <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6 text-xs text-[#8993A4]">
-        {/* Brand */}
-        <div className="flex items-center gap-3">
-          <div className="w-7 h-7 rounded-full bg-white/[0.04] border border-white/10 p-1 flex items-center justify-center">
-            <img src="/image/logo.png" alt="KOFUKU" className="w-full h-full object-contain" />
+    <footer className="w-full border-t border-[#213743] bg-[#0F212E] py-10 px-6 sm:px-10 mt-auto text-xs text-[#B1BAD3]">
+      <div className="max-w-7xl mx-auto space-y-8">
+        {/* Top row */}
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 pb-6 border-b border-[#213743]">
+          {/* Logo & Network (Matching Sidebar) */}
+          <div className="flex flex-col gap-1.5">
+            <div className="h-10 flex items-center">
+              <img
+                src="/image/sidebar.png"
+                alt="FORTIS"
+                className="h-full w-auto object-contain max-w-[170px]"
+              />
+            </div>
+            <div className="text-[11px] text-[#557086] font-mono pl-0.5">
+              Provably Fair • Robinhood Chain (4663)
+            </div>
           </div>
-          <div className="flex flex-col">
-            <span className="font-heading font-bold text-sm text-[#F5F0E6]">KOFUKU</span>
-            <span className="text-[10px] font-mono text-[#8993A4]">ROBINHOOD CHAIN</span>
+
+          {/* Quick links */}
+          <div className="flex flex-wrap gap-5 text-xs font-semibold text-[#B1BAD3]">
+            <Link href="/jackpot" className="hover:text-white transition-colors">
+              Jackpot
+            </Link>
+            <Link href="/coinflip" className="hover:text-white transition-colors">
+              Coinflip
+            </Link>
+            <Link href="/mines" className="hover:text-white transition-colors">
+              Mines
+            </Link>
+            <Link href="/cups" className="hover:text-white transition-colors">
+              Cups
+            </Link>
+            <Link href="/docs" className="hover:text-[#00E701] transition-colors">
+              Fairness & Docs
+            </Link>
+            <a
+              href="https://x.com/play_fortis"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-[#1DA1F2] transition-colors"
+            >
+              Twitter / X
+            </a>
           </div>
         </div>
 
-        {/* Navigation Links */}
-        <div className="flex flex-wrap items-center justify-center gap-6 text-xs font-mono">
-          <Link href="/jackpot" className="hover:text-[#F5F0E6] transition-colors">
-            JACKPOT
-          </Link>
-          <Link href="/coinflip" className="hover:text-[#F5F0E6] transition-colors">
-            COINFLIP
-          </Link>
-          <Link href="/mines" className="hover:text-[#F5F0E6] transition-colors">
-            MINES
-          </Link>
-          <Link href="/cups" className="hover:text-[#F5F0E6] transition-colors">
-            CUPS
-          </Link>
-          <Link
-            href="/docs"
-            className="text-[#CDB486] hover:text-[#F5F0E6] font-bold transition-colors inline-flex items-center gap-1"
-          >
-            DOCS
-          </Link>
-          <a
-            href="https://x.com/kofukudotio"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:text-[#CDB486] transition-colors"
-          >
-            TWITTER
-          </a>
-        </div>
-
-        {/* Network & Copyright */}
-        <div className="text-[11px] font-mono text-[#8993A4]/80 text-center md:text-right">
-          <div>ROBINHOOD CHAIN (4663) • {TOKEN_SYMBOL}</div>
-          <div className="text-[10px] text-[#8993A4]/60">© 2026 KOFUKU. ALL RIGHTS RESERVED.</div>
+        {/* Bottom row */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-[#557086]">
+          <p>
+            © 2026 FORTIS Protocol. High performance non-custodial gaming settling in {TOKEN_SYMBOL}.
+          </p>
+          <div className="flex items-center gap-4">
+            <span className="inline-flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-[#00E701]" />
+              Smart Contracts Live
+            </span>
+            <span>18+ Play Responsibly</span>
+          </div>
         </div>
       </div>
     </footer>

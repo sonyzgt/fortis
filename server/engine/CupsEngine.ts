@@ -125,7 +125,7 @@ export class CupsEngine {
       return { success: false, message: 'Player address is required' };
     }
     if (betAmount < 100000 || betAmount > 100000000) {
-      return { success: false, message: 'Wager must be between 100,000 and 100,000,000 KOFUKU' };
+      return { success: false, message: 'Wager must be between 100,000 and 100,000,000 FORTIS' };
     }
     const safeMaxPicks = 1; // 1 single pick per round
     const normAddress = playerAddress.toLowerCase();
@@ -213,7 +213,7 @@ export class CupsEngine {
     game.pickedIndices.push(cupIndex);
 
     if (hasLogo) {
-      // SUCCESS! Player found the KOFUKU logo
+      // SUCCESS! Player found the FORTIS logo
       game.status = 'won';
       game.endedAt = Date.now();
       game.serverSeed = serverSeed;

@@ -31,7 +31,7 @@ import { AmbientLiquidBackground } from '@/components/ui/AmbientLiquidBackground
 const RANDOM_NAMES = [
   'AetherNode',
   'NocturneCipher',
-  'VanguardKofuku',
+  'VanguardFortis',
   'ZeroExOperator',
   'GildedOracle',
   'ArchonVault',
@@ -66,7 +66,7 @@ export default function AccountPage() {
   // Load saved profile
   useEffect(() => {
     try {
-      const saved = localStorage.getItem('kofuku_user_profile') || localStorage.getItem('cashflip_user_profile');
+      const saved = localStorage.getItem('fortis_user_profile') || localStorage.getItem('cashflip_user_profile');
       if (saved) {
         const parsed = JSON.parse(saved);
         if (parsed.name) setName(parsed.name);
@@ -197,8 +197,8 @@ export default function AccountPage() {
     const profile = { name: finalName, avatar: finalAvatar };
 
     try {
-      localStorage.setItem('kofuku_user_profile', JSON.stringify(profile));
-      localStorage.setItem('kofuku_profile_configured', 'true');
+      localStorage.setItem('fortis_user_profile', JSON.stringify(profile));
+      localStorage.setItem('fortis_profile_configured', 'true');
       localStorage.setItem('cashflip_user_profile', JSON.stringify(profile));
       localStorage.setItem('cashflip_profile_configured', 'true');
       setToastMsg({
@@ -222,7 +222,7 @@ export default function AccountPage() {
   const userStats = getUserStats(account);
 
   return (
-    <div className="min-h-screen bg-[#030508] text-[#F5F7FA] font-sans selection:bg-[#CDB486] selection:text-[#030508] flex flex-col relative overflow-x-hidden">
+    <div className="min-h-screen bg-[#071824] text-white font-sans selection:bg-[#00E701] selection:text-[#071824] flex flex-col relative overflow-x-hidden">
       {/* Ambient Liquid Glass Atmospheric Bubbles Background */}
       <AmbientLiquidBackground />
 
@@ -237,7 +237,7 @@ export default function AccountPage() {
         {!isConnected ? (
           /* When wallet is not connected */
           <div className="glass-capsule rounded-3xl p-8 sm:p-12 text-center space-y-5 shadow-2xl backdrop-blur-xl">
-            <div className="w-16 h-16 rounded-2xl bg-[#CDB486]/10 border border-[#CDB486]/25 flex items-center justify-center mx-auto text-[#CDB486] shadow-inner">
+            <div className="w-16 h-16 rounded-2xl bg-[#00E701]/10 border border-[#00E701]/25 flex items-center justify-center mx-auto text-[#00E701] shadow-inner">
               <Wallet className="w-8 h-8" />
             </div>
             <div className="space-y-2">
@@ -263,10 +263,10 @@ export default function AccountPage() {
               <div className="flex flex-col sm:flex-row items-center sm:items-start justify-between gap-4 pb-6 border-b border-white/[0.06]">
                 <div className="flex items-center gap-4">
                   <div className="w-16 h-16 rounded-2xl bg-white/[0.04] border border-white/10 p-1 shadow-inner flex-shrink-0 overflow-hidden">
-                    <img src={avatar || '/image/logo.png'} alt="Persona" className="w-full h-full object-cover rounded-xl" />
+                    <img src={(avatar && avatar !== '/image/logo.png') ? avatar : '/favicon.ico?v=ico_real'} alt="Persona" className="w-full h-full object-cover rounded-xl" />
                   </div>
                   <div className="space-y-1 text-center sm:text-left">
-                    <span className="text-[10px] tracking-[0.2em] uppercase text-[#CDB486] block font-bold font-mono">
+                    <span className="text-[10px] tracking-[0.2em] uppercase text-[#00E701] block font-bold font-mono">
                       AUTHENTICATED OPERATOR
                     </span>
                     <h1 className="text-xl font-heading font-bold text-[#F5F7FA] uppercase tracking-wider">
@@ -276,16 +276,16 @@ export default function AccountPage() {
                       <span className="font-mono">{account?.slice(0, 10)}...{account?.slice(-8)}</span>
                       <button
                         onClick={copyAddress}
-                        className="p-1 hover:bg-[#CDB486]/10 border border-white/[0.08] hover:border-[#CDB486]/30 rounded-lg text-[#8993A4] hover:text-[#CDB486] transition-colors"
+                        className="p-1 hover:bg-[#00E701]/10 border border-white/[0.08] hover:border-[#00E701]/30 rounded-lg text-[#8993A4] hover:text-[#00E701] transition-colors"
                         title="Copy full address"
                       >
-                        {copiedAddress ? <Check className="w-3 h-3 text-[#CDB486]" /> : <Copy className="w-3 h-3" />}
+                        {copiedAddress ? <Check className="w-3 h-3 text-[#00E701]" /> : <Copy className="w-3 h-3" />}
                       </button>
                       <a
                         href={`${ROBINHOOD_CHAIN_CONFIG.blockExplorer}/address/${account}`}
                         target="_blank"
                         rel="noreferrer"
-                        className="p-1 hover:bg-[#CDB486]/10 border border-white/[0.08] hover:border-[#CDB486]/30 rounded-lg text-[#8993A4] hover:text-[#CDB486] transition-colors"
+                        className="p-1 hover:bg-[#00E701]/10 border border-white/[0.08] hover:border-[#00E701]/30 rounded-lg text-[#8993A4] hover:text-[#00E701] transition-colors"
                         title="Inspect in Block Explorer"
                       >
                         <ExternalLink className="w-3 h-3" />
@@ -298,7 +298,7 @@ export default function AccountPage() {
                   <span className="text-[10px] uppercase tracking-widest text-[#8993A4] block">
                     VAULT RESERVE
                   </span>
-                  <div className="text-2xl font-bold text-[#CDB486] drop-shadow-[0_0_12px_rgba(205, 180, 134,0.35)]">
+                  <div className="text-2xl font-bold text-[#00E701] drop-shadow-[0_0_12px_rgba(205, 180, 134,0.35)]">
                     {usdgBalance.toLocaleString(undefined, { maximumFractionDigits: 2 })}{' '}
                     <span className="text-xs text-[#F5F7FA]/60">{TOKEN_SYMBOL}</span>
                   </div>
@@ -319,11 +319,11 @@ export default function AccountPage() {
                   </span>
                 </div>
                 <div className="glass-capsule p-4 rounded-2xl relative overflow-hidden">
-                  <div className="absolute inset-0 bg-[#CDB486]/[0.03] pointer-events-none" />
-                  <span className="text-[10px] uppercase tracking-widest text-[#CDB486] block font-mono font-bold">
+                  <div className="absolute inset-0 bg-[#00E701]/[0.03] pointer-events-none" />
+                  <span className="text-[10px] uppercase tracking-widest text-[#00E701] block font-mono font-bold">
                     VICTORIES CONCLUDED
                   </span>
-                  <span className="text-xl font-heading font-bold text-[#CDB486] mt-1 block drop-shadow-[0_0_8px_rgba(205, 180, 134,0.3)]">
+                  <span className="text-xl font-heading font-bold text-[#00E701] mt-1 block drop-shadow-[0_0_8px_rgba(205, 180, 134,0.3)]">
                     {totalVictories}
                   </span>
                 </div>
@@ -341,7 +341,7 @@ export default function AccountPage() {
             {/* Section 1: Settings & Persona Customization */}
             <section className="glass-capsule rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl backdrop-blur-xl">
               <div className="flex items-center gap-2.5 pb-4 border-b border-white/[0.06]">
-                <Settings className="w-5 h-5 text-[#CDB486]" />
+                <Settings className="w-5 h-5 text-[#00E701]" />
                 <h2 className="text-base font-heading font-bold tracking-wider text-[#F5F7FA] uppercase">
                   OPERATOR SPECIFICATION & SETTINGS
                 </h2>
@@ -365,7 +365,7 @@ export default function AccountPage() {
                     <button
                       type="button"
                       onClick={handleRandomizeName}
-                      className="glass-btn-chip px-3.5 py-2.5 flex items-center gap-1.5 cursor-pointer text-[#CDB486]"
+                      className="glass-btn-chip px-3.5 py-2.5 flex items-center gap-1.5 cursor-pointer text-[#00E701]"
                       title="Generate random callsign"
                     >
                       <Shuffle className="w-3.5 h-3.5" />
@@ -385,7 +385,7 @@ export default function AccountPage() {
                   </label>
                   <div className="p-4 glass-capsule rounded-2xl flex items-center gap-4 border border-white/[0.08]">
                     {/* Live Preview */}
-                    <div className="relative w-16 h-16 rounded-2xl bg-white/[0.04] border border-[#CDB486]/30 p-1 flex-shrink-0 overflow-hidden shadow-[0_4px_20px_rgba(205,180,134,0.15)] flex items-center justify-center">
+                    <div className="relative w-16 h-16 rounded-2xl bg-white/[0.04] border border-[#00E701]/30 p-1 flex-shrink-0 overflow-hidden shadow-[0_4px_20px_rgba(205,180,134,0.15)] flex items-center justify-center">
                       <img
                         src={avatar || '/image/logo.png'}
                         alt="Avatar Preview"
@@ -434,7 +434,7 @@ export default function AccountPage() {
             <section className="glass-capsule rounded-3xl p-6 sm:p-8 space-y-4 shadow-2xl backdrop-blur-xl">
               <div className="flex items-center justify-between pb-4 border-b border-white/[0.06]">
                 <div className="flex items-center gap-2.5">
-                  <ShieldCheck className="w-5 h-5 text-[#CDB486]" />
+                  <ShieldCheck className="w-5 h-5 text-[#00E701]" />
                   <h2 className="text-base font-heading font-bold tracking-wider text-[#F5F7FA] uppercase">
                     PERSONAL SETTLEMENT LEDGER
                   </h2>
@@ -473,7 +473,7 @@ export default function AccountPage() {
                             <td className="py-3.5 px-4 font-mono font-bold text-[#F5F7FA]">{g.gameId}</td>
                             <td className="py-3.5 px-4">
                               {isWinner ? (
-                                <span className="px-2.5 py-1 bg-[#CDB486]/15 text-[#CDB486] border border-[#CDB486]/30 rounded-full font-bold text-[10px] font-mono">
+                                <span className="px-2.5 py-1 bg-[#00E701]/15 text-[#00E701] border border-[#00E701]/30 rounded-full font-bold text-[10px] font-mono">
                                   VICTORY
                                 </span>
                               ) : (
@@ -483,7 +483,7 @@ export default function AccountPage() {
                               )}
                             </td>
                             <td className="py-3.5 px-4 font-mono">
-                              <span className={isWinner ? 'text-[#CDB486] font-bold drop-shadow-[0_0_8px_rgba(205, 180, 134,0.3)]' : 'text-[#8993A4]'}>
+                              <span className={isWinner ? 'text-[#00E701] font-bold drop-shadow-[0_0_8px_rgba(205, 180, 134,0.3)]' : 'text-[#8993A4]'}>
                                 {g.winner?.prize ? `${g.winner.prize.toFixed(2)} ${TOKEN_SYMBOL}` : `${(g.totalPool || 0).toFixed(2)} ${TOKEN_SYMBOL}`}
                               </span>
                             </td>
@@ -496,7 +496,7 @@ export default function AccountPage() {
                                   setVerifyTargetGameId(g.gameId);
                                   setShowVerifyModal(true);
                                 }}
-                                className="glass-btn-chip px-3 py-1 text-[#CDB486] text-[10px] font-mono uppercase tracking-wider cursor-pointer"
+                                className="glass-btn-chip px-3 py-1 text-[#00E701] text-[10px] font-mono uppercase tracking-wider cursor-pointer"
                               >
                                 VERIFY
                               </button>
@@ -541,12 +541,12 @@ export default function AccountPage() {
             exit={{ opacity: 0, y: 20 }}
             className={`fixed bottom-6 right-6 z-50 p-4 border rounded-xl max-w-sm w-full font-mono text-xs shadow-2xl ${
               toastMsg.ok
-                ? 'bg-[#080C14] border-[#CDB486]/40 text-[#E2E8F0] shadow-[0_0_20px_rgba(205, 180, 134,0.15)]'
+                ? 'bg-[#080C14] border-[#00E701]/40 text-[#E2E8F0] shadow-[0_0_20px_rgba(205, 180, 134,0.15)]'
                 : 'bg-[#0D1322] border-red-500/60 text-red-300 shadow-[0_0_20px_rgba(239,68,68,0.15)]'
             }`}
           >
             <div className="flex items-center justify-between mb-1">
-              <span className="font-bold uppercase tracking-wider text-[10px] text-[#CDB486]">
+              <span className="font-bold uppercase tracking-wider text-[10px] text-[#00E701]">
                 {toastMsg.title}
               </span>
               <span className="text-[9px] text-[#64748B]">SYSTEM LOG</span>

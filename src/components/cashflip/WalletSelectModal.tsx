@@ -80,7 +80,7 @@ export const WalletSelectModal: React.FC<WalletSelectModalProps> = ({
           {/* Header */}
           <div className="flex items-center justify-between pb-4 border-b border-white/[0.06]">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-[#CDB486]/10 border border-[#CDB486]/25 flex items-center justify-center flex-shrink-0 text-[#CDB486] shadow-inner">
+              <div className="w-10 h-10 rounded-2xl bg-[#00E701]/10 border border-[#00E701]/25 flex items-center justify-center flex-shrink-0 text-[#00E701] shadow-inner">
                 <Wallet className="w-5 h-5" />
               </div>
               <div>
@@ -110,15 +110,15 @@ export const WalletSelectModal: React.FC<WalletSelectModalProps> = ({
                   onSelect(wallet.id);
                   onClose();
                 }}
-                className="w-full flex items-center justify-between p-3.5 glass-capsule rounded-2xl hover:border-[#CDB486]/40 hover:bg-[#CDB486]/[0.05] transition-all text-left group cursor-pointer"
+                className="w-full flex items-center justify-between p-3.5 glass-capsule rounded-2xl hover:border-[#00E701]/40 hover:bg-[#00E701]/[0.05] transition-all text-left group cursor-pointer"
               >
                 <div className="flex items-center gap-3.5">
-                  <div className="w-10 h-10 rounded-xl bg-white/[0.04] border border-white/10 flex items-center justify-center text-sm font-mono text-[#CDB486] flex-shrink-0 shadow-inner group-hover:scale-105 transition-transform">
+                  <div className="w-10 h-10 rounded-xl bg-white/[0.04] border border-white/10 flex items-center justify-center text-sm font-mono text-[#00E701] flex-shrink-0 shadow-inner group-hover:scale-105 transition-transform">
                     {wallet.symbol}
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-bold text-[#F5F7FA] group-hover:text-[#CDB486] transition-colors">
+                      <span className="text-sm font-bold text-[#F5F7FA] group-hover:text-[#00E701] transition-colors">
                         {wallet.name}
                       </span>
                       {wallet.isInstalled && (
@@ -133,8 +133,8 @@ export const WalletSelectModal: React.FC<WalletSelectModalProps> = ({
                   </div>
                 </div>
 
-                <div className="w-7 h-7 rounded-full bg-white/[0.03] border border-white/[0.06] flex items-center justify-center group-hover:border-[#CDB486]/40 group-hover:bg-[#CDB486]/10 transition-all flex-shrink-0">
-                  <ArrowRight className="w-3.5 h-3.5 text-[#8993A4] group-hover:text-[#CDB486] group-hover:translate-x-0.5 transition-all" />
+                <div className="w-7 h-7 rounded-full bg-white/[0.03] border border-white/[0.06] flex items-center justify-center group-hover:border-[#00E701]/40 group-hover:bg-[#00E701]/10 transition-all flex-shrink-0">
+                  <ArrowRight className="w-3.5 h-3.5 text-[#8993A4] group-hover:text-[#00E701] group-hover:translate-x-0.5 transition-all" />
                 </div>
               </button>
             ))}
@@ -142,7 +142,7 @@ export const WalletSelectModal: React.FC<WalletSelectModalProps> = ({
 
           {/* Security Note */}
           <div className="flex items-center gap-3 p-3.5 rounded-2xl bg-white/[0.02] border border-white/[0.05] text-[11px] text-[#8993A4]">
-            <ShieldCheck className="w-4 h-4 text-[#CDB486] flex-shrink-0" />
+            <ShieldCheck className="w-4 h-4 text-[#00E701] flex-shrink-0" />
             <span className="leading-snug">Non-custodial connection. Private keys remain exclusively secure in your local wallet.</span>
           </div>
         </motion.div>

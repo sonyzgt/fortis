@@ -436,9 +436,9 @@ export const MinesArena: React.FC<MinesArenaProps> = ({
           UNCLAIMED WINNINGS BANNER
           ───────────────────────────────────────────────────────────── */}
       {unclaimedWins.length > 0 && (
-        <div className="rounded-2xl border border-[#CDB486]/30 bg-[#CDB486]/[0.03] p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 backdrop-blur-md shadow-lg">
+        <div className="rounded-2xl border border-[#00E701]/30 bg-[#00E701]/[0.03] p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 backdrop-blur-md shadow-lg">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-[#CDB486]/15 border border-[#CDB486]/30 flex items-center justify-center text-[#CDB486] shadow-sm">
+            <div className="w-9 h-9 rounded-xl bg-[#00E701]/15 border border-[#00E701]/30 flex items-center justify-center text-[#00E701] shadow-sm">
               <Award className="w-5 h-5" />
             </div>
             <div>
@@ -447,7 +447,7 @@ export const MinesArena: React.FC<MinesArenaProps> = ({
               </p>
               <p className="text-xs text-[#8993A4]">
                 Total:{' '}
-                <span className="font-mono font-bold text-[#CDB486]">
+                <span className="font-mono font-bold text-[#00E701]">
                   {unclaimedWins.reduce((acc, g) => acc + g.currentPayout, 0).toFixed(2)} {TOKEN_SYMBOL}
                 </span>
               </p>
@@ -478,7 +478,7 @@ export const MinesArena: React.FC<MinesArenaProps> = ({
         {/* LEFT: LIQUID GLASS CAPSULE GRID */}
         <div className="lg:col-span-7 flex flex-col items-center justify-center p-3.5 sm:p-6 lg:p-8 rounded-3xl glass-capsule relative shadow-2xl">
           {/* Subtle Ambient Glow */}
-          <div className="absolute inset-8 rounded-full bg-[#CDB486]/[0.03] blur-3xl pointer-events-none" />
+          <div className="absolute inset-8 rounded-full bg-[#00E701]/[0.03] blur-3xl pointer-events-none" />
 
           {/* Grid Header */}
           <div className="w-full flex items-center justify-between pb-4 sm:pb-5 mb-4 sm:mb-5 border-b border-white/10">
@@ -554,7 +554,7 @@ export const MinesArena: React.FC<MinesArenaProps> = ({
                 } else {
                   tileClass = 'bg-white/[0.02] border border-white/[0.04] opacity-50';
                   tileContent = (
-                    <Sparkles className="w-5 h-5 text-[#CDB486]/40" />
+                    <Sparkles className="w-5 h-5 text-[#00E701]/40" />
                   );
                 }
               }
@@ -570,10 +570,10 @@ export const MinesArena: React.FC<MinesArenaProps> = ({
                   type="button"
                   disabled={isTileDisabled}
                   onClick={() => handleTileClick(index)}
-                  className={`group rounded-2xl flex items-center justify-center cursor-pointer disabled:cursor-default transition-all duration-300 ${tileClass}`}
+                  className={`group flex items-center justify-center cursor-pointer disabled:cursor-default ${tileClass}`}
                 >
                   {revealingIndex === index ? (
-                    <RotateCcw className="w-5 h-5 animate-spin text-[#CDB486]" />
+                    <RotateCcw className="w-5 h-5 animate-spin text-[#00E701]" />
                   ) : (
                     tileContent
                   )}
@@ -586,7 +586,7 @@ export const MinesArena: React.FC<MinesArenaProps> = ({
           <div className="mt-6 text-xs text-[#8993A4] flex items-center gap-6">
             <span className="flex items-center gap-2">
               <img src="/image/safe.png" alt="Safe" className="w-5 h-5 object-contain" />
-              Safe = <strong className="text-[#F5F0E6]">Diamond</strong>
+              Safe = <strong className="text-[#FFFFFF]">Diamond</strong>
             </span>
             <span className="flex items-center gap-2">
               <img src="/image/bom.png" alt="Bomb" className="w-5 h-5 object-contain" />
@@ -632,7 +632,7 @@ export const MinesArena: React.FC<MinesArenaProps> = ({
                   onClick={() => setBetAmount(amtObj.val)}
                   className={`py-1.5 sm:py-2 px-1 text-[10px] sm:text-xs font-mono font-medium transition-all cursor-pointer disabled:opacity-40 ${
                     betAmount === amtObj.val
-                      ? 'glass-btn-chip border-[#CDB486]/60 text-[#CDB486] shadow-[0_0_12px_rgba(205, 180, 134,0.25)]'
+                      ? 'glass-btn-chip border-[#00E701]/60 text-[#00E701] shadow-[0_0_12px_rgba(205, 180, 134,0.25)]'
                       : 'glass-btn-chip text-[#8993A4] hover:text-[#F5F7FA]'
                   }`}
                 >
@@ -646,7 +646,7 @@ export const MinesArena: React.FC<MinesArenaProps> = ({
           <div className="space-y-2 pt-2 border-t border-white/10 text-left">
             <div className="flex items-center justify-between text-xs">
               <span className="font-medium text-[#8993A4] tracking-wide uppercase">MINES</span>
-              <span className="text-xs font-mono text-[#CDB486]">{mineCount} Mines / {totalTiles - mineCount} Safe</span>
+              <span className="text-xs font-mono text-[#00E701]">{mineCount} Mines / {totalTiles - mineCount} Safe</span>
             </div>
 
             {/* Quick Presets for 5x5 Matrix */}
@@ -659,7 +659,7 @@ export const MinesArena: React.FC<MinesArenaProps> = ({
                   onClick={() => setMineCount(num)}
                   className={`py-1.5 sm:py-2 px-1 font-mono text-[10px] sm:text-xs font-semibold transition-all cursor-pointer disabled:opacity-40 ${
                     mineCount === num
-                      ? 'glass-btn-chip border-[#CDB486] text-[#CDB486] shadow-[0_0_14px_rgba(205, 180, 134,0.35)]'
+                      ? 'glass-btn-chip border-[#00E701] text-[#00E701] shadow-[0_0_14px_rgba(205, 180, 134,0.35)]'
                       : 'glass-btn-chip text-[#8993A4] hover:text-[#F5F7FA]'
                   }`}
                 >
@@ -677,7 +677,7 @@ export const MinesArena: React.FC<MinesArenaProps> = ({
                 value={mineCount}
                 disabled={isGameRunning}
                 onChange={(e) => setMineCount(parseInt(e.target.value, 10))}
-                className="w-full accent-[#CDB486] bg-white/[0.05] h-1.5 rounded-lg cursor-pointer disabled:opacity-40"
+                className="w-full accent-[#00E701] bg-white/[0.05] h-1.5 rounded-lg cursor-pointer disabled:opacity-40"
               />
               <span className="font-mono text-xs font-bold text-[#F5F7FA] w-6 text-right">
                 {mineCount}
@@ -691,7 +691,7 @@ export const MinesArena: React.FC<MinesArenaProps> = ({
               <span className="text-[11px] font-medium text-[#8993A4] tracking-wider uppercase block">
                 MULTIPLIER
               </span>
-              <span className="font-mono text-2xl font-extrabold text-[#CDB486]">
+              <span className="font-mono text-2xl font-extrabold text-[#00E701]">
                 {currentMultiplier.toFixed(2)}×
               </span>
             </div>
@@ -699,7 +699,7 @@ export const MinesArena: React.FC<MinesArenaProps> = ({
               <span className="text-[11px] font-medium text-[#8993A4] tracking-wider uppercase block">
                 POTENTIAL WIN
               </span>
-              <span className="font-mono text-2xl font-extrabold text-[#E5C07B]">
+              <span className="font-mono text-2xl font-extrabold text-[#00E701]">
                 {potentialWin.toFixed(2)} <span className="text-xs text-[#8993A4]">{TOKEN_SYMBOL}</span>
               </span>
             </div>
@@ -747,14 +747,14 @@ export const MinesArena: React.FC<MinesArenaProps> = ({
           {/* Provably Fair Minimal Link */}
           <div className="pt-2 flex items-center justify-between text-xs text-[#8993A4]">
             <span className="flex items-center gap-1.5">
-              <ShieldCheck className="w-3.5 h-3.5 text-[#CDB486]" />
+              <ShieldCheck className="w-3.5 h-3.5 text-[#00E701]" />
               <span>Provably Fair (HMAC-SHA256)</span>
             </span>
             {endedGame && (
               <button
                 type="button"
                 onClick={() => handleOpenVerify(endedGame.id)}
-                className="text-[#CDB486] hover:underline cursor-pointer"
+                className="text-[#00E701] hover:underline cursor-pointer"
               >
                 Verify Round
               </button>
@@ -777,7 +777,7 @@ export const MinesArena: React.FC<MinesArenaProps> = ({
               >
                 <div className="flex items-center justify-between border-b border-white/[0.06] pb-3">
                   <div className="space-y-0.5">
-                    <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-[#CDB486] font-bold">
+                    <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-[#00E701] font-bold">
                       CRYPTOGRAPHIC AUDIT
                     </span>
                     <h3 className="font-heading text-lg font-bold text-[#F5F7FA] uppercase">
@@ -795,7 +795,7 @@ export const MinesArena: React.FC<MinesArenaProps> = ({
 
                 {isVerifying ? (
                   <div className="py-8 text-center text-sm text-[#8993A4]">
-                    <RotateCcw className="w-6 h-6 animate-spin mx-auto text-[#CDB486] mb-2" />
+                    <RotateCcw className="w-6 h-6 animate-spin mx-auto text-[#00E701] mb-2" />
                     Verifying cryptographic hashes...
                   </div>
                 ) : verifyReport ? (
@@ -814,7 +814,7 @@ export const MinesArena: React.FC<MinesArenaProps> = ({
                     </div>
                     <div className="p-3.5 rounded-2xl glass-capsule border border-white/[0.06] space-y-1">
                       <span className="text-[#8993A4] block text-[10px] font-mono uppercase tracking-wider">MINE POSITIONS</span>
-                      <span className="font-mono text-[#CDB486] font-bold">
+                      <span className="font-mono text-[#00E701] font-bold">
                         Tiles: {verifyReport.actualMinePositions.join(', ')}
                       </span>
                     </div>

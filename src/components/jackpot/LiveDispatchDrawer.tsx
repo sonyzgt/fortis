@@ -88,7 +88,7 @@ export const LiveDispatchDrawer: React.FC<LiveDispatchDrawerProps> = ({
               {/* Header */}
               <div className="p-4 sm:p-5 border-b border-white/[0.06] flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-2xl bg-[#CDB486]/10 border border-[#CDB486]/25 flex items-center justify-center text-[#CDB486] shadow-inner">
+                  <div className="w-9 h-9 rounded-2xl bg-[#00E701]/10 border border-[#00E701]/25 flex items-center justify-center text-[#00E701] shadow-inner">
                     <Terminal className="w-4 h-4" />
                   </div>
                   <div>
@@ -96,7 +96,7 @@ export const LiveDispatchDrawer: React.FC<LiveDispatchDrawerProps> = ({
                       <span className="font-mono text-[10px] tracking-[0.2em] uppercase text-[#8993A4]">
                         LIVE CHAT
                       </span>
-                      <span className="w-2 h-2 rounded-full bg-[#CDB486] shadow-[0_0_8px_#CDB486] animate-pulse" />
+                      <span className="w-2 h-2 rounded-full bg-[#00E701] shadow-[0_0_8px_#00E701] animate-pulse" />
                     </div>
                     <h2 className="font-heading text-sm sm:text-base font-bold tracking-wide text-[#F5F7FA]">
                       DISPATCH FEED
@@ -122,7 +122,7 @@ export const LiveDispatchDrawer: React.FC<LiveDispatchDrawerProps> = ({
               <div className="flex-1 p-4 sm:p-5 space-y-3 overflow-y-auto min-h-0 text-xs">
                 {messages.length === 0 ? (
                   <div className="py-24 text-center text-[#8993A4] space-y-3">
-                    <div className="w-12 h-12 rounded-2xl bg-[#CDB486]/10 border border-[#CDB486]/20 flex items-center justify-center mx-auto text-[#CDB486]">
+                    <div className="w-12 h-12 rounded-2xl bg-[#00E701]/10 border border-[#00E701]/20 flex items-center justify-center mx-auto text-[#00E701]">
                       <Radio className="w-6 h-6 animate-pulse" />
                     </div>
                     <p className="text-xs uppercase tracking-wider font-mono">Awaiting dispatch transmissions...</p>
@@ -140,9 +140,9 @@ export const LiveDispatchDrawer: React.FC<LiveDispatchDrawerProps> = ({
                         key={m.id || idx}
                         className={`p-3.5 glass-capsule rounded-2xl transition-all ${
                           isSystem
-                            ? 'border-[#CDB486]/30 bg-[#CDB486]/[0.04]'
+                            ? 'border-[#00E701]/30 bg-[#00E701]/[0.04]'
                             : isMe
-                            ? 'border-[#CDB486]/40 bg-[#CDB486]/[0.08] shadow-[0_0_15px_rgba(205, 180, 134,0.08)]'
+                            ? 'border-[#00E701]/40 bg-[#00E701]/[0.08] shadow-[0_0_15px_rgba(205, 180, 134,0.08)]'
                             : ''
                         }`}
                       >
@@ -152,9 +152,9 @@ export const LiveDispatchDrawer: React.FC<LiveDispatchDrawerProps> = ({
                             <span
                               className={`font-bold tracking-wider uppercase ${
                                 isSystem
-                                  ? 'text-[#CDB486]'
+                                  ? 'text-[#00E701]'
                                   : isMe
-                                  ? 'text-[#D8C6A5]'
+                                  ? 'text-[#213743]'
                                   : 'text-[#F5F7FA]'
                               }`}
                             >

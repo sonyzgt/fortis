@@ -17,6 +17,7 @@ import { useSound } from '@/context/SoundContext';
 import { useSocket } from '@/context/SocketContext';
 import { CupsGame, CupPickResult, CupsVerifyReport } from '@/types/cups';
 import { TOKEN_SYMBOL, isGameClaimedOnChain } from '@/lib/web3/contracts';
+import { Cup3DVisual } from './Cup3DVisual';
 
 interface CupsArenaProps {
   account: string | null;
@@ -280,7 +281,7 @@ export const CupsArena: React.FC<CupsArenaProps> = ({
       // Step 1: All 3 cups open! (revealing_start)
       setPhase('revealing_start');
       playMineGemReveal();
-      onShowToast(`Wager confirmed! Watch where the KOFUKU emblem is placed...`, true);
+      onShowToast(`Wager confirmed! Watch where the FORTIS emblem is placed...`, true);
 
       // Step 2: After 0.75s, cups close over the emblem (covering)
       shuffleTimeoutRef.current = setTimeout(() => {
@@ -345,7 +346,7 @@ export const CupsArena: React.FC<CupsArenaProps> = ({
           particleCount: 90,
           spread: 80,
           origin: { y: 0.6 },
-          colors: ['#CDB486', '#F5E6C8', '#FFFFFF'],
+          colors: ['#00E701', '#F5E6C8', '#FFFFFF'],
         });
 
         const updatedGame: CupsGame = {
@@ -367,7 +368,7 @@ export const CupsArena: React.FC<CupsArenaProps> = ({
         if (result.unclaimedGame) {
           setUnclaimedWins((prev) => [result.unclaimedGame!, ...prev]);
         }
-        onShowToast(`SUCCESS! You found the KOFUKU emblem! Won ${result.payout.toLocaleString()} ${TOKEN_SYMBOL}!`, true);
+        onShowToast(`SUCCESS! You found the FORTIS emblem! Won ${result.payout.toLocaleString()} ${TOKEN_SYMBOL}!`, true);
       } else if (result.gameOver) {
         // LOST (all chances exhausted)
         playMineExplosion();
@@ -500,9 +501,9 @@ export const CupsArena: React.FC<CupsArenaProps> = ({
           UNCLAIMED WINNINGS BANNER
           ───────────────────────────────────────────────────────────── */}
       {unclaimedWins.length > 0 && (
-        <div className="rounded-2xl border border-[#CDB486]/30 bg-[#CDB486]/[0.03] p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 backdrop-blur-md shadow-lg">
+        <div className="rounded-2xl border border-[#00E701]/30 bg-[#00E701]/[0.03] p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 backdrop-blur-md shadow-lg">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-[#CDB486]/15 border border-[#CDB486]/30 flex items-center justify-center text-[#CDB486] shadow-sm">
+            <div className="w-9 h-9 rounded-xl bg-[#00E701]/15 border border-[#00E701]/30 flex items-center justify-center text-[#00E701] shadow-sm">
               <Award className="w-5 h-5" />
             </div>
             <div>
@@ -511,7 +512,7 @@ export const CupsArena: React.FC<CupsArenaProps> = ({
               </p>
               <p className="text-xs text-[#8993A4]">
                 Total:{' '}
-                <span className="font-mono font-bold text-[#CDB486]">
+                <span className="font-mono font-bold text-[#00E701]">
                   {unclaimedWins.reduce((acc, g) => acc + g.payout, 0).toLocaleString()} {TOKEN_SYMBOL}
                 </span>
               </p>
@@ -542,7 +543,7 @@ export const CupsArena: React.FC<CupsArenaProps> = ({
         {/* LEFT: 3 LIQUID GLASS CUPS */}
         <div className="lg:col-span-7 flex flex-col items-center justify-center p-3.5 sm:p-6 lg:p-10 rounded-3xl glass-capsule relative shadow-2xl min-h-[440px] sm:min-h-[480px]">
           {/* Ambient Glow */}
-          <div className="absolute inset-8 rounded-full bg-[#CDB486]/[0.03] blur-3xl pointer-events-none" />
+          <div className="absolute inset-8 rounded-full bg-[#00E701]/[0.03] blur-3xl pointer-events-none" />
 
           {/* Table Header / Status Banner */}
           <div className="w-full flex flex-wrap items-center justify-between gap-2 pb-4 sm:pb-6 mb-6 sm:mb-8 border-b border-white/10">
@@ -550,14 +551,14 @@ export const CupsArena: React.FC<CupsArenaProps> = ({
               <span className="text-xs font-mono uppercase tracking-widest text-[#8993A4]">
                 3 GLASS CUPS
               </span>
-              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-[#CDB486]/10 text-[#CDB486] border border-[#CDB486]/20">
-                1 KOFUKU EMBLEM
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-[#00E701]/10 text-[#00E701] border border-[#00E701]/20">
+                1 FORTIS EMBLEM
               </span>
             </div>
 
             <div className="text-xs font-mono">
               {phase === 'revealing_start' ? (
-                <span className="text-[#CDB486] font-bold animate-pulse">
+                <span className="text-[#00E701] font-bold animate-pulse">
                   All 3 cups opened... Observe emblem position!
                 </span>
               ) : phase === 'covering' ? (
@@ -565,11 +566,11 @@ export const CupsArena: React.FC<CupsArenaProps> = ({
                   Cups sealed over emblem...
                 </span>
               ) : phase === 'shuffling' ? (
-                <span className="text-[#CDB486] font-bold animate-bounce">
+                <span className="text-[#00E701] font-bold animate-bounce">
                   Shuffling cups... Track the emblem!
                 </span>
               ) : phase === 'playing' ? (
-                <span className="text-[#CDB486] font-bold">
+                <span className="text-[#00E701] font-bold">
                   Choose 1 Cup!
                 </span>
               ) : endedGame ? (
@@ -624,11 +625,11 @@ export const CupsArena: React.FC<CupsArenaProps> = ({
                       >
                         <img
                           src="/logo.png"
-                          alt="KOFUKU Emblem"
+                          alt="FORTIS Emblem"
                           className="w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 object-contain drop-shadow-[0_0_18px_rgba(205,180,134,0.9)] animate-pulse"
                         />
-                        <span className="text-[9px] font-mono font-extrabold text-[#CDB486] mt-0.5 drop-shadow-sm">
-                          KOFUKU
+                        <span className="text-[9px] font-mono font-extrabold text-[#00E701] mt-0.5 drop-shadow-sm">
+                          FORTIS
                         </span>
                       </motion.div>
                     ) : isRevealedEmptyInPlay ? (
@@ -677,44 +678,25 @@ export const CupsArena: React.FC<CupsArenaProps> = ({
                   key={cupId}
                   animate={{
                     x: getSlotX(currentSlot),
-                    y: isLifted ? (isNarrowMobile ? -50 : isMobile ? -62 : -76) : 0,
-                    scale: isLifted ? 1.04 : 1,
-                    rotate: isWonCup ? -8 : 0,
+                    y: isLifted ? (isNarrowMobile ? -55 : isMobile ? -68 : -82) : 0,
+                    scale: isLifted ? 1.05 : 1,
+                    rotate: isWonCup ? -6 : 0,
                   }}
                   transition={{
                     x: { type: 'spring', stiffness: 1050, damping: 32, mass: 0.35 },
                     y: { type: 'spring', stiffness: 450, damping: 25 },
                   }}
                   onClick={() => canClick && handlePickSlot(currentSlot)}
-                  className={`absolute bottom-3 w-20 sm:w-24 md:w-32 h-32 sm:h-38 md:h-44 rounded-t-[36px] sm:rounded-t-[42px] rounded-b-xl border flex flex-col items-center justify-between p-2 sm:p-3 z-20 transition-colors duration-300 backdrop-blur-md shadow-2xl ${
-                    canClick ? 'cursor-pointer hover:border-[#CDB486]/70' : 'cursor-default'
-                  } ${
-                    isWonCup
-                      ? 'border-[#CDB486] bg-gradient-to-b from-[#CDB486]/35 via-[#CDB486]/15 to-transparent shadow-[0_0_30px_rgba(205,180,134,0.4)]'
-                      : isLifted
-                      ? 'border-white/25 bg-gradient-to-b from-white/15 via-white/[0.05] to-transparent'
-                      : phase === 'shuffling'
-                      ? 'border-[#CDB486]/50 bg-gradient-to-b from-white/20 via-white/[0.08] to-transparent'
-                      : 'border-white/15 bg-gradient-to-b from-white/15 via-white/[0.05] to-transparent'
+                  className={`absolute bottom-3 w-20 sm:w-26 md:w-32 h-34 sm:h-40 md:h-48 flex flex-col items-center justify-end z-20 transition-transform duration-200 ${
+                    canClick ? 'cursor-pointer hover:-translate-y-2' : 'cursor-default'
                   }`}
-                  style={{
-                    boxShadow: isWonCup
-                      ? '0 12px 40px rgba(205, 180, 134, 0.35), inset 0 2px 8px rgba(255, 255, 255, 0.4)'
-                      : '0 10px 30px rgba(0, 0, 0, 0.6), inset 0 2px 6px rgba(255, 255, 255, 0.25)',
-                  }}
                 >
-                  {/* Top Rim Specular */}
-                  <div className="w-10 sm:w-16 h-1.5 sm:h-2 rounded-full border border-white/40 bg-white/20 shadow-sm" />
-
-                  {/* Center Emblem Glow */}
-                  <div className="flex flex-col items-center justify-center opacity-60">
-                    <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full border border-[#CDB486]/40 flex items-center justify-center text-[#CDB486]">
-                      <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-                    </div>
-                  </div>
-
-                  {/* Bottom Champagne Rim */}
-                  <div className="w-full h-1 sm:h-1.5 rounded-full bg-gradient-to-r from-transparent via-[#CDB486]/50 to-transparent" />
+                  <Cup3DVisual
+                    isWon={isWonCup}
+                    isLifted={isLifted}
+                    isShuffling={phase === 'shuffling'}
+                    isHovered={canClick}
+                  />
                 </motion.div>
               );
             })}
@@ -736,7 +718,7 @@ export const CupsArena: React.FC<CupsArenaProps> = ({
               return (
                 <div key={slotIdx} className="flex flex-col items-center">
                   {isPickingThis ? (
-                    <span className="flex items-center gap-1 text-xs text-[#CDB486] font-mono py-1.5">
+                    <span className="flex items-center gap-1 text-xs text-[#00E701] font-mono py-1.5 font-bold">
                       <RotateCcw className="w-3.5 h-3.5 animate-spin" />
                       <span>Opening...</span>
                     </span>
@@ -744,12 +726,12 @@ export const CupsArena: React.FC<CupsArenaProps> = ({
                     <button
                       type="button"
                       onClick={() => handlePickSlot(slotIdx)}
-                      className="w-full py-1.5 sm:py-2 rounded-xl border border-[#CDB486]/50 bg-[#CDB486]/10 hover:bg-[#CDB486]/25 text-[#CDB486] font-mono text-[10px] sm:text-xs font-bold uppercase transition-all shadow-md cursor-pointer hover:scale-[1.02]"
+                      className="w-full py-2 rounded-lg bg-[#00E701] hover:bg-[#00C800] text-[#0F212E] font-sans text-xs font-bold uppercase transition-all shadow-md cursor-pointer hover:scale-[1.02] active:scale-95"
                     >
                       PICK #{slotIdx + 1}
                     </button>
                   ) : isSlotPicked ? (
-                    <span className="text-xs font-mono text-[#8993A4] py-1.5 font-semibold">
+                    <span className="text-xs font-mono text-[#B1BAD3] py-1.5 font-semibold">
                       REVEALED
                     </span>
                   ) : (
@@ -765,8 +747,8 @@ export const CupsArena: React.FC<CupsArenaProps> = ({
           {/* Minimal Tactile Legend */}
           <div className="mt-6 sm:mt-8 pt-4 border-t border-white/10 w-full flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-xs text-[#8993A4]">
             <span className="flex items-center gap-2">
-              <img src="/logo.png" alt="KOFUKU" className="w-4 h-4 object-contain" />
-              Winning Cup = <strong className="text-[#CDB486]">KOFUKU Emblem</strong>
+              <img src="/logo.png" alt="FORTIS" className="w-4 h-4 object-contain" />
+              Winning Cup = <strong className="text-[#00E701]">FORTIS Emblem</strong>
             </span>
             <span className="flex items-center gap-2">
               <X className="w-4 h-4 text-rose-400" />
@@ -815,7 +797,7 @@ export const CupsArena: React.FC<CupsArenaProps> = ({
                   onClick={() => setBetAmount(amtObj.val)}
                   className={`py-1.5 sm:py-2 px-1 text-[10px] sm:text-xs font-mono font-medium transition-all cursor-pointer disabled:opacity-40 ${
                     betAmount === amtObj.val
-                      ? 'glass-btn-chip border-[#CDB486]/60 text-[#CDB486] shadow-[0_0_12px_rgba(205,180,134,0.25)]'
+                      ? 'glass-btn-chip border-[#00E701]/60 text-[#00E701] shadow-[0_0_12px_rgba(205,180,134,0.25)]'
                       : 'glass-btn-chip text-[#8993A4] hover:text-[#F5F7FA]'
                   }`}
                 >
@@ -829,10 +811,10 @@ export const CupsArena: React.FC<CupsArenaProps> = ({
           <div className="space-y-1.5 pt-2 border-t border-white/10 text-left">
             <div className="flex items-center justify-between text-xs">
               <span className="font-medium text-[#8993A4] tracking-wide uppercase">RULES</span>
-              <span className="text-xs font-mono text-[#CDB486]">1 Pick (2.94× Payout)</span>
+              <span className="text-xs font-mono text-[#00E701]">1 Pick (2.94× Payout)</span>
             </div>
             <p className="text-xs text-[#8993A4] leading-relaxed">
-              Track the cups during the shuffle. Pick the 1 cup concealing the KOFUKU emblem to win 2.94× your wager.
+              Track the cups during the shuffle. Pick the 1 cup concealing the FORTIS emblem to win 2.94× your wager.
             </p>
           </div>
 
@@ -842,7 +824,7 @@ export const CupsArena: React.FC<CupsArenaProps> = ({
               <span className="text-[11px] font-medium text-[#8993A4] tracking-wider uppercase block">
                 MULTIPLIER
               </span>
-              <span className="font-mono text-2xl font-extrabold text-[#CDB486]">
+              <span className="font-mono text-2xl font-extrabold text-[#00E701]">
                 {currentMultiplier.toFixed(2)}×
               </span>
             </div>
@@ -850,7 +832,7 @@ export const CupsArena: React.FC<CupsArenaProps> = ({
               <span className="text-[11px] font-medium text-[#8993A4] tracking-wider uppercase block">
                 POTENTIAL WIN
               </span>
-              <span className="font-mono text-2xl font-extrabold text-[#E5C07B]">
+              <span className="font-mono text-2xl font-extrabold text-[#00E701]">
                 {potentialWin.toLocaleString()} <span className="text-xs text-[#8993A4]">{TOKEN_SYMBOL}</span>
               </span>
             </div>
@@ -859,8 +841,8 @@ export const CupsArena: React.FC<CupsArenaProps> = ({
           {/* START BUTTON */}
           <div className="pt-2">
             {isGameRunning ? (
-              <div className="p-4 rounded-2xl bg-[#CDB486]/10 border border-[#CDB486]/30 text-center space-y-1">
-                <p className="text-xs font-mono font-bold text-[#CDB486] uppercase tracking-wider">
+              <div className="p-4 rounded-2xl bg-[#00E701]/10 border border-[#00E701]/30 text-center space-y-1">
+                <p className="text-xs font-mono font-bold text-[#00E701] uppercase tracking-wider">
                   {phase === 'revealing_start'
                     ? 'ALL CUPS OPENED'
                     : phase === 'shuffling'
@@ -872,7 +854,7 @@ export const CupsArena: React.FC<CupsArenaProps> = ({
                     ? 'Notice where the emblem is placed...'
                     : phase === 'shuffling'
                     ? 'Track the cup with your eyes!'
-                    : 'Touch any cup on the left to uncover the KOFUKU emblem.'}
+                    : 'Touch any cup on the left to uncover the FORTIS emblem.'}
                 </p>
               </div>
             ) : endedGame && endedGame.status === 'won' && !endedGame.isClaimed ? (
@@ -881,7 +863,7 @@ export const CupsArena: React.FC<CupsArenaProps> = ({
                   type="button"
                   onClick={() => handleClaimWinnings(endedGame)}
                   disabled={claimingGameId === endedGame.id}
-                  className="glass-btn-inflated w-full py-4 text-sm font-bold uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 shadow-xl !bg-[#CDB486] !text-black hover:!bg-[#F5E6C8]"
+                  className="glass-btn-inflated w-full py-4 text-sm font-bold uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 shadow-xl !bg-[#00E701] !text-black hover:!bg-[#F5E6C8]"
                 >
                   {claimingGameId === endedGame.id ? (
                     <>
@@ -899,7 +881,7 @@ export const CupsArena: React.FC<CupsArenaProps> = ({
                   type="button"
                   onClick={handleStartGame}
                   disabled={isStarting}
-                  className="w-full py-2.5 rounded-xl border border-white/10 hover:border-[#CDB486]/40 text-xs font-mono text-[#8993A4] hover:text-[#F5F7FA] transition-colors cursor-pointer"
+                  className="w-full py-2.5 rounded-xl border border-white/10 hover:border-[#00E701]/40 text-xs font-mono text-[#8993A4] hover:text-[#F5F7FA] transition-colors cursor-pointer"
                 >
                   Start New Round (Claim Later)
                 </button>
@@ -926,7 +908,7 @@ export const CupsArena: React.FC<CupsArenaProps> = ({
           {/* Provably Fair Minimal Link */}
           <div className="pt-2 flex items-center justify-between text-xs text-[#8993A4]">
             <span className="flex items-center gap-1.5">
-              <ShieldCheck className="w-3.5 h-3.5 text-[#CDB486]" />
+              <ShieldCheck className="w-3.5 h-3.5 text-[#00E701]" />
               <span className="text-[11px]">HMAC-SHA256 Provably Fair</span>
             </span>
 
@@ -934,7 +916,7 @@ export const CupsArena: React.FC<CupsArenaProps> = ({
               <button
                 type="button"
                 onClick={() => handleOpenVerify(lastFinishedGame.id)}
-                className="text-[11px] font-mono text-[#CDB486] hover:underline cursor-pointer"
+                className="text-[11px] font-mono text-[#00E701] hover:underline cursor-pointer"
               >
                 Verify Round #{lastFinishedGame.id.slice(-5)}
               </button>
@@ -957,7 +939,7 @@ export const CupsArena: React.FC<CupsArenaProps> = ({
             >
               <div className="flex items-center justify-between pb-4 border-b border-white/10">
                 <div className="flex items-center gap-2.5">
-                  <ShieldCheck className="w-5 h-5 text-[#CDB486]" />
+                  <ShieldCheck className="w-5 h-5 text-[#00E701]" />
                   <h3 className="text-base font-bold text-[#F5F7FA]">
                     Provably Fair Verification
                   </h3>
@@ -973,7 +955,7 @@ export const CupsArena: React.FC<CupsArenaProps> = ({
 
               {isVerifying ? (
                 <div className="py-12 flex flex-col items-center justify-center space-y-3">
-                  <RotateCcw className="w-6 h-6 animate-spin text-[#CDB486]" />
+                  <RotateCcw className="w-6 h-6 animate-spin text-[#00E701]" />
                   <span className="text-xs text-[#8993A4]">Verifying cryptographic hashes...</span>
                 </div>
               ) : verifyReport ? (
@@ -1008,7 +990,7 @@ export const CupsArena: React.FC<CupsArenaProps> = ({
 
                     <div>
                       <span className="text-[#8993A4] block text-[10px] uppercase">Calculated Hash</span>
-                      <p className="p-2.5 rounded-lg bg-black/40 border border-white/5 text-[11px] text-[#CDB486] break-all select-all">
+                      <p className="p-2.5 rounded-lg bg-black/40 border border-white/5 text-[11px] text-[#00E701] break-all select-all">
                         {verifyReport.calculatedServerSeedHash}
                       </p>
                     </div>
@@ -1022,7 +1004,7 @@ export const CupsArena: React.FC<CupsArenaProps> = ({
                       </div>
                       <div>
                         <span className="text-[#8993A4] block text-[10px] uppercase">Actual Revealed Slot</span>
-                        <p className="p-2.5 rounded-lg bg-black/40 border border-white/5 text-sm font-bold text-[#CDB486]">
+                        <p className="p-2.5 rounded-lg bg-black/40 border border-white/5 text-sm font-bold text-[#00E701]">
                           Cup #{verifyReport.actualLogoPosition + 1}
                         </p>
                       </div>

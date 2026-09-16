@@ -124,17 +124,17 @@ export default function JackpotPage() {
   // Initialize guest identity & user profile from localStorage
   useEffect(() => {
     try {
-      let gId = localStorage.getItem('kofuku_guest_id') || localStorage.getItem('cashflip_guest_id');
+      let gId = localStorage.getItem('fortis_guest_id') || localStorage.getItem('cashflip_guest_id');
       if (!gId) {
         gId = 'initiate_' + Math.random().toString(36).slice(2, 8);
-        localStorage.setItem('kofuku_guest_id', gId);
+        localStorage.setItem('fortis_guest_id', gId);
         localStorage.setItem('cashflip_guest_id', gId);
       }
       setGuestId(gId);
     } catch (e) {}
 
     try {
-      const saved = localStorage.getItem('kofuku_user_profile') || localStorage.getItem('cashflip_user_profile');
+      const saved = localStorage.getItem('fortis_user_profile') || localStorage.getItem('cashflip_user_profile');
       if (saved) {
         setUserProfile(JSON.parse(saved));
       }
@@ -148,8 +148,8 @@ export default function JackpotPage() {
     const updated = { name, avatar: finalAvatar };
     setUserProfile(updated);
     try {
-      localStorage.setItem('kofuku_user_profile', JSON.stringify(updated));
-      localStorage.setItem('kofuku_profile_configured', 'true');
+      localStorage.setItem('fortis_user_profile', JSON.stringify(updated));
+      localStorage.setItem('fortis_profile_configured', 'true');
     } catch (e) {
       console.error('Failed to save user profile', e);
     }
@@ -182,7 +182,7 @@ export default function JackpotPage() {
           data.contractAddress.startsWith('0x') &&
           data.contractAddress.length === 42
         ) {
-          localStorage.setItem('kofuku_deployed_game_contract', data.contractAddress);
+          localStorage.setItem('fortis_deployed_game_contract', data.contractAddress);
           localStorage.setItem('cashflip_deployed_game_contract', data.contractAddress);
         }
       } catch (e) {
@@ -485,7 +485,7 @@ export default function JackpotPage() {
       return;
     }
 
-    const hasAgreed = localStorage.getItem('kofuku_terms_agreed') || localStorage.getItem('cashflip_terms_agreed');
+    const hasAgreed = localStorage.getItem('fortis_terms_agreed') || localStorage.getItem('cashflip_terms_agreed');
     if (!hasAgreed) {
       openTermsModal();
       return;
@@ -600,7 +600,7 @@ export default function JackpotPage() {
   const timeLeft = liveCountdown > 0 ? liveCountdown : (game?.timeRemaining ?? 0);
 
   return (
-    <div className="min-h-screen bg-[#030508] text-[#F5F7FA] font-sans selection:bg-[#CDB486] selection:text-[#030508] flex flex-col relative overflow-x-hidden">
+    <div className="min-h-screen bg-[#071824] text-white font-sans selection:bg-[#00E701] selection:text-[#071824] flex flex-col relative overflow-x-hidden">
       {/* Ambient Liquid Glass Atmospheric Bubbles Background */}
       <AmbientLiquidBackground />
 
@@ -617,14 +617,13 @@ export default function JackpotPage() {
         {/* Section Title & Coordinates Bar */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-white/10">
           <div className="space-y-1">
-            <div className="flex items-center gap-2 font-mono text-[10px] text-[#CDB486] uppercase tracking-[0.25em] font-bold">
+            <div className="flex items-center gap-2 font-mono text-[10px] text-[#00E701] uppercase tracking-[0.25em] font-bold">
               <span>LIVE ROUND</span>
               <span>//</span>
               <span>AUTONOMOUS POOL</span>
             </div>
-            <h1 className="font-heading text-2xl sm:text-3xl font-extrabold uppercase tracking-tight text-[#F5F7FA] flex items-center gap-2.5">
+            <h1 className="font-heading text-2xl sm:text-3xl font-extrabold uppercase tracking-tight text-white">
               JACKPOT ARENA
-              <img src="/image/jackpot.png" alt="Jackpot Cat" className="w-8 h-8 sm:w-9 sm:h-9 object-contain inline-block drop-shadow-[0_4px_12px_rgba(205,180,134,0.3)]" />
             </h1>
           </div>
 
@@ -663,10 +662,10 @@ export default function JackpotPage() {
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="glass-capsule p-4 sm:p-5 flex items-center justify-between flex-wrap gap-4 border-[#CDB486]/40 shadow-[0_0_30px_rgba(205, 180, 134,0.15)]"
+              className="glass-capsule p-4 sm:p-5 flex items-center justify-between flex-wrap gap-4 border-[#00E701]/40 shadow-[0_0_30px_rgba(205, 180, 134,0.15)]"
             >
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-2xl border border-[#CDB486]/60 bg-[#CDB486]/15 flex items-center justify-center text-[#CDB486] shadow-[0_0_15px_rgba(205, 180, 134,0.3)]">
+                <div className="w-9 h-9 rounded-2xl border border-[#00E701]/60 bg-[#00E701]/15 flex items-center justify-center text-[#00E701] shadow-[0_0_15px_rgba(205, 180, 134,0.3)]">
                   <Trophy className="w-4 h-4" />
                 </div>
                 <div>
@@ -699,7 +698,7 @@ export default function JackpotPage() {
             <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-[#8993A4] block font-medium">
               AGGREGATE CAPITAL IN ESCROW
             </span>
-            <div className="text-3xl lg:text-4xl font-mono font-black text-[#CDB486] tracking-tight drop-shadow-[0_0_15px_rgba(205, 180, 134,0.3)]">
+            <div className="text-3xl lg:text-4xl font-mono font-black text-[#00E701] tracking-tight drop-shadow-[0_0_15px_rgba(205, 180, 134,0.3)]">
               {currentPool.toFixed(2)} <span className="text-sm font-sans text-white/50">{TOKEN_SYMBOL}</span>
             </div>
             <span className="text-xs font-mono text-[#8993A4] block">
@@ -716,7 +715,7 @@ export default function JackpotPage() {
             </div>
             <span className="text-xs font-mono text-[#8993A4] block">
               STATUS:{' '}
-              <strong className="text-[#CDB486]">
+              <strong className="text-[#00E701]">
                 {gameState === 'waiting' && currentContendersCount >= 2
                   ? 'STARTING'
                   : gameState === 'open'
@@ -733,7 +732,7 @@ export default function JackpotPage() {
             <div className="text-3xl lg:text-4xl font-mono font-black text-[#F5F7FA] tracking-tight flex items-center gap-3">
               <span className={
                 gameState === 'spinning'
-                  ? 'text-[#CDB486] drop-shadow-[0_0_12px_rgba(205,180,134,0.6)]'
+                  ? 'text-[#00E701] drop-shadow-[0_0_12px_rgba(205,180,134,0.6)]'
                   : gameState === 'open' && timeLeft <= 5
                   ? 'text-rose-400 animate-pulse drop-shadow-[0_0_12px_rgba(244,63,94,0.6)]'
                   : ''
@@ -751,7 +750,7 @@ export default function JackpotPage() {
                   : `${timeLeft}s`}
               </span>
               {gameState === 'spinning' && (
-                <span className="text-xs px-2.5 py-1 rounded-full bg-[#CDB486] text-[#030508] font-bold shadow-[0_0_12px_rgba(205,180,134,0.4)]">
+                <span className="text-xs px-2.5 py-1 rounded-full bg-[#00E701] text-[#030508] font-bold shadow-[0_0_12px_rgba(205,180,134,0.4)]">
                   SLOW-MO
                 </span>
               )}
@@ -802,7 +801,7 @@ export default function JackpotPage() {
           <div className="lg:col-span-7 glass-capsule p-6 sm:p-8 space-y-6">
             <div className="flex items-center justify-between pb-4 border-b border-white/10">
               <div className="space-y-0.5">
-                <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-[#CDB486] font-bold block">
+                <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-[#00E701] font-bold block">
                   CAPITAL ALLOCATION TERMINAL
                 </span>
                 <h3 className="font-heading text-xl font-bold uppercase text-[#F5F7FA] tracking-wide">
@@ -811,7 +810,7 @@ export default function JackpotPage() {
               </div>
               <div className="text-right font-mono text-[11px]">
                 <span className="text-[#8993A4] block text-[9px] uppercase tracking-wider">VAULT RESERVE</span>
-                <span className="text-[#CDB486] font-bold">{usdgBalance.toFixed(2)} {TOKEN_SYMBOL}</span>
+                <span className="text-[#00E701] font-bold">{usdgBalance.toFixed(2)} {TOKEN_SYMBOL}</span>
               </div>
             </div>
 
@@ -845,7 +844,7 @@ export default function JackpotPage() {
               <label className="text-[10px] uppercase tracking-wider text-[#8993A4] block">
                 CUSTOM ALLOCATION MAGNITUDE ({TOKEN_SYMBOL})
               </label>
-              <div className="flex items-center glass-input px-4 py-1.5 focus-within:border-[#CDB486]/60 transition-all">
+              <div className="flex items-center glass-input px-4 py-1.5 focus-within:border-[#00E701]/60 transition-all">
                 <input
                   type="number"
                   min="100000"
@@ -859,14 +858,14 @@ export default function JackpotPage() {
                   <button
                     type="button"
                     onClick={() => setBetAmount(100000)}
-                    className="px-2.5 py-1 text-[11px] text-[#8993A4] hover:text-[#CDB486] rounded-lg border border-white/10 hover:border-[#CDB486]/30 uppercase cursor-pointer transition-colors"
+                    className="px-2.5 py-1 text-[11px] text-[#8993A4] hover:text-[#00E701] rounded-lg border border-white/10 hover:border-[#00E701]/30 uppercase cursor-pointer transition-colors"
                   >
                     MIN
                   </button>
                   <button
                     type="button"
                     onClick={() => setBetAmount(Number(usdgBalance.toFixed(2)))}
-                    className="px-2.5 py-1 text-[11px] text-[#CDB486] hover:text-[#D8C6A5] rounded-lg border border-[#CDB486]/40 uppercase cursor-pointer transition-colors"
+                    className="px-2.5 py-1 text-[11px] text-[#00E701] hover:text-[#213743] rounded-lg border border-[#00E701]/40 uppercase cursor-pointer transition-colors"
                   >
                     MAX
                   </button>
@@ -877,7 +876,7 @@ export default function JackpotPage() {
             {/* Win Probability Estimation */}
             <div className="glass-capsule p-4 flex items-center justify-between text-xs font-mono border-white/10">
               <span className="text-[#8993A4]">ESTIMATED OUTCOME PROBABILITY:</span>
-              <span className="font-bold text-[#CDB486] text-sm">
+              <span className="font-bold text-[#00E701] text-sm">
                 {currentPool + betAmount > 0
                   ? ((betAmount / (currentPool + betAmount)) * 100).toFixed(1)
                   : '100.0'}
@@ -930,14 +929,14 @@ export default function JackpotPage() {
               <span className="font-mono text-[10px] uppercase tracking-wider text-[#8993A4]">
                 ACTIVE PARTICIPANTS ({currentContendersCount})
               </span>
-              <span className="font-mono text-[10px] text-[#CDB486] font-bold">
+              <span className="font-mono text-[10px] text-[#00E701] font-bold">
                 SHA-256 PRE-COMMITTED
               </span>
             </div>
 
             {gameState === 'waiting' && currentContendersCount === 1 && (
-              <div className="w-full py-2.5 px-3 rounded-xl bg-[#CDB486]/10 border border-[#CDB486]/30 text-[#CDB486] text-xs font-mono flex items-center justify-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-[#CDB486] animate-ping" />
+              <div className="w-full py-2.5 px-3 rounded-xl bg-[#00E701]/10 border border-[#00E701]/30 text-[#00E701] text-xs font-mono flex items-center justify-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-[#00E701] animate-ping" />
                 <span>WAITING FOR 2ND PLAYER TO JOIN...</span>
               </div>
             )}
@@ -945,7 +944,7 @@ export default function JackpotPage() {
             <div className="flex-1 overflow-y-auto space-y-2.5 max-h-[380px] pr-1">
               {currentPlayers.length === 0 ? (
                 <div className="h-48 flex flex-col items-center justify-center text-center p-6 border border-dashed border-white/15 rounded-2xl text-[#8993A4] font-sans text-xs space-y-2">
-                  <Activity className="w-6 h-6 opacity-40 text-[#CDB486]" />
+                  <Activity className="w-6 h-6 opacity-40 text-[#00E701]" />
                   <span>NO PARTICIPANTS IN CURRENT MATRIX</span>
                   <span className="text-[10px]">Be the first to deposit and initiate countdown</span>
                 </div>
@@ -978,7 +977,7 @@ export default function JackpotPage() {
                               {p.name || `${p.address?.slice(0, 6)}...`}
                             </span>
                             {isUser && (
-                              <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-[#CDB486] text-[#030508] font-bold">
+                              <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-[#00E701] text-[#030508] font-bold">
                                 YOU
                               </span>
                             )}
@@ -990,7 +989,7 @@ export default function JackpotPage() {
                       </div>
 
                       <div className="text-right flex-shrink-0">
-                        <span className="font-bold text-[#CDB486] block text-xs">
+                        <span className="font-bold text-[#00E701] block text-xs">
                           {betVal.toFixed(2)} {TOKEN_SYMBOL}
                         </span>
                         <span className="text-[10px] text-[#8993A4]">{prob}% Odds</span>
@@ -1007,7 +1006,7 @@ export default function JackpotPage() {
         <div className="glass-capsule p-6 sm:p-8 space-y-4">
           <div className="flex items-center justify-between pb-3 border-b border-white/10">
             <div className="space-y-0.5">
-              <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-[#CDB486] font-bold block">
+              <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-[#00E701] font-bold block">
                 SETTLEMENT LEDGER
               </span>
               <h3 className="font-heading text-lg font-bold uppercase text-[#F5F7FA] tracking-wider">
@@ -1047,13 +1046,13 @@ export default function JackpotPage() {
                         <td className="py-3 px-3 text-[#8993A4]">
                           {win?.address ? `${win.address.slice(0, 6)}...${win.address.slice(-4)}` : '—'}
                         </td>
-                        <td className="py-3 px-3 text-[#CDB486]">
+                        <td className="py-3 px-3 text-[#00E701]">
                           {win?.winningTicket !== undefined ? `#${win.winningTicket}` : '—'}
                         </td>
                         <td className="py-3 px-3 text-[#8993A4]">
                           {(Number(pg.totalPool) || 0).toFixed(2)} {TOKEN_SYMBOL}
                         </td>
-                        <td className="py-3 px-3 text-[#CDB486] font-bold">
+                        <td className="py-3 px-3 text-[#00E701] font-bold">
                           {((Number(pg.totalPool) || 0) * 0.98).toFixed(2)} {TOKEN_SYMBOL}
                         </td>
                         <td className="py-3 px-3 text-right">
@@ -1062,7 +1061,7 @@ export default function JackpotPage() {
                               setVerifyTargetGameId(pg.gameId);
                               setShowVerifyModal(true);
                             }}
-                            className="px-3 py-1 rounded-lg border border-white/15 hover:border-[#CDB486]/50 text-[#8993A4] hover:text-[#CDB486] text-[10px] uppercase tracking-wider transition-colors cursor-pointer bg-white/[0.02]"
+                            className="px-3 py-1 rounded-lg border border-white/15 hover:border-[#00E701]/50 text-[#8993A4] hover:text-[#00E701] text-[10px] uppercase tracking-wider transition-colors cursor-pointer bg-white/[0.02]"
                           >
                             VERIFY
                           </button>
@@ -1154,7 +1153,7 @@ export default function JackpotPage() {
             exit={{ opacity: 0, y: 20 }}
             className={`fixed bottom-6 right-6 z-50 p-4 border max-w-sm w-full font-mono text-xs shadow-2xl ${
               toastMsg.ok
-                ? 'bg-[#080C14] border-[#CDB486] text-[#E2E8F0] shadow-[0_0_25px_rgba(205, 180, 134,0.2)]'
+                ? 'bg-[#080C14] border-[#00E701] text-[#E2E8F0] shadow-[0_0_25px_rgba(205, 180, 134,0.2)]'
                 : 'bg-[#080C14] border-red-500/60 text-red-300 shadow-[0_0_25px_rgba(239,68,68,0.2)]'
             }`}
           >
@@ -1170,7 +1169,7 @@ export default function JackpotPage() {
                 href={`${ROBINHOOD_CHAIN_CONFIG.blockExplorer}/tx/${toastMsg.txHash}`}
                 target="_blank"
                 rel="noreferrer"
-                className="mt-2 inline-flex items-center gap-1 text-[10px] text-[#CDB486] hover:underline"
+                className="mt-2 inline-flex items-center gap-1 text-[10px] text-[#00E701] hover:underline"
               >
                 <span>Inspect in Block Explorer</span>
                 <ExternalLink className="w-2.5 h-2.5" />

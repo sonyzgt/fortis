@@ -72,7 +72,7 @@ export class CoinFlipEngine {
     }
 
     if (betAmount < 100000 || betAmount > 100000000) {
-      return { success: false, message: 'Bet amount must be between 100,000 - 100,000,000 KOFUKU.' };
+      return { success: false, message: 'Bet amount must be between 100,000 - 100,000,000 FORTIS.' };
     }
 
     const roomNumber = this.nextRoomNumber++;

@@ -3,9 +3,9 @@ import crypto from 'crypto';
 export interface ProvablyFairCommitment {
   serverSeed: string;         // Kept secret until game ends
   serverSeedHash: string;     // SHA256(serverSeed) — published publicly before bets
-  publicSeed: string;         // e.g. "kofuku-2026"
+  publicSeed: string;         // e.g. "fortis-2026"
   nonce: number;              // Incremented round counter
-  gameId: string;             // e.g. "KOFUKU-8F3A91"
+  gameId: string;             // e.g. "FORTIS-8F3A91"
   gameHash: string;           // SHA256(gameId + serverSeedHash + publicSeed + nonce)
 }
 
@@ -61,7 +61,7 @@ export class ProvablyFairEngine {
   public static createCommitment(
     gameId: string,
     nonce: number,
-    publicSeed: string = 'kofuku-2026'
+    publicSeed: string = 'fortis-2026'
   ): ProvablyFairCommitment {
     const serverSeed = this.generateServerSeed();
     const serverSeedHash = this.hashServerSeed(serverSeed);

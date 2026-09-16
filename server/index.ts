@@ -302,7 +302,7 @@ function broadcastPlatformStats() {
 }
 
 // --- REST API Endpoints ---
-app.get('/api/health', (_, res) => res.json({ status: 'ok', ts: Date.now(), system: 'Kofuku Engine' }));
+app.get('/api/health', (_, res) => res.json({ status: 'ok', ts: Date.now(), system: 'Fortis Engine' }));
 app.get('/api/platform/stats', (_, res) => res.json(getPlatformStats()));
 
 // CashFlip Game APIs
@@ -919,7 +919,7 @@ const handleSignClaim = async (req: express.Request, res: express.Response) => {
     const signature = await signerWallet.signMessage(ethers.getBytes(messageHash));
 
     console.log(
-      `[SIGN-CLAIM] Type: ${matchedType.toUpperCase()} | Game: ${gameId} | Winner: ${winner} | Prize: ${ethers.formatUnits(finalPrizeWei, TOKEN_DECIMALS)} ${process.env.NEXT_PUBLIC_TOKEN_SYMBOL || 'KOFUKU'} | Sig: ${signature.slice(0, 20)}...`
+      `[SIGN-CLAIM] Type: ${matchedType.toUpperCase()} | Game: ${gameId} | Winner: ${winner} | Prize: ${ethers.formatUnits(finalPrizeWei, TOKEN_DECIMALS)} ${process.env.NEXT_PUBLIC_TOKEN_SYMBOL || 'FORTIS'} | Sig: ${signature.slice(0, 20)}...`
     );
 
     return res.json({

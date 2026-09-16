@@ -45,7 +45,7 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
           particleCount: 150,
           spread: 90,
           origin: { y: 0.4 },
-          colors: ['#CDB486', '#D8C6A5', '#3B82F6', '#F5F7FA'],
+          colors: ['#00E701', '#213743', '#3B82F6', '#F5F7FA'],
         });
       }
       setClaimStatus(winner.claimed ? 'paid' : 'unclaimed');
@@ -139,11 +139,11 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
           {/* Header Strip */}
           <div className="flex items-center justify-between pb-4 border-b border-white/[0.06] mb-5">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-[#CDB486]/10 border border-[#CDB486]/25 flex items-center justify-center text-[#CDB486] shadow-inner flex-shrink-0">
+              <div className="w-10 h-10 rounded-2xl bg-[#00E701]/10 border border-[#00E701]/25 flex items-center justify-center text-[#00E701] shadow-inner flex-shrink-0">
                 <Trophy className="w-5 h-5" />
               </div>
               <div>
-                <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-[#CDB486] font-bold">
+                <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-[#00E701] font-bold">
                   ROUND CONCLUDED
                 </div>
                 <h2 className="font-heading text-lg font-bold uppercase tracking-wide text-[#F5F7FA]">
@@ -170,26 +170,26 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
           <div className="p-4 glass-capsule rounded-2xl mb-4 space-y-2 text-xs">
             <div className="flex items-center justify-between font-mono">
               <span className="text-[10px] text-[#8993A4] uppercase tracking-wider">ALLOTTEE ACCOUNT:</span>
-              <span className="text-[10px] text-[#CDB486] font-bold">VERIFIED RECIPIENT</span>
+              <span className="text-[10px] text-[#00E701] font-bold">VERIFIED RECIPIENT</span>
             </div>
             <p className="font-bold text-[#F5F7FA] truncate font-mono text-xs">
               {winner.address}
             </p>
             <div className="flex items-center justify-between text-[11px] pt-2 border-t border-white/[0.06] font-mono">
               <span className="text-[#8993A4]">Drawn Ticket Index:</span>
-              <span className="font-bold text-[#CDB486]">#{winner.winningTicket}</span>
+              <span className="font-bold text-[#00E701]">#{winner.winningTicket}</span>
             </div>
           </div>
 
           {/* Net Prize Vault Callout */}
-          <div className="p-5 glass-capsule rounded-2xl mb-4 text-center relative overflow-hidden border border-[#CDB486]/30 bg-[#CDB486]/[0.04] shadow-[0_0_25px_rgba(205, 180, 134,0.08)]">
+          <div className="p-5 glass-capsule rounded-2xl mb-4 text-center relative overflow-hidden border border-[#00E701]/30 bg-[#00E701]/[0.04] shadow-[0_0_25px_rgba(205, 180, 134,0.08)]">
             <div className="absolute top-0 right-0 glass-pill-active font-mono text-[8px] font-bold uppercase tracking-widest px-3 py-1 rounded-bl-xl">
               98% DISBURSEMENT
             </div>
             <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-[#8993A4] mb-1">
               NET ALLOTMENT YIELD
             </div>
-            <div className="text-4xl font-heading font-bold tracking-tight text-[#CDB486] flex items-center justify-center gap-2 drop-shadow-[0_0_15px_rgba(205, 180, 134,0.35)]">
+            <div className="text-4xl font-heading font-bold tracking-tight text-[#00E701] flex items-center justify-center gap-2 drop-shadow-[0_0_15px_rgba(205, 180, 134,0.35)]">
               <span>{((winner as any).prize ?? winner.prizePons ?? 0).toLocaleString()}</span>
               <span className="text-sm font-mono font-bold text-[#F5F7FA]/70">{TOKEN_SYMBOL}</span>
             </div>
@@ -204,25 +204,25 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
           <div className="space-y-3 mb-5">
             {/* Status Steps */}
             <div className="flex items-center justify-between px-3.5 py-2 glass-capsule rounded-xl text-[10px] font-mono">
-              <span className={claimStatus === 'unclaimed' ? 'text-[#CDB486] font-bold' : 'text-[#8993A4]'}>
+              <span className={claimStatus === 'unclaimed' ? 'text-[#00E701] font-bold' : 'text-[#8993A4]'}>
                 01 UNCLAIMED
               </span>
               <ArrowRight className="w-3 h-3 text-[#8993A4]" />
-              <span className={claimStatus === 'claiming' ? 'text-[#CDB486] font-bold animate-pulse' : 'text-[#8993A4]'}>
+              <span className={claimStatus === 'claiming' ? 'text-[#00E701] font-bold animate-pulse' : 'text-[#8993A4]'}>
                 02 SIGNING
               </span>
               <ArrowRight className="w-3 h-3 text-[#8993A4]" />
-              <span className={claimStatus === 'confirmed' ? 'text-[#CDB486] font-bold animate-pulse' : 'text-[#8993A4]'}>
+              <span className={claimStatus === 'confirmed' ? 'text-[#00E701] font-bold animate-pulse' : 'text-[#8993A4]'}>
                 03 CONFIRMED
               </span>
               <ArrowRight className="w-3 h-3 text-[#8993A4]" />
-              <span className={claimStatus === 'paid' ? 'text-[#CDB486] font-bold' : 'text-[#8993A4]'}>
+              <span className={claimStatus === 'paid' ? 'text-[#00E701] font-bold' : 'text-[#8993A4]'}>
                 04 DISBURSED
               </span>
             </div>
 
             {claimStatus === 'paid' ? (
-              <div className="p-3.5 glass-capsule rounded-2xl border border-[#CDB486]/40 text-[#CDB486] text-xs font-mono font-bold flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(205, 180, 134,0.15)]">
+              <div className="p-3.5 glass-capsule rounded-2xl border border-[#00E701]/40 text-[#00E701] text-xs font-mono font-bold flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(205, 180, 134,0.15)]">
                 <Check className="w-4 h-4" />
                 <span className="tracking-wider uppercase">FUNDS DISBURSED ON-CHAIN</span>
               </div>
@@ -255,7 +255,7 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
                   href={`${ROBINHOOD_CHAIN_CONFIG.blockExplorer}/tx/${claimTx}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex items-center gap-1.5 text-[11px] text-[#CDB486] hover:underline font-mono"
+                  className="inline-flex items-center gap-1.5 text-[11px] text-[#00E701] hover:underline font-mono"
                 >
                   <span>Inspect Transaction on Explorer</span>
                   <ExternalLink className="w-3 h-3" />
@@ -271,9 +271,9 @@ export const GameResultModal: React.FC<GameResultModalProps> = ({
                 onClose();
                 onOpenVerify(game.gameId);
               }}
-              className="flex-1 py-2.5 glass-btn-chip rounded-xl text-[#CDB486] text-xs uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer"
+              className="flex-1 py-2.5 glass-btn-chip rounded-xl text-[#00E701] text-xs uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer"
             >
-              <ShieldCheck className="w-4 h-4 text-[#CDB486]" />
+              <ShieldCheck className="w-4 h-4 text-[#00E701]" />
               <span>VERIFY AUDIT</span>
             </button>
             <button

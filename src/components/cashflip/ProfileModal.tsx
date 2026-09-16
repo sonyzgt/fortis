@@ -18,7 +18,7 @@ interface ProfileModalProps {
 const RANDOM_NAMES = [
   'AetherNode',
   'NocturneCipher',
-  'VanguardKofuku',
+  'VanguardFortis',
   'ZeroExOperator',
   'GildedOracle',
   'ArchonVault',
@@ -123,7 +123,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
           {/* Header */}
           <div className="flex items-center justify-between pb-4 border-b border-white/[0.06]">
             <div className="space-y-0.5">
-              <span className="font-mono text-[10px] tracking-[0.2em] uppercase text-[#CDB486] block font-bold">
+              <span className="font-mono text-[10px] tracking-[0.2em] uppercase text-[#00E701] block font-bold">
                 OPERATOR PROFILE
               </span>
               <h3 className="font-heading text-lg font-bold text-[#F5F7FA] tracking-wide uppercase">
@@ -156,7 +156,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                 <div className="text-[11px] font-mono text-[#8993A4] truncate">
                   {account ? `${account.slice(0, 8)}...${account.slice(-6)}` : 'NO WALLET CONNECTED'}
                 </div>
-                <div className="text-[10px] font-mono tracking-wider uppercase text-[#CDB486]">
+                <div className="text-[10px] font-mono tracking-wider uppercase text-[#00E701]">
                   DISPATCH COUNT: {userStats.gamesPlayed} ROUNDS
                 </div>
               </div>
@@ -179,7 +179,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                 <button
                   type="button"
                   onClick={handleRandomizeName}
-                  className="glass-btn-chip px-3.5 py-2 flex items-center gap-1.5 cursor-pointer text-[#CDB486]"
+                  className="glass-btn-chip px-3.5 py-2 flex items-center gap-1.5 cursor-pointer text-[#00E701]"
                   title="Randomize callsign"
                 >
                   <Shuffle className="w-3.5 h-3.5" />
@@ -195,7 +195,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
               </label>
               <div className="p-3.5 glass-capsule rounded-2xl flex items-center gap-4 border border-white/[0.08]">
                 {/* Current Avatar Preview */}
-                <div className="relative w-14 h-14 rounded-xl bg-white/[0.04] border border-[#CDB486]/30 p-1 flex-shrink-0 overflow-hidden shadow-[0_4px_16px_rgba(205,180,134,0.15)] flex items-center justify-center">
+                <div className="relative w-14 h-14 rounded-xl bg-white/[0.04] border border-[#00E701]/30 p-1 flex-shrink-0 overflow-hidden shadow-[0_4px_16px_rgba(205,180,134,0.15)] flex items-center justify-center">
                   <img
                     src={avatar || '/image/logo.png'}
                     alt="Avatar Preview"

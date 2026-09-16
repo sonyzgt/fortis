@@ -99,10 +99,10 @@ export const VerifyModal: React.FC<VerifyModalProps> = ({ isOpen, gameId, onClos
           <div className="flex items-center justify-between pb-4 border-b border-white/[0.06] flex-shrink-0">
             <div className="space-y-0.5">
               <div className="flex items-center gap-2">
-                <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-[#CDB486] font-bold">
+                <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-[#00E701] font-bold">
                   CRYPTOGRAPHIC AUDIT
                 </span>
-                <span className="px-2 py-0.5 border border-[#CDB486]/30 bg-[#CDB486]/10 text-[#CDB486] text-[9px] font-mono tracking-wider rounded-full font-bold">
+                <span className="px-2 py-0.5 border border-[#00E701]/30 bg-[#00E701]/10 text-[#00E701] text-[9px] font-mono tracking-wider rounded-full font-bold">
                   HMAC-SHA256
                 </span>
               </div>
@@ -132,7 +132,7 @@ export const VerifyModal: React.FC<VerifyModalProps> = ({ isOpen, gameId, onClos
                 <Search className="w-4 h-4 text-[#8993A4] absolute left-3.5 pointer-events-none" />
                 <input
                   type="text"
-                  placeholder="ENTER ROUND ID (E.G. KOFUKU-15AFD5)"
+                  placeholder="ENTER ROUND ID (E.G. FORTIS-15AFD5)"
                   value={inputGameId}
                   onChange={(e) => setInputGameId(e.target.value.toUpperCase())}
                   className="glass-input w-full pl-10 pr-4 py-2.5 text-xs font-mono text-[#F5F7FA] placeholder-[#8993A4]/50 uppercase"
@@ -163,12 +163,12 @@ export const VerifyModal: React.FC<VerifyModalProps> = ({ isOpen, gameId, onClos
                   <div
                     className={`p-4 glass-capsule rounded-2xl ${
                       verifyReport.allPassed
-                        ? 'border border-[#CDB486]/40 shadow-[0_0_20px_rgba(205, 180, 134,0.1)]'
+                        ? 'border border-[#00E701]/40 shadow-[0_0_20px_rgba(205, 180, 134,0.1)]'
                         : 'border border-rose-500/40 bg-rose-950/20'
                     }`}
                   >
                     <div className="flex items-center justify-between mb-3">
-                      <span className="text-xs font-mono font-bold tracking-wider uppercase text-[#CDB486]">
+                      <span className="text-xs font-mono font-bold tracking-wider uppercase text-[#00E701]">
                         MATHEMATICAL PROOF AUDIT
                       </span>
                       <span className="glass-pill-active text-[9px] font-mono font-bold px-2.5 py-0.5">
@@ -178,19 +178,19 @@ export const VerifyModal: React.FC<VerifyModalProps> = ({ isOpen, gameId, onClos
 
                     <div className="grid grid-cols-2 gap-2.5 text-[11px] font-mono">
                       <div className="flex items-center gap-2 text-[#F5F7FA]">
-                        {verifyReport.serverSeedValid ? <Check className="w-3.5 h-3.5 text-[#CDB486]" /> : <X className="w-3.5 h-3.5 text-rose-400" />}
+                        {verifyReport.serverSeedValid ? <Check className="w-3.5 h-3.5 text-[#00E701]" /> : <X className="w-3.5 h-3.5 text-rose-400" />}
                         <span>SERVER SEED COMMITTED</span>
                       </div>
                       <div className="flex items-center gap-2 text-[#F5F7FA]">
-                        {verifyReport.gameHashValid ? <Check className="w-3.5 h-3.5 text-[#CDB486]" /> : <X className="w-3.5 h-3.5 text-rose-400" />}
+                        {verifyReport.gameHashValid ? <Check className="w-3.5 h-3.5 text-[#00E701]" /> : <X className="w-3.5 h-3.5 text-rose-400" />}
                         <span>GAME HASH UNALTERED</span>
                       </div>
                       <div className="flex items-center gap-2 text-[#F5F7FA]">
-                        {verifyReport.winningHashValid ? <Check className="w-3.5 h-3.5 text-[#CDB486]" /> : <X className="w-3.5 h-3.5 text-rose-400" />}
+                        {verifyReport.winningHashValid ? <Check className="w-3.5 h-3.5 text-[#00E701]" /> : <X className="w-3.5 h-3.5 text-rose-400" />}
                         <span>HMAC HASH MATCHED</span>
                       </div>
                       <div className="flex items-center gap-2 text-[#F5F7FA]">
-                        {verifyReport.winningTicketValid ? <Check className="w-3.5 h-3.5 text-[#CDB486]" /> : <X className="w-3.5 h-3.5 text-rose-400" />}
+                        {verifyReport.winningTicketValid ? <Check className="w-3.5 h-3.5 text-[#00E701]" /> : <X className="w-3.5 h-3.5 text-rose-400" />}
                         <span>TICKET MODULO VERIFIED</span>
                       </div>
                     </div>
@@ -201,7 +201,7 @@ export const VerifyModal: React.FC<VerifyModalProps> = ({ isOpen, gameId, onClos
                 <div className="p-4 glass-capsule rounded-2xl space-y-2.5 text-xs font-mono">
                   <div className="flex items-center justify-between">
                     <span className="text-[#8993A4]">ROUND ID:</span>
-                    <span className="font-bold text-[#CDB486]">{gameData.gameId}</span>
+                    <span className="font-bold text-[#00E701]">{gameData.gameId}</span>
                   </div>
 
                   <div className="flex items-center justify-between">
@@ -221,14 +221,14 @@ export const VerifyModal: React.FC<VerifyModalProps> = ({ isOpen, gameId, onClos
 
                   <div className="flex items-center justify-between">
                     <span className="text-[#8993A4]">TOTAL {TOKEN_SYMBOL} POOL:</span>
-                    <span className="font-bold text-[#CDB486]">{gameData.totalPool?.toLocaleString()} {TOKEN_SYMBOL}</span>
+                    <span className="font-bold text-[#00E701]">{gameData.totalPool?.toLocaleString()} {TOKEN_SYMBOL}</span>
                   </div>
 
                   {gameData.winner && (
                     <>
                       <div className="pt-2.5 border-t border-white/[0.06] flex items-center justify-between">
                         <span className="text-[#8993A4]">DRAWN TICKET NUMBER:</span>
-                        <span className="font-bold text-[#CDB486] text-sm">#{gameData.winner.winningTicket}</span>
+                        <span className="font-bold text-[#00E701] text-sm">#{gameData.winner.winningTicket}</span>
                       </div>
                       <div className="flex items-center justify-between">
                         <span className="text-[#8993A4]">WINNING RECIPIENT:</span>
@@ -246,9 +246,9 @@ export const VerifyModal: React.FC<VerifyModalProps> = ({ isOpen, gameId, onClos
                       <span className="text-[#8993A4] uppercase font-bold text-[10px]">INITIAL GAME HASH</span>
                       <button
                         onClick={() => handleCopy(gameData.gameHash, 'gameHash')}
-                        className="text-[#8993A4] hover:text-[#CDB486] transition-colors cursor-pointer"
+                        className="text-[#8993A4] hover:text-[#00E701] transition-colors cursor-pointer"
                       >
-                        {copied === 'gameHash' ? <span className="text-xs text-[#CDB486]">COPIED</span> : <Copy className="w-3.5 h-3.5" />}
+                        {copied === 'gameHash' ? <span className="text-xs text-[#00E701]">COPIED</span> : <Copy className="w-3.5 h-3.5" />}
                       </button>
                     </div>
                     <p className="break-all text-[11px] text-[#F5F7FA]/80">{gameData.gameHash}</p>
@@ -260,9 +260,9 @@ export const VerifyModal: React.FC<VerifyModalProps> = ({ isOpen, gameId, onClos
                       <span className="text-[#8993A4] uppercase font-bold text-[10px]">SERVER SEED COMMITMENT (SHA-256)</span>
                       <button
                         onClick={() => handleCopy(gameData.serverSeedHash, 'serverSeedHash')}
-                        className="text-[#8993A4] hover:text-[#CDB486] transition-colors cursor-pointer"
+                        className="text-[#8993A4] hover:text-[#00E701] transition-colors cursor-pointer"
                       >
-                        {copied === 'serverSeedHash' ? <span className="text-xs text-[#CDB486]">COPIED</span> : <Copy className="w-3.5 h-3.5" />}
+                        {copied === 'serverSeedHash' ? <span className="text-xs text-[#00E701]">COPIED</span> : <Copy className="w-3.5 h-3.5" />}
                       </button>
                     </div>
                     <p className="break-all text-[11px] text-[#F5F7FA]/80">{gameData.serverSeedHash}</p>
@@ -270,17 +270,17 @@ export const VerifyModal: React.FC<VerifyModalProps> = ({ isOpen, gameId, onClos
 
                   {/* Revealed Server Seed */}
                   {gameData.revealedServerSeed ? (
-                    <div className="p-3.5 glass-capsule rounded-2xl border border-[#CDB486]/40 bg-[#CDB486]/[0.06]">
+                    <div className="p-3.5 glass-capsule rounded-2xl border border-[#00E701]/40 bg-[#00E701]/[0.06]">
                       <div className="flex items-center justify-between mb-1.5">
-                        <span className="text-[#CDB486] uppercase font-bold text-[10px]">REVEALED SERVER SECRET SEED</span>
+                        <span className="text-[#00E701] uppercase font-bold text-[10px]">REVEALED SERVER SECRET SEED</span>
                         <button
                           onClick={() => handleCopy(gameData.revealedServerSeed, 'serverSeed')}
-                          className="text-[#CDB486] hover:text-white transition-colors cursor-pointer"
+                          className="text-[#00E701] hover:text-white transition-colors cursor-pointer"
                         >
-                          {copied === 'serverSeed' ? <span className="text-xs text-[#CDB486]">COPIED</span> : <Copy className="w-3.5 h-3.5" />}
+                          {copied === 'serverSeed' ? <span className="text-xs text-[#00E701]">COPIED</span> : <Copy className="w-3.5 h-3.5" />}
                         </button>
                       </div>
-                      <p className="break-all text-[11px] font-bold text-[#CDB486]">{gameData.revealedServerSeed}</p>
+                      <p className="break-all text-[11px] font-bold text-[#00E701]">{gameData.revealedServerSeed}</p>
                     </div>
                   ) : (
                     <div className="p-3.5 glass-capsule rounded-2xl text-[#8993A4] text-[11px] font-mono">
@@ -295,9 +295,9 @@ export const VerifyModal: React.FC<VerifyModalProps> = ({ isOpen, gameId, onClos
                         <span className="text-[#8993A4] uppercase font-bold text-[10px]">HMAC-SHA256 DRAW DIGEST</span>
                         <button
                           onClick={() => handleCopy(gameData.winningHash, 'winHash')}
-                          className="text-[#8993A4] hover:text-[#CDB486] transition-colors cursor-pointer"
+                          className="text-[#8993A4] hover:text-[#00E701] transition-colors cursor-pointer"
                         >
-                          {copied === 'winHash' ? <span className="text-xs text-[#CDB486]">COPIED</span> : <Copy className="w-3.5 h-3.5" />}
+                          {copied === 'winHash' ? <span className="text-xs text-[#00E701]">COPIED</span> : <Copy className="w-3.5 h-3.5" />}
                         </button>
                       </div>
                       <p className="break-all text-[11px] text-[#F5F7FA]/80">{gameData.winningHash}</p>

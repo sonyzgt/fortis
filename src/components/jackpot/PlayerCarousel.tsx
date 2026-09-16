@@ -251,14 +251,14 @@ export const PlayerCarousel: React.FC<PlayerCarouselProps> = ({
       <div
         className={`relative w-full glass-capsule transition-all duration-700 overflow-hidden border border-white/10 rounded-3xl ${
           isDarkening || isSpinning
-            ? 'shadow-[0_20px_60px_rgba(205, 180, 134,0.25)] border-[#CDB486]/50'
+            ? 'shadow-[0_20px_60px_rgba(205, 180, 134,0.25)] border-[#00E701]/50'
             : 'shadow-[0_16px_40px_rgba(0,0,0,0.8)]'
         }`}
       >
         {/* Subtle Convergence Glow during spin */}
         {(isDarkening || isSpinning) && (
           <div className="absolute inset-0 pointer-events-none z-30 overflow-hidden">
-            <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-96 h-96 bg-gradient-to-b from-[#CDB486]/25 via-transparent to-transparent rounded-full blur-3xl animate-pulse" />
+            <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-96 h-96 bg-gradient-to-b from-[#00E701]/25 via-transparent to-transparent rounded-full blur-3xl animate-pulse" />
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_40%,rgba(3,5,8,0.9)_100%)]" />
           </div>
         )}
@@ -439,7 +439,7 @@ const ParticipantCard: React.FC<ParticipantCardProps> = ({
           isWinner
             ? 'border-amber-300 shadow-[0_0_15px_rgba(251,191,36,0.6)] bg-amber-400/20'
             : isCenter
-            ? 'border-[#CDB486]/80 shadow-[0_0_15px_rgba(205, 180, 134,0.4)] bg-[#CDB486]/10 scale-105'
+            ? 'border-[#00E701]/80 shadow-[0_0_15px_rgba(205, 180, 134,0.4)] bg-[#00E701]/10 scale-105'
             : 'border-white/15 bg-white/[0.03]'
         }`}
       >
@@ -463,7 +463,7 @@ const ParticipantCard: React.FC<ParticipantCardProps> = ({
 
       {/* Stake Badge as Glass Capsule */}
       <div className="flex items-center gap-1.5 px-3 py-1 rounded-full border border-white/15 bg-white/[0.04] text-[11px] font-mono tracking-wider font-bold shadow-inner">
-        <span className="text-[#CDB486]">
+        <span className="text-[#00E701]">
           {p.totalSpent >= 1000 ? `${(p.totalSpent / 1000).toFixed(1)}k` : p.totalSpent}
         </span>
         <span className="text-[9px] text-[#8993A4]">{TOKEN_SYMBOL}</span>
@@ -584,7 +584,7 @@ export const RightWinnerSidebar: React.FC<RightWinnerSidebarProps> = ({
       <div className="p-4 border-b border-white/10 bg-white/[0.02] flex items-center justify-between">
         <div className="flex items-center gap-2.5">
           <div className="w-7 h-7 rounded-xl border border-white/20 p-1 bg-white/5 flex items-center justify-center flex-shrink-0 shadow-inner">
-            <img src="/image/logo.png" alt="Kofuku" className="w-full h-full object-contain" />
+            <img src="/image/logo.png" alt="Fortis" className="w-full h-full object-contain" />
           </div>
           <div>
             <h2 className="text-xs font-sans font-bold tracking-wider text-[#F5F7FA] uppercase">
@@ -595,7 +595,7 @@ export const RightWinnerSidebar: React.FC<RightWinnerSidebarProps> = ({
             </p>
           </div>
         </div>
-        <span className="text-[10px] font-mono tracking-wider text-[#CDB486] border border-[#CDB486]/30 px-2 py-0.5 rounded-full bg-[#CDB486]/10">
+        <span className="text-[10px] font-mono tracking-wider text-[#00E701] border border-[#00E701]/30 px-2 py-0.5 rounded-full bg-[#00E701]/10">
           #{totalCount}
         </span>
       </div>
@@ -640,7 +640,7 @@ export const RightWinnerSidebar: React.FC<RightWinnerSidebarProps> = ({
       <div className="flex-1 p-3 space-y-2.5">
         {displayedVictories.length === 0 ? (
           <div className="py-16 text-center text-xs text-[#8993A4] font-sans">
-            <span className="block text-[#CDB486] text-lg mb-1">✦</span>
+            <span className="block text-[#00E701] text-lg mb-1">✦</span>
             No recorded victories in this category yet.
           </div>
         ) : (
@@ -651,7 +651,7 @@ export const RightWinnerSidebar: React.FC<RightWinnerSidebarProps> = ({
                 key={item.id}
                 className={`glass-capsule p-3 transition-all ${
                   isLatest
-                    ? 'border-[#CDB486]/50 shadow-[0_0_20px_rgba(205, 180, 134,0.15)]'
+                    ? 'border-[#00E701]/50 shadow-[0_0_20px_rgba(205, 180, 134,0.15)]'
                     : 'border-white/[0.08]'
                 }`}
               >
@@ -664,14 +664,14 @@ export const RightWinnerSidebar: React.FC<RightWinnerSidebarProps> = ({
                       className={`text-[9px] font-mono px-1.5 py-0.5 rounded-md uppercase font-bold border ${
                         item.gameType === 'coinflip'
                           ? 'bg-[#3B82F6]/10 text-[#3B82F6] border-[#3B82F6]/30'
-                          : 'bg-[#CDB486]/10 text-[#CDB486] border-[#CDB486]/30'
+                          : 'bg-[#00E701]/10 text-[#00E701] border-[#00E701]/30'
                       }`}
                     >
                       {item.gameType === 'coinflip' ? 'COINFLIP' : 'JACKPOT'}
                     </span>
                   </div>
                   {isLatest && (
-                    <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded border border-[#CDB486] text-[#CDB486] uppercase tracking-wider">
+                    <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded border border-[#00E701] text-[#00E701] uppercase tracking-wider">
                       LATEST
                     </span>
                   )}
@@ -685,7 +685,7 @@ export const RightWinnerSidebar: React.FC<RightWinnerSidebarProps> = ({
                       className="w-full h-full object-cover"
                     />
                     {item.coinSide && (
-                      <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-[#030508] border border-[#CDB486] p-0.5">
+                      <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-[#030508] border border-[#00E701] p-0.5">
                         <img
                           src={item.coinSide === 'heads' ? '/head.png' : '/tail.png'}
                           alt=""
@@ -709,7 +709,7 @@ export const RightWinnerSidebar: React.FC<RightWinnerSidebarProps> = ({
                   <span className="text-[10px] uppercase font-sans tracking-wider text-[#8993A4]">
                     Awarded
                   </span>
-                  <div className="flex items-center gap-1 font-mono font-bold text-[#CDB486]">
+                  <div className="flex items-center gap-1 font-mono font-bold text-[#00E701]">
                     <span>{item.totalPot.toLocaleString()}</span>
                     <span className="text-[9px] text-[#8993A4]">{TOKEN_SYMBOL}</span>
                   </div>

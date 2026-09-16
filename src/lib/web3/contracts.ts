@@ -3,8 +3,8 @@ import CashFlipTokenABI from './abi/CashFlipTokenABI.json';
 import CashFlipJackpotABI from './abi/CashFlipJackpotABI.json';
 import { getApiBaseUrl } from '@/lib/apiConfig';
 
-export const DEFAULT_TOKEN_ADDRESS = '0x69ed124e3d013b06e05aeef5e6b784ac4ab20197';
-export const TOKEN_SYMBOL = (process.env.NEXT_PUBLIC_TOKEN_SYMBOL || 'KOFUKU').trim();
+export const DEFAULT_TOKEN_ADDRESS = '';
+export const TOKEN_SYMBOL = (process.env.NEXT_PUBLIC_TOKEN_SYMBOL || 'FORTIS').trim();
 export const TOKEN_DECIMALS = parseInt(process.env.NEXT_PUBLIC_TOKEN_DECIMALS || '18', 10);
 
 export function parseTokenAmount(amount: number | string): bigint {
@@ -32,16 +32,20 @@ export function formatTokenAmount(raw: bigint | string): number {
   }
 }
 
-// --- Kofuku / CashFlip Environment Configuration ---
+// --- Fortis / Web3 Environment Configuration ---
 export function getCashFlipTokenAddress(): string {
   if (typeof window !== 'undefined') {
-    const saved = localStorage.getItem('kofuku_token_contract') || localStorage.getItem('cashflip_token_contract');
+    const saved =
+      localStorage.getItem('fortis_token_contract') ||
+      localStorage.getItem('fortis_token_contract') ||
+      localStorage.getItem('cashflip_token_contract');
     if (saved && saved.startsWith('0x') && saved.length === 42) {
       return saved;
     }
   }
   const envAddr = (
-    process.env.NEXT_PUBLIC_KOFUKU_TOKEN_ADDRESS ||
+    process.env.NEXT_PUBLIC_FORTIS_TOKEN_ADDRESS ||
+    process.env.NEXT_PUBLIC_FORTIS_TOKEN_ADDRESS ||
     process.env.NEXT_PUBLIC_CASHFLIP_TOKEN_ADDRESS ||
     process.env.NEXT_PUBLIC_PONSPOT_TOKEN_ADDRESS ||
     process.env.NEXT_PUBLIC_PONS_TOKEN_ADDRESS ||
@@ -54,11 +58,11 @@ export function getCashFlipTokenAddress(): string {
   return DEFAULT_TOKEN_ADDRESS;
 }
 
-export const getKofukuTokenAddress = getCashFlipTokenAddress;
+export const getFortisTokenAddress = getCashFlipTokenAddress;
 
 export const CASHFLIP_TOKEN_ADDRESS =
   (
-    process.env.NEXT_PUBLIC_KOFUKU_TOKEN_ADDRESS ||
+    process.env.NEXT_PUBLIC_FORTIS_TOKEN_ADDRESS ||
     process.env.NEXT_PUBLIC_CASHFLIP_TOKEN_ADDRESS ||
     process.env.NEXT_PUBLIC_PONSPOT_TOKEN_ADDRESS ||
     process.env.NEXT_PUBLIC_PONS_TOKEN_ADDRESS ||
@@ -66,13 +70,15 @@ export const CASHFLIP_TOKEN_ADDRESS =
     DEFAULT_TOKEN_ADDRESS
   ).trim();
 
-export const KOFUKU_TOKEN_ADDRESS = CASHFLIP_TOKEN_ADDRESS;
+export const FORTIS_TOKEN_ADDRESS = CASHFLIP_TOKEN_ADDRESS;
 
-export const DEFAULT_GAME_CONTRACT_ADDRESS = '0xa626b74Ac9CDbD22Bb6fA5e0F1e7FCce859a4834';
+export const DEFAULT_GAME_CONTRACT_ADDRESS = '';
 
 export function getGameContractAddress(): string {
   if (typeof window !== 'undefined') {
-    const saved = localStorage.getItem('kofuku_deployed_game_contract') || localStorage.getItem('cashflip_deployed_game_contract');
+    const saved =
+      localStorage.getItem('fortis_deployed_game_contract') ||
+      localStorage.getItem('cashflip_deployed_game_contract');
     if (
       saved &&
       saved.startsWith('0x') &&
